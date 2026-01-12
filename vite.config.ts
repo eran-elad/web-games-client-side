@@ -1,0 +1,35 @@
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import { fileURLToPath, URL } from "node:url";
+import path from "node:path";
+
+// https://vite.dev/config/
+export default defineConfig({
+  plugins: [react()],
+  root: path.resolve(process.cwd()),
+  resolve: {
+    alias: {
+      "@": fileURLToPath(new URL("./src", import.meta.url)),
+    },
+  },
+  server: {
+    host: true,        // listen on LAN
+    port: 5174,        // fixed port
+    strictPort: true,  // fail if port is taken
+    proxy: {
+      '/api': {
+        target: 'http://127.0.0.1:8000',
+        changeOrigin: true,
+        secure: false,
+        configure: (proxy, _options) => {
+          proxy.on('error', (err, _req, _res) => {
+            console.log('proxy error', err);
+          });
+          proxy.on('proxyReq', (proxyReq, req, _res) => {
+            console.log('Proxying request:', req.method, req.url, '->', proxyReq.path);
+          });
+        },
+      },
+    },
+  },
+});

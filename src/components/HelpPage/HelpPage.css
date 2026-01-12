@@ -1,0 +1,260 @@
+.help-page-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+  overflow-y: auto;
+}
+
+.help-page-content {
+  background: white;
+  border-radius: 16px;
+  max-width: 700px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  position: relative;
+  padding: 2rem;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.help-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.help-page-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #333;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.help-icon {
+  font-size: 2rem;
+}
+
+.help-close-button {
+  background: none;
+  border: none;
+  font-size: 2rem;
+  color: #666;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.help-close-button:hover {
+  background: #f0f0f0;
+  color: #333;
+  transform: scale(1.1);
+}
+
+.help-subtitle {
+  font-size: 1.2rem;
+  color: #667eea;
+  font-weight: 600;
+  text-align: center;
+  margin: 0 0 2rem 0;
+}
+
+.help-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.help-section {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 1.5rem;
+  border-left: 4px solid #667eea;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.help-section:hover {
+  transform: translateX(4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.help-section-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #333;
+  margin: 0 0 0.75rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.section-icon {
+  font-size: 1.5rem;
+}
+
+.help-section-content {
+  color: #555;
+  line-height: 1.7;
+}
+
+.help-paragraph {
+  margin: 0.5rem 0;
+  font-size: 1rem;
+}
+
+.help-paragraph:first-child {
+  margin-top: 0;
+}
+
+.help-paragraph:last-child {
+  margin-bottom: 0;
+}
+
+.help-footer {
+  text-align: center;
+  margin: 2rem 0 1.5rem 0;
+  padding-top: 1.5rem;
+  border-top: 2px solid #e0e0e0;
+  font-size: 1.1rem;
+  color: #667eea;
+  font-weight: 600;
+}
+
+.help-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 1.5rem;
+}
+
+.help-back-button {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 0.75rem 2rem;
+  border-radius: 25px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.help-back-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+}
+
+.help-back-button:active {
+  transform: translateY(0);
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .help-page-content {
+    padding: 1.5rem;
+    max-height: 95vh;
+  }
+  
+  .help-page-title {
+    font-size: 1.5rem;
+  }
+  
+  .help-icon {
+    font-size: 1.5rem;
+  }
+  
+  .help-subtitle {
+    font-size: 1rem;
+  }
+  
+  .help-section {
+    padding: 1rem;
+  }
+  
+  .help-section-title {
+    font-size: 1.1rem;
+  }
+  
+  .help-paragraph {
+    font-size: 0.9rem;
+  }
+  
+  .help-back-button {
+    padding: 0.65rem 1.5rem;
+    font-size: 0.9rem;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .help-page-content {
+    background: #1a1a1a;
+    color: #e0e0e0;
+  }
+  
+  .help-page-title {
+    color: #fff;
+  }
+  
+  .help-section {
+    background: #2a2a2a;
+    border-left-color: #667eea;
+  }
+  
+  .help-section-title {
+    color: #fff;
+  }
+  
+  .help-section-content {
+    color: #ccc;
+  }
+  
+  .help-close-button {
+    color: #aaa;
+  }
+  
+  .help-close-button:hover {
+    background: #333;
+    color: #fff;
+  }
+  
+  .help-page-header {
+    border-bottom-color: #444;
+  }
+  
+  .help-footer {
+    border-top-color: #444;
+  }
+}

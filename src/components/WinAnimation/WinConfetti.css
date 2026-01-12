@@ -1,0 +1,48 @@
+.win-confetti-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 1000;
+  overflow: hidden;
+}
+
+.confetti-note {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  font-size: 2rem;
+  color: #667eea;
+  font-weight: bold;
+  animation: confettiFall 4s ease-out forwards;
+  animation-delay: var(--delay);
+  transform-origin: center;
+  opacity: 0;
+}
+
+@keyframes confettiFall {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(0) rotate(0deg);
+  }
+  10% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1) rotate(calc(var(--rotation) * 0.3));
+  }
+  100% {
+    opacity: 0;
+    transform: translate(
+      calc(-50% + var(--x)),
+      calc(-50% + var(--y))
+    ) scale(1.2) rotate(var(--rotation));
+  }
+}
+
+/* Mobile optimization - reduce number of notes */
+@media (max-width: 768px) {
+  .confetti-note {
+    font-size: 1.5rem;
+  }
+}
