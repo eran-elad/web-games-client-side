@@ -8,17 +8,17 @@
  * - Create .env.local file with VITE_API_BASE_URL (optional, defaults to empty for proxy)
  * 
  * For Vercel/production:
- * - Set VITE_API_BASE_URL in Vercel environment variables
- * - Example: https://api.yourdomain.com
+ * - Option 1: Leave VITE_API_BASE_URL empty (or unset) to use Vercel rewrites (see vercel.json)
+ * - Option 2: Set VITE_API_BASE_URL to your HTTPS API URL (e.g., https://api.yourdomain.com)
  */
 
 /**
  * API Base URL
  * 
- * - Empty string (default): Uses relative paths, works with Vite proxy in dev
+ * - Empty string (default): Uses relative paths
+ *   - In dev: Works with Vite proxy (see vite.config.ts)
+ *   - In production: Works with Vercel rewrites (see vercel.json)
  * - Full URL: Direct API calls (e.g., https://api.yourdomain.com)
- * 
- * In Vercel, set this to your backend API URL
  */
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 
