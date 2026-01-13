@@ -2,6 +2,7 @@
 
 A daily music guessing game client built with React, TypeScript, and Vite. Players have 6 attempts to guess the secret song of the day using clues about year, country, genre, duration, artist, and album.
 
+
 ## Features
 
 - 🎵 Daily music puzzle with a new secret song each day
