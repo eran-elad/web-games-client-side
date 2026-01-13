@@ -132,7 +132,7 @@ export const initGame = async (
   }
 
   const response = await fetch(getApiUrl(`/api/game/init?${params.toString()}`), {
-    method: 'GET',
+    method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
