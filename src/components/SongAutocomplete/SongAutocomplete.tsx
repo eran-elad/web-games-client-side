@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Autocomplete, TextField } from '@mui/material';
 import type { FilterOptionsState } from '@mui/material';
+import { getApiUrl } from '../../config/apiConfig';
 
 interface Song {
   id: string;
@@ -227,7 +228,7 @@ const SongAutocomplete = ({
       try {
         setLoading(true);
         setError(null);
-        const response = await fetch('/api/catalog/searchable');
+        const response = await fetch(getApiUrl('/api/catalog/searchable'));
         
         if (!response.ok) {
           // Try to get error details from response

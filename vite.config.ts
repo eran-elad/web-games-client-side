@@ -18,7 +18,9 @@ export default defineConfig({
     strictPort: true,  // fail if port is taken
     proxy: {
       '/api': {
-        target: 'http://127.0.0.1:8000',
+        // Use environment variable for proxy target, fallback to localhost
+        // Set VITE_API_PROXY_TARGET in .env.local for custom backend URL
+        target: process.env.VITE_API_PROXY_TARGET || 'http://127.0.0.1:8000',
         changeOrigin: true,
         secure: false,
         configure: (proxy, _options) => {

@@ -2,6 +2,8 @@
  * API service for game-related endpoints
  */
 
+import { getApiUrl } from '../config/apiConfig';
+
 /**
  * Response structure from /api/game/init and /api/game/guess
  */
@@ -129,7 +131,7 @@ export const initGame = async (
     params.append('local_date', localDate);
   }
 
-  const response = await fetch(`/api/game/init?${params.toString()}`, {
+  const response = await fetch(getApiUrl(`/api/game/init?${params.toString()}`), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -160,7 +162,7 @@ export const submitGuess = async (
   guessSongId: string,
   rawInput?: string
 ): Promise<GameInitResponse> => {
-  const response = await fetch('/api/game/guess', {
+  const response = await fetch(getApiUrl('/api/game/guess'), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -231,8 +233,8 @@ export const getPlayerStats = async (
     params.append('game_id', gameId);
   }
 
-  const url = `/api/game/stats/${playerId}${params.toString() ? `?${params.toString()}` : ''}`;
-  const response = await fetch(url, {
+  const endpoint = `/api/game/stats/${playerId}${params.toString() ? `?${params.toString()}` : ''}`;
+  const response = await fetch(getApiUrl(endpoint), {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
@@ -290,7 +292,7 @@ export const getArchive = async (
     params.append('player_id', playerId);
   }
 
-  const response = await fetch(`/api/game/archive?${params.toString()}`, {
+  const response = await fetch(getApiUrl(`/api/game/archive?${params.toString()}`), {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
