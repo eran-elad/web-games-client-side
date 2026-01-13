@@ -48,7 +48,10 @@ const ArchivePage = ({ onClose, onPlayDate }: ArchivePageProps) => {
     }
   };
 
-  const getStatusClass = (status: string | null) => {
+  const getStatusClass = (status: string | null, isUnavailable: boolean = false) => {
+    if (isUnavailable) {
+      return 'status-unavailable';
+    }
     switch (status) {
       case 'won':
         return 'status-won';
@@ -63,7 +66,10 @@ const ArchivePage = ({ onClose, onPlayDate }: ArchivePageProps) => {
     }
   };
 
-  const getStatusLabel = (status: string | null) => {
+  const getStatusLabel = (status: string | null, isUnavailable: boolean = false) => {
+    if (isUnavailable) {
+      return 'Unavailable';
+    }
     switch (status) {
       case 'won':
         return 'Won';
@@ -129,7 +135,10 @@ const ArchivePage = ({ onClose, onPlayDate }: ArchivePageProps) => {
   };
 
   // Create calendar grid for a month
-  const createCalendarGrid = (monthPuzzles: Array<{ date: string; puzzle_id: string | null; player_status: string | null }>) => {
+  const createCalendarGrid = (
+    monthPuzzles: Array<{ date: string; puzzle_id: string | null; player_status: string | null }>,
+    firstPuzzleDate: string | null
+  ) => {
     if (monthPuzzles.length === 0) return [];
 
     const firstDate = new Date(monthPuzzles[0].date + 'T00:00:00');
@@ -145,18 +154,30 @@ const ArchivePage = ({ onClose, onPlayDate }: ArchivePageProps) => {
     const daysInMonth = lastDayOfMonth.getDate();
     const startDayOfWeek = firstDayOfMonth.getDay(); // 0 = Sunday
 
-    const grid: Array<{ date: string | null; puzzle: { date: string; puzzle_id: string | null; player_status: string | null } | null }> = [];
+    // Parse first puzzle date for comparison
+    const firstPuzzleDateObj = firstPuzzleDate ? new Date(firstPuzzleDate + 'T00:00:00') : null;
+
+    const grid: Array<{ 
+      date: string | null; 
+      puzzle: { date: string; puzzle_id: string | null; player_status: string | null } | null;
+      isUnavailable: boolean;
+    }> = [];
 
     // Add empty cells for days before the first day of the month
     for (let i = 0; i < startDayOfWeek; i++) {
-      grid.push({ date: null, puzzle: null });
+      grid.push({ date: null, puzzle: null, isUnavailable: false });
     }
 
     // Add cells for each day of the month
     for (let day = 1; day <= daysInMonth; day++) {
       const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
       const puzzle = puzzleMap.get(dateStr) || null;
-      grid.push({ date: dateStr, puzzle });
+      const dateObj = new Date(dateStr + 'T00:00:00');
+      
+      // Check if this date is before the first puzzle date (puzzle doesn't exist)
+      const isUnavailable = firstPuzzleDateObj !== null && dateObj < firstPuzzleDateObj;
+      
+      grid.push({ date: dateStr, puzzle, isUnavailable });
     }
 
     return grid;
@@ -228,10 +249,14 @@ const ArchivePage = ({ onClose, onPlayDate }: ArchivePageProps) => {
             <span className="status-indicator status-not-played"></span>
             <span>Not Played</span>
           </div>
+          <div className="legend-item">
+            <span className="status-indicator status-unavailable"></span>
+            <span>Unavailable</span>
+          </div>
         </div>
         <div className="archive-calendars">
           {groupByMonth(archive.puzzles).map(({ monthKey, puzzles }) => {
-            const grid = createCalendarGrid(puzzles);
+            const grid = createCalendarGrid(puzzles, archive.date_range.first_puzzle_date);
             const firstPuzzle = puzzles[0];
             
             return (
@@ -254,16 +279,20 @@ const ArchivePage = ({ onClose, onPlayDate }: ArchivePageProps) => {
                     }
 
                     const puzzle = cell.puzzle;
-                    const statusClass = puzzle ? getStatusClass(puzzle.player_status) : 'status-not-played';
+                    const statusClass = getStatusClass(puzzle?.player_status || null, cell.isUnavailable);
                     const statusIcon = puzzle ? getStatusIcon(puzzle.player_status) : '';
-                    const isClickable = puzzle && puzzle.puzzle_id !== null;
+                    const isClickable = puzzle && puzzle.puzzle_id !== null && !cell.isUnavailable;
 
                     return (
                       <div
                         key={cell.date}
-                        className={`calendar-day ${statusClass} ${isClickable ? 'clickable' : ''}`}
-                        onClick={() => puzzle && handleDateClick(puzzle.date, puzzle.puzzle_id)}
-                        title={puzzle ? `${formatDate(puzzle.date)} - ${getStatusLabel(puzzle.player_status)}` : formatDate(cell.date)}
+                        className={`calendar-day ${statusClass} ${isClickable ? 'clickable' : ''} ${cell.isUnavailable ? 'unavailable' : ''}`}
+                        onClick={() => puzzle && !cell.isUnavailable && handleDateClick(puzzle.date, puzzle.puzzle_id)}
+                        title={cell.isUnavailable 
+                          ? `${formatDate(cell.date)} - Unavailable` 
+                          : puzzle 
+                            ? `${formatDate(puzzle.date)} - ${getStatusLabel(puzzle.player_status)}` 
+                            : `${formatDate(cell.date)} - Not Played`}
                       >
                         <div className="day-number">{getDayNumber(cell.date)}</div>
                         {statusIcon && <div className="day-status-icon">{statusIcon}</div>}

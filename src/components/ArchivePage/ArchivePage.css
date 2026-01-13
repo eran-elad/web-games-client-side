@@ -159,6 +159,16 @@
   background: white;
 }
 
+.calendar-day.status-unavailable {
+  background: #f5f5f5;
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.calendar-day.status-unavailable .day-number {
+  color: #999;
+}
+
 .day-number {
   font-size: 0.9rem;
   font-weight: 500;
@@ -207,6 +217,12 @@
 .status-indicator.status-not-played {
   background: #bdbdbd;
   color: transparent;
+}
+
+.status-indicator.status-unavailable {
+  background: #e0e0e0;
+  color: transparent;
+  opacity: 0.6;
 }
 
 .error-message {
