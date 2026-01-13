@@ -22,6 +22,11 @@
  */
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 
+// Debug log (remove in production if needed)
+if (typeof window !== 'undefined') {
+  console.log('API_BASE_URL:', API_BASE_URL || '(empty - using relative paths)');
+}
+
 /**
  * Get the full API URL for an endpoint
  * 
@@ -36,7 +41,9 @@ export const getApiUrl = (endpoint: string): string => {
     // If API_BASE_URL is set, use it (production/Vercel)
     // Remove trailing slash from base URL if present
     const baseUrl = API_BASE_URL.endsWith('/') ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
-    return `${baseUrl}${cleanEndpoint}`;
+    const fullUrl = `${baseUrl}${cleanEndpoint}`;
+    console.log('API Request URL:', fullUrl);
+    return fullUrl;
   }
   
   // If no API_BASE_URL, use relative path (works with Vite proxy in dev)
