@@ -4,7 +4,7 @@ import GuessBox from '../GuessBox/GuessBox';
 import WinConfetti from '../WinAnimation/WinConfetti';
 import ShareResult from '../ShareResult/ShareResult';
 import { MUSIC_GAME_ID } from '../../config/gameConfig';
-import { getPlayerId, setPlayerId, getSessionId, setSessionId, setGameId, clearSession, getPuzzleId, clearPuzzleId, getLocalDate, clearLocalDate } from '../../utils/storage';
+import { getPlayerId, setPlayerId, setSessionId, setGameId, clearSession, getPuzzleId, clearPuzzleId, getLocalDate, clearLocalDate } from '../../utils/storage';
 import { initGame, submitGuess } from '../../services/gameApi';
 import type { GameInitResponse } from '../../services/gameApi';
 import './ActiveGame.css';
@@ -71,7 +71,6 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
   const [error, setError] = useState<string | null>(null);
   const [sessionId, setSessionIdState] = useState<string | null>(null);
   const [sessionState, setSessionState] = useState<SessionState | null>(null);
-  const [playerId, setPlayerIdState] = useState<string | null>(null);
   const [hasShownStats, setHasShownStats] = useState<boolean>(false);
   const [isWinning, setIsWinning] = useState<boolean>(false);
   const [puzzleDate, setPuzzleDate] = useState<string | null>(null);
@@ -94,7 +93,6 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
         
         // Get stored player ID or use null for new player
         const storedPlayerId = getPlayerId();
-        const storedSessionId = getSessionId();
         
         // Detect timezone or default to UTC
         const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
@@ -135,12 +133,9 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
         
         if (!isMounted) return;
         
-        // Store player and session data
-        setPlayerIdState(response.player.player_uuid);
-        setSessionIdState(response.session.session_id);
-        
-        // Store in localStorage
+        // Store player and session data in localStorage
         setPlayerId(response.player.player_uuid);
+        setSessionIdState(response.session.session_id);
         setSessionId(response.session.session_id);
         setGameId(MUSIC_GAME_ID);
         
@@ -188,7 +183,7 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
           ? err.message 
           : 'Failed to initialize game';
         
-        console.error('Error initializing game:', err);
+        console.error('Error initializing game:', err, errorMessage);
         
         // If session not found error and we haven't retried yet, try once more with cleared data
         if (err instanceof Error && 
@@ -236,9 +231,9 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
     }
   }, [sessionState?.status, sessionState?.is_over]);
 
-  const handleSongSelect = (songId: string | null, song: Song | null) => {
+  const handleSongSelect = (songId: string | null, song?: Song | null) => {
     setSelectedSongId(songId);
-    setSelectedSong(song);
+    setSelectedSong(song ?? null);
   };
 
   const handleGuess = async () => {

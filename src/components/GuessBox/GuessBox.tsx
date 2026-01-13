@@ -373,7 +373,7 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, isWin
   const duration = formatTimeClue(durationObj);
   
   // Helper to get help text for clues
-  const getHelpText = (clueType: 'year' | 'country' | 'genre' | 'duration' | 'artist' | 'album', clueObj: any, formattedValue: string): string => {
+  const getHelpText = (clueType: 'year' | 'country' | 'genre' | 'duration' | 'artist' | 'album', clueObj: any): string => {
     if (!clueObj || typeof clueObj !== 'object') return '';
     
     switch (clueType) {
@@ -466,7 +466,7 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, isWin
             <div className={`clue-tag clue-status-${yearStatus}`}>
               <span className="clue-label">YEAR</span>
               <span className="clue-value">{yearDisplay}</span>
-              <ClueTooltip helpText={getHelpText('year', yearObj, yearDisplay)} />
+              <ClueTooltip helpText={getHelpText('year', yearObj)} />
             </div>
           );
         })()}
@@ -480,14 +480,14 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, isWin
                 // Neighboring country: show country code and clear indication it's a border country
                 <>
                   <span className="clue-value neighboring">border country</span>
-                  <ClueTooltip helpText={getHelpText('country', countryObj, '')} />
+                  <ClueTooltip helpText={getHelpText('country', countryObj)} />
                 </>
               ) : (
                 // Regular country: show country code, distance with arrow
                 <>
                   {country.distance && <span className="clue-value">{country.distance}</span>}
                   {country.arrow && <span className="clue-arrow">{country.arrow}</span>}
-                  <ClueTooltip helpText={getHelpText('country', countryObj, '')} />
+                  <ClueTooltip helpText={getHelpText('country', countryObj)} />
                 </>
               )}
             </div>
@@ -521,7 +521,7 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, isWin
               <div className={`clue-tag clue-status-${genreStatus}`}>
                 <span className="clue-label">GENRE</span>
                 {genreName && <span className="clue-value">{genreName}</span>}
-                <ClueTooltip helpText={getHelpText('genre', genreObj, genreName)} />
+                <ClueTooltip helpText={getHelpText('genre', genreObj)} />
               </div>
             );
           }
@@ -533,7 +533,7 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, isWin
             <div className={`clue-tag clue-status-${durationStatus}`}>
               <span className="clue-label">DURATION</span>
               <span className="clue-value">{duration}</span>
-              <ClueTooltip helpText={getHelpText('duration', durationObj, duration)} />
+              <ClueTooltip helpText={getHelpText('duration', durationObj)} />
             </div>
           );
         })()}
@@ -542,7 +542,7 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, isWin
           <div className="clue-tag clue-status-correct">
             <span className="clue-label">ARTIST</span>
             <span className="clue-value">✓</span>
-            <ClueTooltip helpText={getHelpText('artist', artistObj, '')} />
+            <ClueTooltip helpText={getHelpText('artist', artistObj)} />
           </div>
         )}
         {/* Album clue - only show when correct */}
@@ -550,7 +550,7 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, isWin
           <div className="clue-tag clue-status-correct">
             <span className="clue-label">ALBUM</span>
             <span className="clue-value">✓</span>
-            <ClueTooltip helpText={getHelpText('album', albumObj, '')} />
+            <ClueTooltip helpText={getHelpText('album', albumObj)} />
           </div>
         )}
         {/* Debug: show all keys if no clues found */}

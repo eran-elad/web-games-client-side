@@ -96,11 +96,6 @@ const ArchivePage = ({ onClose, onPlayDate }: ArchivePageProps) => {
     });
   };
 
-  const getDayOfWeek = (dateString: string) => {
-    const date = new Date(dateString + 'T00:00:00');
-    return date.getDay(); // 0 = Sunday, 6 = Saturday
-  };
-
   const getDayNumber = (dateString: string) => {
     const date = new Date(dateString + 'T00:00:00');
     return date.getDate();
@@ -138,7 +133,6 @@ const ArchivePage = ({ onClose, onPlayDate }: ArchivePageProps) => {
     if (monthPuzzles.length === 0) return [];
 
     const firstDate = new Date(monthPuzzles[0].date + 'T00:00:00');
-    const lastDate = new Date(monthPuzzles[monthPuzzles.length - 1].date + 'T00:00:00');
     
     // Create a map of date -> puzzle for quick lookup
     const puzzleMap = new Map(monthPuzzles.map(p => [p.date, p]));
