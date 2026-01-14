@@ -230,8 +230,6 @@
 .clue-tooltip {
   position: absolute;
   bottom: 100%;
-  left: 50%;
-  transform: translateX(-50%);
   margin-bottom: 0.5rem;
   padding: 0.75rem 1rem;
   background: #333;
@@ -249,12 +247,50 @@
   text-align: left;
 }
 
-.clue-tooltip::after {
+/* Center positioning (default) */
+.clue-tooltip-center {
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.clue-tooltip-center::after {
   content: '';
   position: absolute;
   top: 100%;
   left: 50%;
   transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: #333;
+}
+
+/* Right alignment (when not enough space on left) */
+.clue-tooltip-right {
+  right: 0;
+  transform: none;
+}
+
+.clue-tooltip-right::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  right: 1rem;
+  transform: none;
+  border: 6px solid transparent;
+  border-top-color: #333;
+}
+
+/* Left alignment (when not enough space on right) */
+.clue-tooltip-left {
+  left: 0;
+  transform: none;
+}
+
+.clue-tooltip-left::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 1rem;
+  transform: none;
   border: 6px solid transparent;
   border-top-color: #333;
 }

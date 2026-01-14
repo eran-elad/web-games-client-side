@@ -9,6 +9,7 @@ interface ClueTooltipProps {
 
 const ClueTooltip = ({ helpText }: ClueTooltipProps) => {
   const [isVisible, setIsVisible] = useState(false);
+  const [tooltipPosition, setTooltipPosition] = useState<'left' | 'center' | 'right'>('center');
   const tooltipRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
@@ -29,6 +30,48 @@ const ClueTooltip = ({ helpText }: ClueTooltipProps) => {
       return () => {
         document.removeEventListener('mousedown', handleClickOutside);
       };
+    }
+  }, [isVisible]);
+
+  // Calculate tooltip position based on available space
+  useEffect(() => {
+    if (isVisible && buttonRef.current && tooltipRef.current) {
+      // Use requestAnimationFrame to ensure tooltip is rendered and measured
+      requestAnimationFrame(() => {
+        if (!buttonRef.current || !tooltipRef.current) return;
+        
+        const buttonRect = buttonRef.current.getBoundingClientRect();
+        const tooltipWidth = tooltipRef.current.offsetWidth || 240; // Default width
+        const viewportWidth = window.innerWidth;
+        
+        // Calculate space on left and right
+        const spaceLeft = buttonRect.left;
+        const spaceRight = viewportWidth - buttonRect.right;
+        const buttonCenter = buttonRect.left + buttonRect.width / 2;
+        
+        // Determine best position
+        // If not enough space to center (half tooltip width on each side), align to the side with more space
+        if (spaceLeft < tooltipWidth / 2 && spaceRight >= tooltipWidth / 2) {
+          // Not enough space on left, use right alignment
+          setTooltipPosition('right');
+        } else if (spaceRight < tooltipWidth / 2 && spaceLeft >= tooltipWidth / 2) {
+          // Not enough space on right, use left alignment
+          setTooltipPosition('left');
+        } else if (spaceLeft < 20 || spaceRight < 20) {
+          // Very close to edge, use the side with more space
+          if (spaceRight > spaceLeft) {
+            setTooltipPosition('right');
+          } else {
+            setTooltipPosition('left');
+          }
+        } else {
+          // Enough space on both sides, center it
+          setTooltipPosition('center');
+        }
+      });
+    } else {
+      // Reset to center when hidden
+      setTooltipPosition('center');
     }
   }, [isVisible]);
 
@@ -61,7 +104,7 @@ const ClueTooltip = ({ helpText }: ClueTooltipProps) => {
       {isVisible && (
         <div
           ref={tooltipRef}
-          className="clue-tooltip"
+          className={`clue-tooltip clue-tooltip-${tooltipPosition}`}
           onClick={(e) => e.stopPropagation()}
         >
           {helpText}
