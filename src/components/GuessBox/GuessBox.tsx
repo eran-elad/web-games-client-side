@@ -36,37 +36,48 @@ const ClueTooltip = ({ helpText }: ClueTooltipProps) => {
   // Calculate tooltip position based on available space
   useEffect(() => {
     if (isVisible && buttonRef.current && tooltipRef.current) {
-      // Use requestAnimationFrame to ensure tooltip is rendered and measured
+      // Use double requestAnimationFrame to ensure tooltip is fully rendered and measured
       requestAnimationFrame(() => {
-        if (!buttonRef.current || !tooltipRef.current) return;
-        
-        const buttonRect = buttonRef.current.getBoundingClientRect();
-        const tooltipWidth = tooltipRef.current.offsetWidth || 240; // Default width
-        const viewportWidth = window.innerWidth;
-        
-        // Calculate space on left and right
-        const spaceLeft = buttonRect.left;
-        const spaceRight = viewportWidth - buttonRect.right;
-        
-        // Determine best position
-        // If not enough space to center (half tooltip width on each side), align to the side with more space
-        if (spaceLeft < tooltipWidth / 2 && spaceRight >= tooltipWidth / 2) {
-          // Not enough space on left, use right alignment
-          setTooltipPosition('right');
-        } else if (spaceRight < tooltipWidth / 2 && spaceLeft >= tooltipWidth / 2) {
-          // Not enough space on right, use left alignment
-          setTooltipPosition('left');
-        } else if (spaceLeft < 20 || spaceRight < 20) {
-          // Very close to edge, use the side with more space
-          if (spaceRight > spaceLeft) {
+        requestAnimationFrame(() => {
+          if (!buttonRef.current || !tooltipRef.current) return;
+          
+          const buttonRect = buttonRef.current.getBoundingClientRect();
+          const tooltipRect = tooltipRef.current.getBoundingClientRect();
+          const tooltipWidth = tooltipRect.width || tooltipRef.current.offsetWidth || 240;
+          const viewportWidth = window.innerWidth;
+          
+          // Calculate space on left and right of the button
+          const spaceLeft = buttonRect.left;
+          const spaceRight = viewportWidth - buttonRect.right;
+          
+          // Calculate where the tooltip would be positioned if centered
+          const buttonCenterX = buttonRect.left + buttonRect.width / 2;
+          const tooltipLeftIfCentered = buttonCenterX - tooltipWidth / 2;
+          const tooltipRightIfCentered = buttonCenterX + tooltipWidth / 2;
+          
+          // Check if centered tooltip would overflow
+          const wouldOverflowLeft = tooltipLeftIfCentered < 10;
+          const wouldOverflowRight = tooltipRightIfCentered > viewportWidth - 10;
+          
+          // Determine best position
+          if (wouldOverflowLeft && !wouldOverflowRight) {
+            // Would overflow left, align to right
             setTooltipPosition('right');
-          } else {
+          } else if (wouldOverflowRight && !wouldOverflowLeft) {
+            // Would overflow right, align to left
             setTooltipPosition('left');
+          } else if (wouldOverflowLeft && wouldOverflowRight) {
+            // Would overflow both sides, use the side with more space
+            if (spaceRight > spaceLeft) {
+              setTooltipPosition('right');
+            } else {
+              setTooltipPosition('left');
+            }
+          } else {
+            // Enough space on both sides, center it
+            setTooltipPosition('center');
           }
-        } else {
-          // Enough space on both sides, center it
-          setTooltipPosition('center');
-        }
+        });
       });
     } else {
       // Reset to center when hidden
