@@ -237,7 +237,7 @@
   border-radius: 8px;
   font-size: 0.8rem;
   line-height: 1.5;
-  max-width: 280px;
+  max-width: min(280px, calc(100vw - 20px));
   min-width: 200px;
   white-space: normal;
   word-wrap: break-word;
@@ -250,7 +250,9 @@
 /* Center positioning (default) */
 .clue-tooltip-center {
   left: 50%;
+  right: auto;
   transform: translateX(-50%);
+  max-width: min(280px, calc(100vw - 20px)); /* Prevent overflow */
 }
 
 .clue-tooltip-center::after {
@@ -266,7 +268,9 @@
 /* Right alignment (when not enough space on left) */
 .clue-tooltip-right {
   right: 0;
+  left: auto;
   transform: none;
+  max-width: min(280px, calc(100vw - 20px)); /* Prevent overflow */
 }
 
 .clue-tooltip-right::after {
@@ -274,6 +278,7 @@
   position: absolute;
   top: 100%;
   right: 1rem;
+  left: auto;
   transform: none;
   border: 6px solid transparent;
   border-top-color: #333;
@@ -282,7 +287,9 @@
 /* Left alignment (when not enough space on right) */
 .clue-tooltip-left {
   left: 0;
+  right: auto;
   transform: none;
+  max-width: min(280px, calc(100vw - 20px)); /* Prevent overflow */
 }
 
 .clue-tooltip-left::after {
@@ -290,6 +297,7 @@
   position: absolute;
   top: 100%;
   left: 1rem;
+  right: auto;
   transform: none;
   border: 6px solid transparent;
   border-top-color: #333;

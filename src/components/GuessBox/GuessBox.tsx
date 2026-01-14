@@ -33,58 +33,21 @@ const ClueTooltip = ({ helpText }: ClueTooltipProps) => {
     }
   }, [isVisible]);
 
-  // Calculate tooltip position based on available space
+  // Calculate tooltip position - simple rule: right-align if button is in left half of screen
   useEffect(() => {
-    if (isVisible && buttonRef.current && tooltipRef.current) {
-      // Use double requestAnimationFrame to ensure tooltip is fully rendered and measured
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          if (!buttonRef.current || !tooltipRef.current) return;
-          
-          const buttonRect = buttonRef.current.getBoundingClientRect();
-          const tooltipRect = tooltipRef.current.getBoundingClientRect();
-          const tooltipWidth = tooltipRect.width || tooltipRef.current.offsetWidth || 240;
-          const viewportWidth = window.innerWidth;
-          const padding = 10; // Minimum padding from viewport edge
-          
-          // Calculate space on left and right of the button
-          const spaceLeft = buttonRect.left;
-          const spaceRight = viewportWidth - buttonRect.right;
-          
-          // Calculate where the tooltip would be positioned if centered
-          const buttonCenterX = buttonRect.left + buttonRect.width / 2;
-          const tooltipLeftIfCentered = buttonCenterX - tooltipWidth / 2;
-          const tooltipRightIfCentered = buttonCenterX + tooltipWidth / 2;
-          
-          // Check if centered tooltip would overflow
-          const wouldOverflowLeft = tooltipLeftIfCentered < padding;
-          const wouldOverflowRight = tooltipRightIfCentered > viewportWidth - padding;
-          
-          // Determine best position - prioritize right alignment when near left edge
-          if (spaceLeft < tooltipWidth / 2) {
-            // Not enough space on left, use right alignment
-            setTooltipPosition('right');
-          } else if (wouldOverflowLeft && !wouldOverflowRight) {
-            // Would overflow left, align to right
-            setTooltipPosition('right');
-          } else if (wouldOverflowRight && !wouldOverflowLeft) {
-            // Would overflow right, align to left
-            setTooltipPosition('left');
-          } else if (wouldOverflowLeft && wouldOverflowRight) {
-            // Would overflow both sides, use the side with more space
-            if (spaceRight > spaceLeft) {
-              setTooltipPosition('right');
-            } else {
-              setTooltipPosition('left');
-            }
-          } else {
-            // Enough space on both sides, center it
-            setTooltipPosition('center');
-          }
-        });
-      });
+    if (isVisible && buttonRef.current) {
+      const buttonRect = buttonRef.current.getBoundingClientRect();
+      const viewportWidth = window.innerWidth;
+      const buttonCenterX = buttonRect.left + buttonRect.width / 2;
+      
+      // If button is in left half of screen, use right alignment
+      // Otherwise, center it
+      if (buttonCenterX < viewportWidth / 2) {
+        setTooltipPosition('right');
+      } else {
+        setTooltipPosition('center');
+      }
     } else {
-      // Reset to center when hidden
       setTooltipPosition('center');
     }
   }, [isVisible]);
