@@ -47,7 +47,6 @@ const ClueTooltip = ({ helpText }: ClueTooltipProps) => {
         // Calculate space on left and right
         const spaceLeft = buttonRect.left;
         const spaceRight = viewportWidth - buttonRect.right;
-        const buttonCenter = buttonRect.left + buttonRect.width / 2;
         
         // Determine best position
         // If not enough space to center (half tooltip width on each side), align to the side with more space
