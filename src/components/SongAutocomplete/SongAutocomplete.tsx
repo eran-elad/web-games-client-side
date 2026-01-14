@@ -222,6 +222,16 @@ const SongAutocomplete = ({
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedSong, setSelectedSong] = useState<Song | null>(value);
+  const [inputValue, setInputValue] = useState<string>('');
+
+  // Sync internal state with prop value (for clearing after guess)
+  useEffect(() => {
+    setSelectedSong(value);
+    if (value === null) {
+      // Clear input text when value is cleared
+      setInputValue('');
+    }
+  }, [value]);
 
   useEffect(() => {
     const fetchSongs = async () => {
@@ -301,6 +311,10 @@ const SongAutocomplete = ({
       freeSolo
       options={songs}
       value={selectedSong}
+      inputValue={inputValue}
+      onInputChange={(_event, newInputValue) => {
+        setInputValue(newInputValue);
+      }}
       onChange={handleChange}
       loading={loading}
       getOptionLabel={getOptionLabel}
@@ -318,6 +332,7 @@ const SongAutocomplete = ({
             '& .MuiOutlinedInput-root': {
               borderRadius: '50px',
               paddingLeft: '3rem',
+              backgroundColor: 'rgba(255, 255, 255, 0.9)',
               '& fieldset': {
                 borderColor: '#ddd',
               },
@@ -330,6 +345,21 @@ const SongAutocomplete = ({
             },
             '& .MuiInputBase-input': {
               padding: '1rem 1rem 1rem 0',
+              color: '#333',
+              fontSize: '1rem',
+            },
+            '& .MuiInputBase-input::placeholder': {
+              color: '#999',
+              opacity: 1,
+            },
+            '& .MuiAutocomplete-clearIndicator': {
+              color: '#666',
+              '&:hover': {
+                color: '#333',
+              },
+            },
+            '& .MuiAutocomplete-popupIndicator': {
+              color: '#666',
             },
           }}
         />

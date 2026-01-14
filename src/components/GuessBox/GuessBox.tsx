@@ -45,6 +45,7 @@ const ClueTooltip = ({ helpText }: ClueTooltipProps) => {
           const tooltipRect = tooltipRef.current.getBoundingClientRect();
           const tooltipWidth = tooltipRect.width || tooltipRef.current.offsetWidth || 240;
           const viewportWidth = window.innerWidth;
+          const padding = 10; // Minimum padding from viewport edge
           
           // Calculate space on left and right of the button
           const spaceLeft = buttonRect.left;
@@ -56,11 +57,14 @@ const ClueTooltip = ({ helpText }: ClueTooltipProps) => {
           const tooltipRightIfCentered = buttonCenterX + tooltipWidth / 2;
           
           // Check if centered tooltip would overflow
-          const wouldOverflowLeft = tooltipLeftIfCentered < 10;
-          const wouldOverflowRight = tooltipRightIfCentered > viewportWidth - 10;
+          const wouldOverflowLeft = tooltipLeftIfCentered < padding;
+          const wouldOverflowRight = tooltipRightIfCentered > viewportWidth - padding;
           
-          // Determine best position
-          if (wouldOverflowLeft && !wouldOverflowRight) {
+          // Determine best position - prioritize right alignment when near left edge
+          if (spaceLeft < tooltipWidth / 2) {
+            // Not enough space on left, use right alignment
+            setTooltipPosition('right');
+          } else if (wouldOverflowLeft && !wouldOverflowRight) {
             // Would overflow left, align to right
             setTooltipPosition('right');
           } else if (wouldOverflowRight && !wouldOverflowLeft) {
