@@ -108,8 +108,8 @@ interface GuessBoxProps {
 }
 
 const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, isWinning = false, pulseDelay = 0 }: GuessBoxProps) => {
-  // Helper to determine clue status (correct/close/incorrect) based on thresholds
-  type ClueStatus = 'correct' | 'close' | 'incorrect' | 'unknown';
+  // Helper to determine clue status (correct/close/incorrect/neighboring) based on thresholds
+  type ClueStatus = 'correct' | 'close' | 'incorrect' | 'neighboring' | 'unknown';
   
   const getYearStatus = (clueObj: any): ClueStatus => {
     if (!clueObj || typeof clueObj !== 'object' || clueObj.diff === undefined) return 'unknown';
@@ -122,6 +122,14 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, isWin
   const getCountryStatus = (clueObj: any): ClueStatus => {
     if (!clueObj || typeof clueObj !== 'object') return 'unknown';
     if (clueObj.status === 'correct' || clueObj.status === true) return 'correct';
+    
+    // Check if it's a neighboring country (distance = 0 and status is incorrect)
+    const distance = clueObj.distance_km !== undefined ? clueObj.distance_km :
+                     clueObj.distance !== undefined ? clueObj.distance : undefined;
+    if (distance === 0 && clueObj.status !== 'correct') {
+      return 'neighboring';
+    }
+    
     // Country must be exact (closeRange is 0), so no "close" state
     return 'incorrect';
   };
@@ -418,10 +426,13 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, isWin
         
         const distance = clueObj.distance_km || clueObj.distance || 0;
         if (distance === 0 && clueObj.status !== 'correct') {
+          const dir = clueObj.dir || clueObj.direction || '';
+          const directionText = dir ? ` Look ${dir === 'N' ? 'north' : dir === 'S' ? 'south' : dir === 'E' ? 'east' : dir === 'W' ? 'west' : dir === 'NE' ? 'northeast' : dir === 'NW' ? 'northwest' : dir === 'SE' ? 'southeast' : dir === 'SW' ? 'southwest' : dir.toLowerCase()} (${dir}).` : '';
+          
           if (countryName) {
-            return `This is a neighboring country (shares a border). The secret song is not from ${countryName}.`;
+            return `The secret song is not from ${countryName}. This is a neighboring country (shares a border).${directionText}`;
           }
-          return 'This is a neighboring country (shares a border).';
+          return `This is a neighboring country (shares a border).${directionText}`;
         }
         
         const dir = clueObj.dir || clueObj.direction || '';
@@ -497,9 +508,10 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, isWin
               <span className="clue-label">COUNTRY</span>
               {country.countryCode && <span className="clue-value">({country.countryCode})</span>}
               {country.status === 'neighboring' ? (
-                // Neighboring country: show country code and clear indication it's a border country
+                // Neighboring country: show country code, border country text, and arrow if direction is available
                 <>
                   <span className="clue-value neighboring">border country</span>
+                  {country.arrow && <span className="clue-arrow">{country.arrow}</span>}
                   <ClueTooltip helpText={getHelpText('country', countryObj)} />
                 </>
               ) : (
