@@ -375,16 +375,15 @@
 /* Adjust tooltip position on mobile to prevent overflow */
 @media (max-width: 768px) {
   .clue-tooltip {
-    left: auto;
-    right: 0;
-    transform: none;
+    /* Don't override positioning - let the dynamic classes handle it */
     max-width: 240px;
     min-width: 180px;
     font-size: 0.75rem;
     padding: 0.65rem 0.85rem;
   }
   
-  .clue-tooltip::after {
+  /* Only override arrow position for right-aligned tooltips on mobile */
+  .clue-tooltip-right::after {
     left: auto;
     right: 1rem;
     transform: none;
