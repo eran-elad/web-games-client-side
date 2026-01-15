@@ -12,7 +12,6 @@ const ClueTooltip = ({ helpText, clueType = 'unknown' }: ClueTooltipProps) => {
   const [isVisible, setIsVisible] = useState(false);
   const [tooltipPosition, setTooltipPosition] = useState<'left' | 'center' | 'right'>('center');
   const [tooltipStyle, setTooltipStyle] = useState<React.CSSProperties>({});
-  const [arrowStyle, setArrowStyle] = useState<React.CSSProperties>({});
   const tooltipRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
@@ -142,10 +141,14 @@ const ClueTooltip = ({ helpText, clueType = 'unknown' }: ClueTooltipProps) => {
           console.log(`  - Left fits: ${leftFits} (left: ${leftLeftEdge.toFixed(1)} >= ${padding})`);
           console.log(`Chosen position: ${chosenPosition}`);
           if (!centerFits && !rightFits && !leftFits) {
+            // Calculate overflow for each position (already calculated above in the else block)
+            const centerOverflowCalc = Math.max(0, padding - centerLeftEdge) + Math.max(0, centerRightEdge - (viewportWidth - padding));
+            const rightOverflowCalc = Math.max(0, rightRightEdge - (viewportWidth - padding));
+            const leftOverflowCalc = Math.max(0, padding - leftLeftEdge);
             console.log(`  - All positions overflow, using least overflow option`);
-            console.log(`  - Center overflow: ${centerOverflow.toFixed(1)}px`);
-            console.log(`  - Right overflow: ${rightOverflow.toFixed(1)}px`);
-            console.log(`  - Left overflow: ${leftOverflow.toFixed(1)}px`);
+            console.log(`  - Center overflow: ${centerOverflowCalc.toFixed(1)}px`);
+            console.log(`  - Right overflow: ${rightOverflowCalc.toFixed(1)}px`);
+            console.log(`  - Left overflow: ${leftOverflowCalc.toFixed(1)}px`);
           }
           console.log('==============================');
           
@@ -183,27 +186,21 @@ const ClueTooltip = ({ helpText, clueType = 'unknown' }: ClueTooltipProps) => {
           let top = buttonTop - tooltipHeight - 8; // 8px margin
           
           // Recalculate position based on chosen alignment, ensuring it fits
-          let finalPosition = tooltipPosition;
-          
           if (tooltipPosition === 'center') {
             left = buttonCenterX - tooltipWidth / 2;
             // If center doesn't fit, try right, then left
             if (left < padding) {
               left = buttonRight;
-              finalPosition = 'right';
             } else if (left + tooltipWidth > viewportWidth - padding) {
               left = buttonLeft - tooltipWidth;
-              finalPosition = 'left';
             }
           } else if (tooltipPosition === 'right') {
             left = buttonRight;
             // If right doesn't fit, try center, then left
             if (left + tooltipWidth > viewportWidth - padding) {
               left = buttonCenterX - tooltipWidth / 2;
-              finalPosition = 'center';
               if (left < padding) {
                 left = buttonLeft - tooltipWidth;
-                finalPosition = 'left';
               }
             }
           } else { // left
@@ -211,10 +208,8 @@ const ClueTooltip = ({ helpText, clueType = 'unknown' }: ClueTooltipProps) => {
             // If left doesn't fit, try center, then right
             if (left < padding) {
               left = buttonCenterX - tooltipWidth / 2;
-              finalPosition = 'center';
               if (left + tooltipWidth > viewportWidth - padding) {
                 left = buttonRight;
-                finalPosition = 'right';
               }
             }
           }
@@ -225,14 +220,6 @@ const ClueTooltip = ({ helpText, clueType = 'unknown' }: ClueTooltipProps) => {
             left = viewportWidth - tooltipWidth - padding;
           }
           
-          // Calculate arrow position relative to button (after final constraint)
-          const tooltipLeft = left;
-          const arrowLeft = buttonCenterX - tooltipLeft; // Distance from tooltip left edge to button center
-          
-          // Constrain arrow to stay within tooltip bounds (with some padding from edges)
-          const arrowPadding = 12; // Minimum distance from tooltip edges
-          const constrainedArrowLeft = Math.max(arrowPadding, Math.min(arrowLeft, tooltipWidth - arrowPadding));
-          
           setTooltipStyle({
             position: 'fixed',
             left: `${left}px`,
@@ -240,21 +227,11 @@ const ClueTooltip = ({ helpText, clueType = 'unknown' }: ClueTooltipProps) => {
             zIndex: 99999,
             opacity: 1 // Make visible once positioned
           });
-          
-          // Position arrow to point at button center (or constrained position)
-          setArrowStyle({
-            position: 'absolute',
-            left: `${constrainedArrowLeft}px`,
-            top: '100%',
-            transform: 'translateX(-50%)',
-            border: '6px solid transparent',
-            borderTopColor: '#333',
-            pointerEvents: 'none'
-          });
         });
       });
     } else {
-      setArrowStyle({});
+      setTooltipPosition('center');
+      setTooltipStyle({});
     }
   }, [isVisible, tooltipPosition]);
 

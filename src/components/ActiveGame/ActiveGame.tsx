@@ -298,7 +298,7 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
         const artist = displayParts.slice(1).join(' - ') || '';
         
         // Extract artist_type from guess object (not from result clues)
-        const artistTypeFromGuess = latestGuess.guess.artist_type;
+        const artistTypeFromGuess = (latestGuess.guess as any).artist_type;
         
         console.log('ActiveGame Debug - latestGuess.guess.artist_type:', artistTypeFromGuess);
         
