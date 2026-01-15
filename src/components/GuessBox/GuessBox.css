@@ -96,12 +96,12 @@
   }
   
   .clue-label {
-    font-size: 0.65rem;
+    font-size: 0.75rem; /* Increased from 0.65rem */
     white-space: nowrap;
   }
   
   .clue-value {
-    font-size: 0.65rem; /* Smaller on mobile */
+    font-size: 0.7rem; /* Increased from 0.65rem */
     white-space: nowrap;
     flex-shrink: 1; /* Allow shrinking */
     min-width: 0;
@@ -215,7 +215,7 @@
 .clue-label {
   font-weight: 600;
   color: #666;
-  font-size: 0.75rem;
+  font-size: 0.85rem; /* Increased from 0.75rem */
   text-transform: uppercase;
   display: inline-flex;
   align-items: center;
@@ -225,7 +225,7 @@
 .clue-value {
   color: #333;
   font-weight: 500;
-  font-size: 0.7rem; /* Even smaller font */
+  font-size: 0.8rem; /* Increased from 0.7rem */
   display: inline-flex;
   align-items: center;
   white-space: nowrap;

@@ -422,8 +422,8 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guess
         }
       }
       
-      // Extract direction
-      direction = clueObj.direction || clueObj.dir || '';
+      // Extract direction - check multiple possible field names
+      direction = clueObj.direction || clueObj.dir || clueObj.direction_code || clueObj.d || '';
       
       // Extract country code (similar to genre, check 'given', 'name', 'code', etc.)
       // Also check the guessedCountry prop which comes from guess.country
@@ -442,15 +442,29 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guess
       // Check if it's a neighboring country (distance = 0 and status is incorrect)
       if (distanceValue === 0 && status === 'incorrect') {
         status = 'neighboring';
+        // For neighboring countries, set distance to empty (we'll show ±0km in the UI)
+        distance = '';
       }
     }
     
-    // If distance is still empty, try to extract from object
-    if (!distance) {
+    // If distance is still empty and not neighboring, try to extract from object
+    if (!distance && status !== 'neighboring') {
       distance = extractClueValue(clueObj);
     }
     
+    // Always generate arrow if direction is available (for both regular and neighboring countries)
     const arrow = getDirectionArrow(direction);
+    
+    // Debug logging for neighboring countries
+    if (status === 'neighboring') {
+      console.log('Neighboring country debug:', {
+        clueObj,
+        direction,
+        arrow,
+        distanceValue,
+        countryCode
+      });
+    }
     
     return { distance, arrow, status, countryCode };
   };
@@ -796,9 +810,9 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guess
               </span>
               {country.countryCode && <span className="clue-value">{country.countryCode}</span>}
               {country.status === 'neighboring' ? (
-                // Neighboring country: show country code, border country text, and arrow if direction is available
+                // Neighboring country: show country code, +/- 0km, and arrow if direction is available
                 <>
-                  <span className="clue-value neighboring">border country</span>
+                  <span className="clue-value neighboring">±0km</span>
                   {country.arrow && <span className="clue-arrow">{country.arrow}</span>}
                   <ClueTooltip helpText={getHelpText('country', countryObj)} clueType="country" />
                 </>
