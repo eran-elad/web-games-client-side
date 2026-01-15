@@ -28,9 +28,15 @@ const tokenizeQuery = (query: string): string[] => {
     .filter(token => token.length > 0);
 };
 
-// Helper function to normalize text for matching
+// Helper function to remove accents/diacritics from text
+const removeAccents = (text: string): string => {
+  return text.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+};
+
+// Helper function to normalize text for matching (lowercase, trim, remove accents)
 const normalizeText = (text: string): string => {
-  return (text || '').toLowerCase().trim();
+  const normalized = (text || '').toLowerCase().trim();
+  return removeAccents(normalized);
 };
 
 // Helper function to strip punctuation from text for matching
