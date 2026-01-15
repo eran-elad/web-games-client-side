@@ -103,11 +103,12 @@ interface GuessBoxProps {
   };
   guessNumber?: number;
   guessedCountry?: string; // Country code from the guess object (guess.country)
+  guessedArtistType?: string; // Artist type from the guess object (guess.artist_type)
   isWinning?: boolean; // Whether to show win animation
   pulseDelay?: number; // Delay in seconds for staggered pulse effect
 }
 
-const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, isWinning = false, pulseDelay = 0 }: GuessBoxProps) => {
+const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guessedArtistType, isWinning = false, pulseDelay = 0 }: GuessBoxProps) => {
   // Helper to determine clue status (correct/close/incorrect/neighboring) based on thresholds
   type ClueStatus = 'correct' | 'close' | 'incorrect' | 'neighboring' | 'unknown';
   
@@ -123,11 +124,23 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, isWin
     if (!clueObj || typeof clueObj !== 'object') return 'unknown';
     if (clueObj.status === 'correct' || clueObj.status === true) return 'correct';
     
-    // Check if it's a neighboring country (distance = 0 and status is incorrect)
-    const distance = clueObj.distance_km !== undefined ? clueObj.distance_km :
-                     clueObj.distance !== undefined ? clueObj.distance : undefined;
-    if (distance === 0 && clueObj.status !== 'correct') {
-      return 'neighboring';
+    // Check if it's a neighboring country (distance = 0 and status is incorrect/different)
+    const distValue = clueObj.distance_km !== undefined ? clueObj.distance_km :
+                     clueObj.distance !== undefined ? clueObj.distance :
+                     clueObj.km !== undefined ? clueObj.km :
+                     clueObj.value !== undefined ? clueObj.value : undefined;
+    
+    if (distValue !== undefined) {
+      const distanceValue = Number(distValue);
+      // Check if status is incorrect/different (not correct)
+      const isIncorrect = clueObj.status === 'incorrect' || 
+                         clueObj.status === 'different' || 
+                         clueObj.status === false ||
+                         (clueObj.status !== 'correct' && clueObj.status !== true);
+      
+      if (distanceValue === 0 && isIncorrect) {
+        return 'neighboring';
+      }
     }
     
     // Country must be exact (closeRange is 0), so no "close" state
@@ -394,6 +407,15 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, isWin
   const durationObj = getClueObject('time', 'duration');
   const artistObj = getClueObject('artist');
   const albumObj = getClueObject('album');
+  const artistTypeObj = getClueObject('artist_type');
+  
+  // Debug: Log clues data to see what's coming from the server
+  console.log('GuessBox Debug - All clues data:', clues);
+  console.log('GuessBox Debug - CluesData:', cluesData);
+  console.log('GuessBox Debug - artistObj:', artistObj);
+  console.log('GuessBox Debug - albumObj:', albumObj);
+  console.log('GuessBox Debug - artistTypeObj:', artistTypeObj);
+  console.log('GuessBox Debug - All clue keys:', Object.keys(cluesData));
   
   const year = formatYearClue(yearObj);
   const country = formatCountryClue(countryObj);
@@ -401,7 +423,7 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, isWin
   const duration = formatTimeClue(durationObj);
   
   // Helper to get help text for clues
-  const getHelpText = (clueType: 'year' | 'country' | 'genre' | 'duration' | 'artist' | 'album', clueObj: any): string => {
+  const getHelpText = (clueType: 'year' | 'country' | 'genre' | 'duration' | 'artist' | 'album' | 'artist_type', clueObj: any): string => {
     if (!clueObj || typeof clueObj !== 'object') return '';
     
     switch (clueType) {
@@ -470,6 +492,52 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, isWin
       case 'album': {
         return 'You guessed the correct album! This helps confirm you\'re on the right track.';
       }
+      case 'artist_type': {
+        // Get the guessed type - use helper fields passed from rendering logic, or extract from clueObj
+        const guessedType = clueObj._guessedType || clueObj.given || clueObj.type || clueObj.value || clueObj.artist_type || '';
+        const guessedTypeLower = guessedType ? guessedType.toLowerCase() : '';
+        
+        // Use helper fields if available, otherwise determine from guessedType
+        const isPerson = clueObj._isPerson !== undefined ? clueObj._isPerson : 
+                        (guessedTypeLower === 'person' || guessedTypeLower === 'solo');
+        const isGroup = clueObj._isGroup !== undefined ? clueObj._isGroup :
+                       (guessedTypeLower === 'group' || guessedTypeLower === 'band' || guessedTypeLower === 'duo');
+        
+        console.log('getHelpText artist_type:', {
+          guessedType,
+          guessedTypeLower,
+          isPerson,
+          isGroup,
+          status: clueObj.status,
+          _guessedType: clueObj._guessedType,
+          _isPerson: clueObj._isPerson,
+          _isGroup: clueObj._isGroup
+        });
+        
+        if (clueObj.status === 'correct' || clueObj.status === true) {
+          // When correct, the guessed type matches the secret type
+          if (isPerson) {
+            return 'The Artist Type is a Solo Artist.';
+          } else if (isGroup) {
+            return 'The Artist Type is a Group (e.g. band).';
+          } else if (guessedType) {
+            return `The Artist Type is ${guessedType}.`;
+          } else {
+            return 'The Artist Type matches.';
+          }
+        } else {
+          // When wrong, the guessed type doesn't match
+          if (isPerson) {
+            return 'The Artist Type isn\'t a Solo Artist.';
+          } else if (isGroup) {
+            return 'The Artist Type isn\'t a Group (e.g. band).';
+          } else if (guessedType) {
+            return `The Artist Type isn't ${guessedType}.`;
+          } else {
+            return 'The Artist Type doesn\'t match.';
+          }
+        }
+      }
       default:
         return '';
     }
@@ -502,7 +570,10 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, isWin
           );
         })()}
         {(country.distance || country.status === 'correct' || country.status === 'neighboring' || country.countryCode) && countryObj && (() => {
-          const countryStatus = getCountryStatus(countryObj);
+          // Use the status from formatCountryClue, but fall back to getCountryStatus if needed
+          const countryStatus = country.status === 'neighboring' ? 'neighboring' :
+                               country.status === 'correct' ? 'correct' :
+                               getCountryStatus(countryObj);
           return (
             <div className={`clue-tag clue-status-${countryStatus}`}>
               <span className="clue-label">COUNTRY</span>
@@ -585,6 +656,59 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, isWin
             <ClueTooltip helpText={getHelpText('album', albumObj)} />
           </div>
         )}
+        {/* Artist Type clue - show icon only (no label) */}
+        {artistTypeObj && (() => {
+          // Determine status - show for both correct and incorrect
+          const isCorrect = artistTypeObj.status === 'correct' || artistTypeObj.status === true;
+          const statusClass = isCorrect ? 'correct' : 'incorrect';
+          
+          // Try to get the guessed artist_type value - this is what the user guessed
+          // First check the prop (from guess object), then check clue object fields
+          const guessedType = guessedArtistType || artistTypeObj.given || artistTypeObj.type || artistTypeObj.value || artistTypeObj.artist_type || '';
+          const guessedTypeLower = guessedType.toLowerCase();
+          const isPerson = guessedTypeLower === 'person' || guessedTypeLower === 'solo';
+          const isGroup = guessedTypeLower === 'group' || guessedTypeLower === 'band' || guessedTypeLower === 'duo';
+          
+          // Debug logging
+          console.log('Artist Type Debug:', {
+            artistTypeObj,
+            guessedType,
+            guessedTypeLower,
+            isPerson,
+            isGroup,
+            status: artistTypeObj.status
+          });
+          
+          // Default to person icon if we can't determine, or show appropriate icon
+          const iconSvg = isGroup ? (
+            // Multiple persons icon (Group)
+            <svg className="artist-type-icon" viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
+              <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
+            </svg>
+          ) : (
+            // Single person icon (Person/Solo)
+            <svg className="artist-type-icon" viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
+              <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+            </svg>
+          );
+          
+          // Pass the guessed type info to help text function so it knows what was guessed
+          const helpText = getHelpText('artist_type', { 
+            ...artistTypeObj, 
+            _guessedType: guessedType, 
+            _isPerson: isPerson, 
+            _isGroup: isGroup 
+          });
+          
+          console.log('Help text result:', helpText);
+          
+          return (
+            <div className={`clue-tag clue-status-${statusClass}`}>
+              <span className="clue-value artist-type-icon-wrapper">{iconSvg}</span>
+              <ClueTooltip helpText={helpText} />
+            </div>
+          );
+        })()}
         {/* Debug: show all keys if no clues found */}
         {!year && !country.distance && country.status !== 'correct' && country.status !== 'neighboring' && !genre.display && !duration && (
           <div style={{ padding: '1rem', background: '#fff3cd', borderRadius: '8px', fontSize: '0.85rem' }}>

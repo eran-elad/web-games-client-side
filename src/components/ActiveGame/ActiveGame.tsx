@@ -23,6 +23,7 @@ interface Guess {
   artist: string;
   clues: any;
   guessedCountry?: string; // Country code from guess.country
+  guessedArtistType?: string; // Artist type from guess.artist_type
   songId?: string; // Store song ID for duplicate checking
 }
 
@@ -301,6 +302,7 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
           artist,
           clues: latestGuess.result.clues,
           guessedCountry: latestGuess.guess.country, // Extract country code from the guess
+          guessedArtistType: (latestGuess.guess as any).artist_type, // Extract artist_type from the guess if available
           songId: latestGuess.guess.entity_id, // Store song ID for duplicate checking
         };
         
@@ -472,6 +474,7 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
                 clues={guess.clues}
                 guessNumber={guesses.length - index}
                 guessedCountry={guess.guessedCountry}
+                guessedArtistType={guess.guessedArtistType}
                 isWinning={isWinning}
                 pulseDelay={index * 0.1}
               />

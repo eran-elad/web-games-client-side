@@ -92,6 +92,11 @@
     font-size: 0.95rem;
   }
   
+  .artist-type-icon {
+    width: 14px;
+    height: 14px;
+  }
+  
   .clue-icon {
     font-size: 0.75rem;
   }
@@ -178,6 +183,20 @@
   font-size: 1.1rem;
   font-weight: bold;
   line-height: 1;
+}
+
+.artist-type-icon-wrapper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 0.25rem;
+}
+
+.artist-type-icon {
+  width: 16px;
+  height: 16px;
+  color: #22c55e;
+  vertical-align: middle;
 }
 
 .clue-icon {
