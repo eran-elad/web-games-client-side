@@ -221,7 +221,7 @@ const filterOptions = (options: Song[], { inputValue }: FilterOptionsState<Song>
 const SongAutocomplete = ({ 
   onSongSelect, 
   value = null, 
-  placeholder = 'ABBA...',
+  placeholder = 'Type a song title or artist...',
   onSubmit
 }: SongAutocompleteProps) => {
   const [songs, setSongs] = useState<Song[]>([]);

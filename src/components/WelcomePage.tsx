@@ -13,9 +13,6 @@ const WelcomePage = ({ onPlay, onShowStatistics, onShowHelp, onShowArchive }: We
       <div className="welcome-content">
         <h1 className="welcome-title">Welcome to Music Game</h1>
         <p className="welcome-subtitle">Get ready to test your musical skills!</p>
-        <div className="welcome-description">
-          <p>This is the client application for the Music Game.</p>
-        </div>
         <div className="welcome-buttons">
           <button className="play-button" onClick={onPlay}>
             Play

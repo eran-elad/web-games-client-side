@@ -452,7 +452,7 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
           <div className="search-box-wrapper">
             <SongAutocomplete
               onSongSelect={handleSongSelect}
-              placeholder="ABBA..."
+              placeholder="Type a song title or artist..."
               value={selectedSong}
               onSubmit={handleGuess}
             />
