@@ -97,6 +97,16 @@
     height: 14px;
   }
   
+  .duration-icon {
+    width: 12px;
+    height: 12px;
+  }
+  
+  .country-icon {
+    width: 12px;
+    height: 12px;
+  }
+  
   .clue-icon {
     font-size: 0.75rem;
   }
@@ -197,6 +207,39 @@
   height: 16px;
   color: #22c55e;
   vertical-align: middle;
+}
+
+.duration-icon-wrapper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.duration-icon {
+  width: 14px;
+  height: 14px;
+  color: #666;
+  vertical-align: middle;
+}
+
+.country-icon-wrapper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.country-icon {
+  width: 14px;
+  height: 14px;
+  color: #666;
+  vertical-align: middle;
+}
+
+.genre-icon-wrapper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
 }
 
 .clue-icon {
