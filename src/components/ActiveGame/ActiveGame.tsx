@@ -297,12 +297,17 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
         const songTitle = displayParts[0] || latestGuess.guess.display;
         const artist = displayParts.slice(1).join(' - ') || '';
         
+        // Extract artist_type from guess object (not from result clues)
+        const artistTypeFromGuess = latestGuess.guess.artist_type;
+        
+        console.log('ActiveGame Debug - latestGuess.guess.artist_type:', artistTypeFromGuess);
+        
         const newGuess: Guess = {
           songTitle,
           artist,
           clues: latestGuess.result.clues,
           guessedCountry: latestGuess.guess.country, // Extract country code from the guess
-          guessedArtistType: (latestGuess.guess as any).artist_type, // Extract artist_type from the guess if available
+          guessedArtistType: artistTypeFromGuess, // Extract artist_type from the guess object
           songId: latestGuess.guess.entity_id, // Store song ID for duplicate checking
         };
         

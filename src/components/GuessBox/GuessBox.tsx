@@ -11,6 +11,8 @@ interface ClueTooltipProps {
 const ClueTooltip = ({ helpText, clueType = 'unknown' }: ClueTooltipProps) => {
   const [isVisible, setIsVisible] = useState(false);
   const [tooltipPosition, setTooltipPosition] = useState<'left' | 'center' | 'right'>('center');
+  const [tooltipStyle, setTooltipStyle] = useState<React.CSSProperties>({});
+  const [arrowStyle, setArrowStyle] = useState<React.CSSProperties>({});
   const tooltipRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
@@ -152,8 +154,109 @@ const ClueTooltip = ({ helpText, clueType = 'unknown' }: ClueTooltipProps) => {
       });
     } else {
       setTooltipPosition('center');
+      setTooltipStyle({});
     }
   }, [isVisible, clueType, helpText]);
+
+  // Position tooltip after it's rendered
+  useEffect(() => {
+    if (isVisible && tooltipRef.current && buttonRef.current) {
+      // Wait for tooltip to be rendered and measured
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          if (!tooltipRef.current || !buttonRef.current) return;
+          
+          const buttonRect = buttonRef.current.getBoundingClientRect();
+          const tooltipRect = tooltipRef.current.getBoundingClientRect();
+          const viewportWidth = window.innerWidth;
+          const padding = 10; // Minimum padding from viewport edge
+          
+          const buttonLeft = buttonRect.left;
+          const buttonRight = buttonRect.right;
+          const buttonCenterX = buttonRect.left + buttonRect.width / 2;
+          const buttonTop = buttonRect.top;
+          
+          const tooltipWidth = tooltipRect.width || tooltipRef.current.offsetWidth || 240;
+          const tooltipHeight = tooltipRect.height || tooltipRef.current.offsetHeight || 0;
+          
+          let left = 0;
+          let top = buttonTop - tooltipHeight - 8; // 8px margin
+          
+          // Recalculate position based on chosen alignment, ensuring it fits
+          let finalPosition = tooltipPosition;
+          
+          if (tooltipPosition === 'center') {
+            left = buttonCenterX - tooltipWidth / 2;
+            // If center doesn't fit, try right, then left
+            if (left < padding) {
+              left = buttonRight;
+              finalPosition = 'right';
+            } else if (left + tooltipWidth > viewportWidth - padding) {
+              left = buttonLeft - tooltipWidth;
+              finalPosition = 'left';
+            }
+          } else if (tooltipPosition === 'right') {
+            left = buttonRight;
+            // If right doesn't fit, try center, then left
+            if (left + tooltipWidth > viewportWidth - padding) {
+              left = buttonCenterX - tooltipWidth / 2;
+              finalPosition = 'center';
+              if (left < padding) {
+                left = buttonLeft - tooltipWidth;
+                finalPosition = 'left';
+              }
+            }
+          } else { // left
+            left = buttonLeft - tooltipWidth;
+            // If left doesn't fit, try center, then right
+            if (left < padding) {
+              left = buttonCenterX - tooltipWidth / 2;
+              finalPosition = 'center';
+              if (left + tooltipWidth > viewportWidth - padding) {
+                left = buttonRight;
+                finalPosition = 'right';
+              }
+            }
+          }
+          
+          // Final constraint: ensure tooltip stays within viewport
+          if (left < padding) left = padding;
+          if (left + tooltipWidth > viewportWidth - padding) {
+            left = viewportWidth - tooltipWidth - padding;
+          }
+          
+          // Calculate arrow position relative to button (after final constraint)
+          const tooltipLeft = left;
+          const arrowLeft = buttonCenterX - tooltipLeft; // Distance from tooltip left edge to button center
+          
+          // Constrain arrow to stay within tooltip bounds (with some padding from edges)
+          const arrowPadding = 12; // Minimum distance from tooltip edges
+          const constrainedArrowLeft = Math.max(arrowPadding, Math.min(arrowLeft, tooltipWidth - arrowPadding));
+          
+          setTooltipStyle({
+            position: 'fixed',
+            left: `${left}px`,
+            top: `${top}px`,
+            zIndex: 99999,
+            opacity: 1 // Make visible once positioned
+          });
+          
+          // Position arrow to point at button center (or constrained position)
+          setArrowStyle({
+            position: 'absolute',
+            left: `${constrainedArrowLeft}px`,
+            top: '100%',
+            transform: 'translateX(-50%)',
+            border: '6px solid transparent',
+            borderTopColor: '#333',
+            pointerEvents: 'none'
+          });
+        });
+      });
+    } else {
+      setArrowStyle({});
+    }
+  }, [isVisible, tooltipPosition]);
 
   return (
     <div className="clue-tooltip-wrapper">
@@ -185,6 +288,7 @@ const ClueTooltip = ({ helpText, clueType = 'unknown' }: ClueTooltipProps) => {
         <div
           ref={tooltipRef}
           className={`clue-tooltip clue-tooltip-${tooltipPosition}`}
+          style={tooltipStyle}
           onClick={(e) => e.stopPropagation()}
         >
           {helpText}
@@ -274,7 +378,7 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guess
     
     if (typeof clueObj === 'object' && clueObj.diff !== undefined) {
       const diff = Number(clueObj.diff);
-      if (diff === 0) return '±0y';
+      if (diff === 0) return ''; // Return empty string for exact match - we'll show checkmark instead
       if (diff > 0) return `+${diff}y`;
       return `${diff}y`; // Already negative, so just show the number
     }
@@ -331,7 +435,13 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guess
       if (distValue !== undefined) {
         distanceValue = Number(distValue);
         if (!isNaN(distanceValue)) {
-          distance = `${distanceValue}km`;
+          // Format large distances more compactly
+          if (distanceValue >= 1000) {
+            const thousands = (distanceValue / 1000).toFixed(1);
+            distance = `${thousands.replace(/\.0$/, '')}k`; // e.g., "5.1k" or "5k" (more compact, no "km")
+          } else {
+            distance = `${distanceValue}km`;
+          }
         }
       }
       
@@ -518,7 +628,10 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guess
   console.log('GuessBox Debug - artistObj:', artistObj);
   console.log('GuessBox Debug - albumObj:', albumObj);
   console.log('GuessBox Debug - artistTypeObj:', artistTypeObj);
+  console.log('GuessBox Debug - artistTypeObj keys:', artistTypeObj ? Object.keys(artistTypeObj) : 'null');
   console.log('GuessBox Debug - All clue keys:', Object.keys(cluesData));
+  console.log('GuessBox Debug - guessedArtistType prop:', guessedArtistType);
+  console.log('GuessBox Debug - Full clues object:', JSON.stringify(clues, null, 2));
   
   const year = formatYearClue(yearObj);
   const country = formatCountryClue(countryObj);
@@ -593,6 +706,11 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guess
         return 'You guessed the correct artist! This is a great clue to narrow down your search.';
       }
       case 'album': {
+        // Try to get the album name from the clue object
+        const albumName = clueObj.name || clueObj.album || clueObj.given || clueObj.value || '';
+        if (albumName) {
+          return `You guessed the correct album: ${albumName}! This helps confirm you're on the right track.`;
+        }
         return 'You guessed the correct album! This helps confirm you\'re on the right track.';
       }
       case 'artist_type': {
@@ -601,9 +719,10 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guess
         const guessedTypeLower = guessedType ? guessedType.toLowerCase() : '';
         
         // Use helper fields if available, otherwise determine from guessedType
+        // Note: API sends "Person" but we display it as "Solo" for better UX
         const isPerson = clueObj._isPerson !== undefined ? clueObj._isPerson : 
                         (guessedTypeLower === 'person' || guessedTypeLower === 'solo');
-        const isGroup = clueObj._isGroup !== undefined ? clueObj._isGroup :
+        const isGroup = clueObj._isGroup !== undefined ? clueObj._isGroup : 
                        (guessedTypeLower === 'group' || guessedTypeLower === 'band' || guessedTypeLower === 'duo');
         
         console.log('getHelpText artist_type:', {
@@ -617,14 +736,19 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guess
           _isGroup: clueObj._isGroup
         });
         
+        // Format display name - convert "Person" to "Solo" for better UX
+        const displayName = guessedTypeLower === 'person' ? 'Solo' : 
+                           guessedTypeLower === 'group' ? 'Group' :
+                           guessedType ? guessedType.charAt(0).toUpperCase() + guessedType.slice(1).toLowerCase() : '';
+        
         if (clueObj.status === 'correct' || clueObj.status === true) {
           // When correct, the guessed type matches the secret type
           if (isPerson) {
             return 'The Artist Type is a Solo Artist.';
           } else if (isGroup) {
             return 'The Artist Type is a Group (e.g. band).';
-          } else if (guessedType) {
-            return `The Artist Type is ${guessedType}.`;
+          } else if (displayName) {
+            return `The Artist Type is ${displayName}.`;
           } else {
             return 'The Artist Type matches.';
           }
@@ -634,8 +758,8 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guess
             return 'The Artist Type isn\'t a Solo Artist.';
           } else if (isGroup) {
             return 'The Artist Type isn\'t a Group (e.g. band).';
-          } else if (guessedType) {
-            return `The Artist Type isn't ${guessedType}.`;
+          } else if (displayName) {
+            return `The Artist Type isn't ${displayName}.`;
           } else {
             return 'The Artist Type doesn\'t match.';
           }
@@ -664,11 +788,20 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guess
         {yearObj && (() => {
           const yearStatus = getYearStatus(yearObj);
           const yearDisplay = year || '?';
+          const isExactMatch = yearObj && typeof yearObj === 'object' && yearObj.diff !== undefined && Number(yearObj.diff) === 0;
           return (
             <div className={`clue-tag clue-status-${yearStatus}`}>
-              <span className="clue-label">YEAR</span>
-              <span className="clue-value">{yearDisplay}</span>
-              <ClueTooltip helpText={getHelpText('year', yearObj)} />
+              <span className="clue-label year-icon-wrapper">
+                <svg className="year-icon" viewBox="0 0 24 24" fill="currentColor" width="14" height="14">
+                  <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2zM7 12h2v2H7zm4 0h2v2h-2zm4 0h2v2h-2z"/>
+                </svg>
+              </span>
+              {isExactMatch ? (
+                <span className="clue-value clue-value-checkmark">✓</span>
+              ) : (
+                <span className="clue-value">{yearDisplay}</span>
+              )}
+              <ClueTooltip helpText={getHelpText('year', yearObj)} clueType="year" />
             </div>
           );
         })()}
@@ -751,32 +884,17 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guess
             </div>
           );
         })()}
-        {/* Artist clue - only show when correct */}
-        {artistObj && artistObj.status === 'correct' && (
-          <div className="clue-tag clue-status-correct">
-            <span className="clue-label">ARTIST</span>
-            <span className="clue-value">✓</span>
-            <ClueTooltip helpText={getHelpText('artist', artistObj)} clueType="artist" />
-          </div>
-        )}
-        {/* Album clue - only show when correct */}
-        {albumObj && albumObj.status === 'correct' && (
-          <div className="clue-tag clue-status-correct">
-            <span className="clue-label">ALBUM</span>
-            <span className="clue-value">✓</span>
-            <ClueTooltip helpText={getHelpText('album', albumObj)} clueType="album" />
-          </div>
-        )}
-        {/* Artist Type clue - show icon only (no label) */}
+        {/* Artist Type clue - show icon only (no label) - before Artist and Album */}
         {artistTypeObj && (() => {
           // Determine status - show for both correct and incorrect
           const isCorrect = artistTypeObj.status === 'correct' || artistTypeObj.status === true;
           const statusClass = isCorrect ? 'correct' : 'incorrect';
           
           // Try to get the guessed artist_type value - this is what the user guessed
-          // First check the prop (from guess object), then check clue object fields
-          const guessedType = guessedArtistType || artistTypeObj.given || artistTypeObj.type || artistTypeObj.value || artistTypeObj.artist_type || '';
-          const guessedTypeLower = guessedType.toLowerCase();
+          // The artist_type comes from the guess object (guess.artist_type), not from the result clues
+          // The result clues only contain the status, not the actual guessed value
+          const guessedType = guessedArtistType || artistTypeObj?.given || artistTypeObj?.type || artistTypeObj?.value || artistTypeObj?.artist_type || '';
+          const guessedTypeLower = guessedType ? guessedType.toLowerCase() : '';
           const isPerson = guessedTypeLower === 'person' || guessedTypeLower === 'solo';
           const isGroup = guessedTypeLower === 'group' || guessedTypeLower === 'band' || guessedTypeLower === 'duo';
           
@@ -803,6 +921,33 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guess
             </svg>
           );
           
+          // Format the display text - convert "Person" to "Solo" for better UX
+          let displayText = '';
+          if (guessedType) {
+            const guessedTypeLower = guessedType.toLowerCase();
+            if (guessedTypeLower === 'person') {
+              displayText = 'Solo';
+            } else if (guessedTypeLower === 'group') {
+              displayText = 'Group';
+            } else if (guessedTypeLower === 'other') {
+              displayText = 'Other';
+            } else {
+              // Capitalize first letter
+              displayText = guessedType.charAt(0).toUpperCase() + guessedType.slice(1).toLowerCase();
+            }
+          }
+          
+          // Debug logging for display text
+          console.log('=== ARTIST TYPE DISPLAY DEBUG ===');
+          console.log('guessedType:', guessedType);
+          console.log('guessedTypeLower:', guessedTypeLower);
+          console.log('isPerson:', isPerson);
+          console.log('isGroup:', isGroup);
+          console.log('displayText:', displayText);
+          console.log('artistTypeObj:', artistTypeObj);
+          console.log('guessedArtistType prop:', guessedArtistType);
+          console.log('================================');
+          
           // Pass the guessed type info to help text function so it knows what was guessed
           const helpText = getHelpText('artist_type', { 
             ...artistTypeObj, 
@@ -816,10 +961,27 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guess
           return (
             <div className={`clue-tag clue-status-${statusClass}`}>
               <span className="clue-value artist-type-icon-wrapper">{iconSvg}</span>
+              {displayText && <span className="clue-value">{displayText}</span>}
               <ClueTooltip helpText={helpText} clueType="artist_type" />
             </div>
           );
         })()}
+        {/* Artist clue - only show when correct */}
+        {artistObj && artistObj.status === 'correct' && (
+          <div className="clue-tag clue-status-correct">
+            <span className="clue-label">ARTIST</span>
+            <span className="clue-value clue-value-checkmark">✓</span>
+            <ClueTooltip helpText={getHelpText('artist', artistObj)} clueType="artist" />
+          </div>
+        )}
+        {/* Album clue - only show when correct */}
+        {albumObj && albumObj.status === 'correct' && (
+          <div className="clue-tag clue-status-correct">
+            <span className="clue-label">ALBUM</span>
+            <span className="clue-value clue-value-checkmark">✓</span>
+            <ClueTooltip helpText={getHelpText('album', albumObj)} clueType="album" />
+          </div>
+        )}
         {/* Debug: show all keys if no clues found */}
         {!year && !country.distance && country.status !== 'correct' && country.status !== 'neighboring' && !genre.display && !duration && (
           <div style={{ padding: '1rem', background: '#fff3cd', borderRadius: '8px', fontSize: '0.85rem' }}>
