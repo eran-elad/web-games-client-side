@@ -3,7 +3,6 @@ import SongAutocomplete from '../SongAutocomplete/SongAutocomplete';
 import GuessBox from '../GuessBox/GuessBox';
 import WinConfetti from '../WinAnimation/WinConfetti';
 import ShareResult from '../ShareResult/ShareResult';
-import { DEFAULT_CLUE_THRESHOLDS } from '../../config/clueThresholds';
 import { MUSIC_GAME_ID } from '../../config/gameConfig';
 import { getPlayerId, setPlayerId, setSessionId, setGameId, clearSession, getPuzzleId, clearPuzzleId, getLocalDate, clearLocalDate } from '../../utils/storage';
 import { initGame, submitGuess } from '../../services/gameApi';

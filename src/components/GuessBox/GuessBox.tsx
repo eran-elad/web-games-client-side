@@ -9,7 +9,7 @@ interface ClueTooltipProps {
   clueType?: string; // For debugging - which clue this tooltip is for
 }
 
-const ClueTooltip = ({ helpText, clueType = 'unknown' }: ClueTooltipProps) => {
+const ClueTooltip = ({ helpText }: ClueTooltipProps) => {
   const [isVisible, setIsVisible] = useState(false);
   const [tooltipStyle, setTooltipStyle] = useState<React.CSSProperties>({
     opacity: 0,
@@ -658,7 +658,6 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guess
       case 'duration': {
         const diff = clueObj.diff_sec || clueObj.diff || 0;
         const threshold = DEFAULT_CLUE_THRESHOLDS.duration.secondsThreshold;
-        const thresholdText = threshold ? `${threshold}` : 'the threshold';
         
         let mainText = '';
         if (diff === 0) {
