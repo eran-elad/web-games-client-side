@@ -15,6 +15,7 @@ export interface ClueThresholds {
   };
   duration: {
     closeRangeSeconds: number; // Seconds within which it's considered "close" (e.g., 60 means -60s to +60s)
+    secondsThreshold?: number | null; // If set, only show duration clue when abs(diff) >= this value. Once shown, always show for remainder of session.
   };
 }
 
@@ -30,5 +31,6 @@ export const DEFAULT_CLUE_THRESHOLDS: ClueThresholds = {
   },
   duration: {
     closeRangeSeconds: 60, // Within 60 seconds (1 minute) is considered "close"
+    secondsThreshold: 120, // If set to a positive integer, only show duration clue when abs(diff) >= this value. null/0 means always show.
   },
 };

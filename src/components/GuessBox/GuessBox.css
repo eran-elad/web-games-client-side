@@ -75,33 +75,33 @@
   
   .clue-tag {
     padding: 0.35rem 0.25rem; /* Even more reduced padding */
-    font-size: 0.7rem;
+    font-size: 0.75rem; /* Increased from 0.7rem */
     gap: 0.15rem; /* Even more reduced gap */
-    flex: 0 0 calc(33.333% - 0.25rem); /* Don't grow, fixed size for 3 per row */
-    min-width: calc(33.333% - 0.25rem);
-    max-width: calc(33.333% - 0.25rem); /* Prevent growing beyond 33.333% */
+    flex: 0 0 calc(50% - 0.2rem); /* 2 per row for all mobile screens */
+    min-width: calc(50% - 0.2rem);
+    max-width: calc(50% - 0.2rem); /* Prevent growing beyond 50% */
     min-height: 28px; /* Consistent height on mobile */
     line-height: 1.2;
     overflow: hidden; /* Keep content within bounds */
     box-sizing: border-box; /* Include padding in width */
   }
   
-  /* For very small screens, allow 2 per row */
-  @media (max-width: 360px) {
-    .clue-tag {
-      flex: 0 0 calc(50% - 0.2rem);
-      min-width: calc(50% - 0.2rem);
-      max-width: calc(50% - 0.2rem);
-    }
+  /* Country clues - use smaller font to fit in same width as other clues */
+  .clue-tag.country-clue .clue-value {
+    font-size: 0.7rem; /* Slightly smaller to fit longer text */
+  }
+  
+  .clue-tag.country-clue .clue-arrow {
+    font-size: 0.7rem; /* Match the smaller font */
   }
   
   .clue-label {
-    font-size: 0.75rem; /* Increased from 0.65rem */
+    font-size: 0.8rem; /* Increased from 0.75rem */
     white-space: nowrap;
   }
   
   .clue-value {
-    font-size: 0.7rem; /* Increased from 0.65rem */
+    font-size: 0.75rem; /* Increased from 0.7rem */
     white-space: nowrap;
     flex-shrink: 1; /* Allow shrinking */
     min-width: 0;
@@ -111,17 +111,12 @@
   }
   
   .clue-arrow {
-    font-size: 0.7rem; /* Even smaller on mobile */
+    font-size: 0.8rem; /* Increased from 0.75rem */
     margin-left: 0.08rem;
   }
   
   .clue-tooltip-wrapper {
     margin-left: 0.1rem; /* Smaller margin on mobile */
-  }
-  
-  .clue-arrow {
-    font-size: 0.75rem; /* Even smaller on mobile */
-    margin-left: 0.1rem;
   }
   
   .artist-type-icon {
@@ -285,7 +280,8 @@
 
 .year-icon-wrapper,
 .duration-icon-wrapper,
-.country-icon-wrapper {
+.country-icon-wrapper,
+.gender-icon-wrapper {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -300,6 +296,15 @@
   color: #666;
   vertical-align: middle;
   flex-shrink: 0;
+}
+
+.gender-icon {
+  font-size: 14px;
+  line-height: 1;
+  color: #666;
+  vertical-align: middle;
+  flex-shrink: 0;
+  display: inline-block;
 }
 
 .clue-icon {
@@ -342,6 +347,9 @@
   width: 16px;
   height: 16px;
   flex-shrink: 0;
+  /* iOS Safari touch improvements */
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation; /* Prevent double-tap zoom */
 }
 
 .clue-help-button:hover {
@@ -379,6 +387,12 @@
   top: -9999px;
   left: 0;
   opacity: 0; /* Invisible but still measurable */
+  visibility: hidden; /* Hidden until positioned */
+  /* iOS Safari fixes */
+  -webkit-transform: translateZ(0); /* Create new stacking context for iOS */
+  transform: translate3d(0, 0, 0); /* Force hardware acceleration */
+  will-change: transform; /* Optimize for transforms */
+  touch-action: none; /* Prevent scrolling interference on iOS */
 }
 
 /* Arrow indicator pointing to the button */

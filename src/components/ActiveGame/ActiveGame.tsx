@@ -3,6 +3,7 @@ import SongAutocomplete from '../SongAutocomplete/SongAutocomplete';
 import GuessBox from '../GuessBox/GuessBox';
 import WinConfetti from '../WinAnimation/WinConfetti';
 import ShareResult from '../ShareResult/ShareResult';
+import { DEFAULT_CLUE_THRESHOLDS } from '../../config/clueThresholds';
 import { MUSIC_GAME_ID } from '../../config/gameConfig';
 import { getPlayerId, setPlayerId, setSessionId, setGameId, clearSession, getPuzzleId, clearPuzzleId, getLocalDate, clearLocalDate } from '../../utils/storage';
 import { initGame, submitGuess } from '../../services/gameApi';
@@ -24,6 +25,7 @@ interface Guess {
   clues: any;
   guessedCountry?: string; // Country code from guess.country
   guessedArtistType?: string; // Artist type from guess.artist_type
+  guessedGender?: string; // Gender from guess.gender
   songId?: string; // Store song ID for duplicate checking
 }
 
@@ -169,6 +171,8 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
             artist,
             clues: guess.result.clues,
             guessedCountry: guess.guess.country, // Extract country code from the guess
+            guessedArtistType: (guess.guess as any).artist_type, // Extract artist_type from the guess
+            guessedGender: (guess.guess as any).gender, // Extract gender from the guess
             songId: guess.guess.entity_id, // Store song ID for duplicate checking
           };
         });
@@ -299,8 +303,10 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
         
         // Extract artist_type from guess object (not from result clues)
         const artistTypeFromGuess = (latestGuess.guess as any).artist_type;
+        const genderFromGuess = (latestGuess.guess as any).gender;
         
         console.log('ActiveGame Debug - latestGuess.guess.artist_type:', artistTypeFromGuess);
+        console.log('ActiveGame Debug - latestGuess.guess.gender:', genderFromGuess);
         
         const newGuess: Guess = {
           songTitle,
@@ -308,6 +314,7 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
           clues: latestGuess.result.clues,
           guessedCountry: latestGuess.guess.country, // Extract country code from the guess
           guessedArtistType: artistTypeFromGuess, // Extract artist_type from the guess object
+          guessedGender: genderFromGuess, // Extract gender from the guess object
           songId: latestGuess.guess.entity_id, // Store song ID for duplicate checking
         };
         
@@ -480,6 +487,7 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
                 guessNumber={guesses.length - index}
                 guessedCountry={guess.guessedCountry}
                 guessedArtistType={guess.guessedArtistType}
+                guessedGender={guess.guessedGender}
                 isWinning={isWinning}
                 pulseDelay={index * 0.1}
               />

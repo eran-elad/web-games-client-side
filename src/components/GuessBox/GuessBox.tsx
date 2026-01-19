@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import './GuessBox.css';
 import { getCountryName, normalizeCountryCode } from '../../config/countryCodes';
 import { DEFAULT_CLUE_THRESHOLDS } from '../../config/clueThresholds';
@@ -10,230 +11,164 @@ interface ClueTooltipProps {
 
 const ClueTooltip = ({ helpText, clueType = 'unknown' }: ClueTooltipProps) => {
   const [isVisible, setIsVisible] = useState(false);
-  const [tooltipPosition, setTooltipPosition] = useState<'left' | 'center' | 'right'>('center');
-  const [tooltipStyle, setTooltipStyle] = useState<React.CSSProperties>({});
+  const [tooltipStyle, setTooltipStyle] = useState<React.CSSProperties>({
+    opacity: 0,
+    visibility: 'hidden',
+    pointerEvents: 'none'
+  });
   const tooltipRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
+  // Handle click outside to close tooltip
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
+    if (!isVisible) return;
+
+    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
+      const target = event.target as Node;
       if (
         tooltipRef.current &&
         buttonRef.current &&
-        !tooltipRef.current.contains(event.target as Node) &&
-        !buttonRef.current.contains(event.target as Node)
+        !tooltipRef.current.contains(target) &&
+        !buttonRef.current.contains(target)
       ) {
         setIsVisible(false);
       }
     };
 
-    if (isVisible) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => {
-        document.removeEventListener('mousedown', handleClickOutside);
-      };
-    }
+    // Use both mousedown and touchstart for iOS
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+    
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
   }, [isVisible]);
 
-  // Calculate tooltip position - simple rule: right-align if button is in left half of screen
+  // Calculate and position tooltip when visible
   useEffect(() => {
-    if (isVisible && buttonRef.current) {
-      // Use requestAnimationFrame to ensure tooltip is rendered and measured
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          if (!buttonRef.current) return;
-          
-          const buttonRect = buttonRef.current.getBoundingClientRect();
-          const viewportWidth = window.innerWidth;
-          const viewportHeight = window.innerHeight;
-          const buttonLeft = buttonRect.left;
-          const buttonRight = buttonRect.right;
-          const buttonWidth = buttonRect.width;
-          const buttonCenterX = buttonRect.left + buttonRect.width / 2;
-          const buttonTop = buttonRect.top;
-          
-          // Get tooltip dimensions if available
-          let tooltipWidth = 0;
-          let tooltipHeight = 0;
-          if (tooltipRef.current) {
-            const tooltipRect = tooltipRef.current.getBoundingClientRect();
-            tooltipWidth = tooltipRect.width || tooltipRef.current.offsetWidth || 240;
-            tooltipHeight = tooltipRect.height || tooltipRef.current.offsetHeight || 0;
-          } else {
-            // Estimate tooltip width if not yet rendered
-            tooltipWidth = 240; // Default estimate
-          }
-          
-          // Calculate available space
-          const spaceLeft = buttonLeft;
-          const spaceRight = viewportWidth - buttonRight;
-          const spaceAbove = buttonTop;
-          const isLeftHalf = buttonCenterX < viewportWidth / 2;
-          
-          // Determine position based on available space
-          let chosenPosition: 'left' | 'center' | 'right' = 'center';
-          const padding = 10; // Minimum padding from viewport edge
-          
-          // Calculate where tooltip would be positioned in each alignment
-          const centerLeftEdge = buttonCenterX - tooltipWidth / 2;
-          const centerRightEdge = buttonCenterX + tooltipWidth / 2;
-          const rightLeftEdge = buttonRight; // Right-aligned starts at button right edge
-          const rightRightEdge = buttonRight + tooltipWidth;
-          const leftRightEdge = buttonLeft; // Left-aligned ends at button left edge
-          const leftLeftEdge = buttonLeft - tooltipWidth;
-          
-          // Check if each position would fit
-          const centerFits = (centerLeftEdge >= padding) && (centerRightEdge <= viewportWidth - padding);
-          const rightFits = (rightRightEdge <= viewportWidth - padding);
-          const leftFits = (leftLeftEdge >= padding);
-          
-          // Choose best position: prefer center if it fits, otherwise right, otherwise left
-          if (centerFits) {
-            chosenPosition = 'center';
-          } else if (rightFits) {
-            chosenPosition = 'right';
-          } else if (leftFits) {
-            chosenPosition = 'left';
-          } else {
-            // None fit perfectly, choose the one with least overflow
-            const centerOverflow = Math.max(0, padding - centerLeftEdge) + Math.max(0, centerRightEdge - (viewportWidth - padding));
-            const rightOverflow = Math.max(0, rightRightEdge - (viewportWidth - padding));
-            const leftOverflow = Math.max(0, padding - leftLeftEdge);
-            
-            if (centerOverflow <= rightOverflow && centerOverflow <= leftOverflow) {
-              chosenPosition = 'center';
-            } else if (rightOverflow <= leftOverflow) {
-              chosenPosition = 'right';
-            } else {
-              chosenPosition = 'left';
-            }
-          }
-          
-          // Debug logging
-          console.log('=== TOOLTIP POSITION DEBUG ===');
-          console.log(`Clue Type: ${clueType}`);
-          console.log(`Help Text: "${helpText.substring(0, 50)}..."`);
-          console.log(`Button Position:`);
-          console.log(`  - Left: ${buttonLeft.toFixed(1)}px`);
-          console.log(`  - Right: ${buttonRight.toFixed(1)}px`);
-          console.log(`  - Center X: ${buttonCenterX.toFixed(1)}px`);
-          console.log(`  - Width: ${buttonWidth.toFixed(1)}px`);
-          console.log(`  - Top: ${buttonTop.toFixed(1)}px`);
-          console.log(`Viewport:`);
-          console.log(`  - Width: ${viewportWidth}px`);
-          console.log(`  - Height: ${viewportHeight}px`);
-          console.log(`  - Center: ${(viewportWidth / 2).toFixed(1)}px`);
-          console.log(`Tooltip:`);
-          console.log(`  - Width: ${tooltipWidth.toFixed(1)}px (estimated: ${!tooltipRef.current})`);
-          console.log(`  - Height: ${tooltipHeight.toFixed(1)}px`);
-          console.log(`Available Space:`);
-          console.log(`  - Left of button: ${spaceLeft.toFixed(1)}px`);
-          console.log(`  - Right of button: ${spaceRight.toFixed(1)}px`);
-          console.log(`  - Above button: ${spaceAbove.toFixed(1)}px`);
-          console.log(`Position Calculations:`);
-          console.log(`  - Button in left half: ${isLeftHalf}`);
-          console.log(`  - Center position: left edge at ${centerLeftEdge.toFixed(1)}px, right edge at ${centerRightEdge.toFixed(1)}px`);
-          console.log(`  - Right position: left edge at ${rightLeftEdge.toFixed(1)}px, right edge at ${rightRightEdge.toFixed(1)}px`);
-          console.log(`  - Left position: left edge at ${leftLeftEdge.toFixed(1)}px, right edge at ${leftRightEdge.toFixed(1)}px`);
-          console.log(`Position Fit Check:`);
-          console.log(`  - Center fits: ${centerFits} (left: ${centerLeftEdge.toFixed(1)} >= ${padding}, right: ${centerRightEdge.toFixed(1)} <= ${viewportWidth - padding})`);
-          console.log(`  - Right fits: ${rightFits} (right: ${rightRightEdge.toFixed(1)} <= ${viewportWidth - padding})`);
-          console.log(`  - Left fits: ${leftFits} (left: ${leftLeftEdge.toFixed(1)} >= ${padding})`);
-          console.log(`Chosen position: ${chosenPosition}`);
-          if (!centerFits && !rightFits && !leftFits) {
-            // Calculate overflow for each position (already calculated above in the else block)
-            const centerOverflowCalc = Math.max(0, padding - centerLeftEdge) + Math.max(0, centerRightEdge - (viewportWidth - padding));
-            const rightOverflowCalc = Math.max(0, rightRightEdge - (viewportWidth - padding));
-            const leftOverflowCalc = Math.max(0, padding - leftLeftEdge);
-            console.log(`  - All positions overflow, using least overflow option`);
-            console.log(`  - Center overflow: ${centerOverflowCalc.toFixed(1)}px`);
-            console.log(`  - Right overflow: ${rightOverflowCalc.toFixed(1)}px`);
-            console.log(`  - Left overflow: ${leftOverflowCalc.toFixed(1)}px`);
-          }
-          console.log('==============================');
-          
-          setTooltipPosition(chosenPosition);
-        });
+    if (!isVisible) {
+      setTooltipStyle({ 
+        opacity: 0, 
+        visibility: 'hidden',
+        pointerEvents: 'none'
       });
-    } else {
-      setTooltipPosition('center');
-      setTooltipStyle({});
+      return;
     }
-  }, [isVisible, clueType, helpText]);
 
-  // Position tooltip after it's rendered
-  useEffect(() => {
-    if (isVisible && tooltipRef.current && buttonRef.current) {
-      // Wait for tooltip to be rendered and measured
-      requestAnimationFrame(() => {
+    if (!buttonRef.current) return;
+
+    // Calculate position immediately
+    const updatePosition = () => {
+      if (!buttonRef.current) return;
+
+      const buttonRect = buttonRef.current.getBoundingClientRect();
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      const padding = 10;
+      
+      // Estimate tooltip size
+      const estimatedWidth = 240;
+      const estimatedHeight = 60;
+      
+      const buttonCenterX = buttonRect.left + buttonRect.width / 2;
+      const buttonTop = buttonRect.top;
+      
+      // Position above button, centered
+      let left = buttonCenterX - estimatedWidth / 2;
+      let top = buttonTop - estimatedHeight - 8;
+      
+      // Adjust if off-screen
+      if (left < padding) left = padding;
+      if (left + estimatedWidth > viewportWidth - padding) {
+        left = viewportWidth - estimatedWidth - padding;
+      }
+      
+      if (top < padding) {
+        // Position below if no space above
+        top = buttonRect.bottom + 8;
+        if (top + estimatedHeight > viewportHeight - padding) {
+          top = viewportHeight - estimatedHeight - padding;
+        }
+      }
+      
+      // Set position immediately
+      setTooltipStyle({
+        position: 'fixed',
+        left: `${left}px`,
+        top: `${top}px`,
+        zIndex: 99999,
+        opacity: 1,
+        visibility: 'visible',
+        pointerEvents: 'auto',
+        transform: 'translate3d(0, 0, 0)'
+      });
+      
+      // Refine position after tooltip renders with actual dimensions
+      if (tooltipRef.current) {
         requestAnimationFrame(() => {
           if (!tooltipRef.current || !buttonRef.current) return;
           
-          const buttonRect = buttonRef.current.getBoundingClientRect();
           const tooltipRect = tooltipRef.current.getBoundingClientRect();
-          const viewportWidth = window.innerWidth;
-          const padding = 10; // Minimum padding from viewport edge
+          const actualWidth = tooltipRect.width || estimatedWidth;
+          const actualHeight = tooltipRect.height || estimatedHeight;
           
-          const buttonLeft = buttonRect.left;
-          const buttonRight = buttonRect.right;
-          const buttonCenterX = buttonRect.left + buttonRect.width / 2;
-          const buttonTop = buttonRect.top;
+          // Recalculate with actual dimensions
+          let finalLeft = buttonRect.left + buttonRect.width / 2 - actualWidth / 2;
+          let finalTop = buttonRect.top - actualHeight - 8;
           
-          const tooltipWidth = tooltipRect.width || tooltipRef.current.offsetWidth || 240;
-          const tooltipHeight = tooltipRect.height || tooltipRef.current.offsetHeight || 0;
-          
-          let left = 0;
-          let top = buttonTop - tooltipHeight - 8; // 8px margin
-          
-          // Recalculate position based on chosen alignment, ensuring it fits
-          if (tooltipPosition === 'center') {
-            left = buttonCenterX - tooltipWidth / 2;
-            // If center doesn't fit, try right, then left
-            if (left < padding) {
-              left = buttonRight;
-            } else if (left + tooltipWidth > viewportWidth - padding) {
-              left = buttonLeft - tooltipWidth;
-            }
-          } else if (tooltipPosition === 'right') {
-            left = buttonRight;
-            // If right doesn't fit, try center, then left
-            if (left + tooltipWidth > viewportWidth - padding) {
-              left = buttonCenterX - tooltipWidth / 2;
-              if (left < padding) {
-                left = buttonLeft - tooltipWidth;
-              }
-            }
-          } else { // left
-            left = buttonLeft - tooltipWidth;
-            // If left doesn't fit, try center, then right
-            if (left < padding) {
-              left = buttonCenterX - tooltipWidth / 2;
-              if (left + tooltipWidth > viewportWidth - padding) {
-                left = buttonRight;
-              }
-            }
+          // Adjust if off-screen
+          if (finalLeft < padding) finalLeft = padding;
+          if (finalLeft + actualWidth > viewportWidth - padding) {
+            finalLeft = viewportWidth - actualWidth - padding;
           }
           
-          // Final constraint: ensure tooltip stays within viewport
-          if (left < padding) left = padding;
-          if (left + tooltipWidth > viewportWidth - padding) {
-            left = viewportWidth - tooltipWidth - padding;
+          if (finalTop < padding) {
+            finalTop = buttonRect.bottom + 8;
+            if (finalTop + actualHeight > viewportHeight - padding) {
+              finalTop = viewportHeight - actualHeight - padding;
+            }
           }
           
           setTooltipStyle({
             position: 'fixed',
-            left: `${left}px`,
-            top: `${top}px`,
+            left: `${finalLeft}px`,
+            top: `${finalTop}px`,
             zIndex: 99999,
-            opacity: 1 // Make visible once positioned
+            opacity: 1,
+            visibility: 'visible',
+            pointerEvents: 'auto',
+            transform: 'translate3d(0, 0, 0)'
           });
         });
-      });
-    } else {
-      setTooltipPosition('center');
-      setTooltipStyle({});
-    }
-  }, [isVisible, tooltipPosition]);
+      }
+    };
+
+    // Update immediately
+    updatePosition();
+    
+    // Also update on scroll/resize
+    window.addEventListener('scroll', updatePosition, true);
+    window.addEventListener('resize', updatePosition);
+    
+    return () => {
+      window.removeEventListener('scroll', updatePosition, true);
+      window.removeEventListener('resize', updatePosition);
+    };
+  }, [isVisible]);
+
+  // Always render tooltip in portal, but control visibility via style
+  const tooltipElement = (
+    <div
+      ref={tooltipRef}
+      className="clue-tooltip"
+      style={tooltipStyle}
+      onClick={(e) => e.stopPropagation()}
+      onTouchStart={(e) => e.stopPropagation()}
+    >
+      {helpText}
+    </div>
+  );
 
   return (
     <div className="clue-tooltip-wrapper">
@@ -241,8 +176,15 @@ const ClueTooltip = ({ helpText, clueType = 'unknown' }: ClueTooltipProps) => {
         ref={buttonRef}
         className="clue-help-button"
         onClick={(e) => {
+          e.preventDefault();
           e.stopPropagation();
-          setIsVisible(!isVisible);
+          setIsVisible(prev => !prev);
+        }}
+        onTouchEnd={(e) => {
+          // Handle touch separately for iOS
+          e.preventDefault();
+          e.stopPropagation();
+          setIsVisible(prev => !prev);
         }}
         onMouseEnter={() => setIsVisible(true)}
         onMouseLeave={() => setIsVisible(false)}
@@ -261,16 +203,7 @@ const ClueTooltip = ({ helpText, clueType = 'unknown' }: ClueTooltipProps) => {
           <rect x="6.5" y="6.5" width="1" height="3.5" rx="0.5" fill="currentColor" />
         </svg>
       </button>
-      {isVisible && (
-        <div
-          ref={tooltipRef}
-          className={`clue-tooltip clue-tooltip-${tooltipPosition}`}
-          style={tooltipStyle}
-          onClick={(e) => e.stopPropagation()}
-        >
-          {helpText}
-        </div>
-      )}
+      {tooltipElement && createPortal(tooltipElement, document.body)}
     </div>
   );
 };
@@ -288,11 +221,13 @@ interface GuessBoxProps {
   guessNumber?: number;
   guessedCountry?: string; // Country code from the guess object (guess.country)
   guessedArtistType?: string; // Artist type from the guess object (guess.artist_type)
+  guessedGender?: string; // Gender from the guess object (guess.gender)
   isWinning?: boolean; // Whether to show win animation
   pulseDelay?: number; // Delay in seconds for staggered pulse effect
+  durationClueShown?: boolean; // Whether duration clue has been shown in this session (for threshold logic)
 }
 
-const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guessedArtistType, isWinning = false, pulseDelay = 0 }: GuessBoxProps) => {
+const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guessedArtistType, guessedGender, isWinning = false, pulseDelay = 0 }: GuessBoxProps) => {
   // Helper to determine clue status (correct/close/incorrect/neighboring) based on thresholds
   type ClueStatus = 'correct' | 'close' | 'incorrect' | 'neighboring' | 'unknown';
   
@@ -612,6 +547,7 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guess
   const artistObj = getClueObject('artist');
   const albumObj = getClueObject('album');
   const artistTypeObj = getClueObject('artist_type');
+  const genderObj = getClueObject('gender');
   
   // Debug: Log clues data to see what's coming from the server
   console.log('GuessBox Debug - All clues data:', clues);
@@ -629,8 +565,39 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guess
   const genre = formatGenreClue(genreObj);
   const duration = formatTimeClue(durationObj);
   
+  // Helper to format gender value for display
+  const formatGenderValue = (gender: string): string => {
+    if (!gender) return '';
+    const lower = gender.toLowerCase();
+    switch (lower) {
+      case 'male':
+        return 'Male';
+      case 'female':
+        return 'Female';
+      case 'other':
+        return 'Other';
+      case 'non_binary':
+      case 'non-binary':
+        return 'Non-Binary';
+      case 'all_male':
+      case 'all males':
+        return 'All Male';
+      case 'all_female':
+      case 'all_females':
+      case 'all females':
+        return 'All Female';
+      case 'mixed':
+        return 'Mixed';
+      default:
+        // Capitalize first letter of each word
+        return gender.split('_').map(word => 
+          word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+        ).join(' ');
+    }
+  };
+  
   // Helper to get help text for clues
-  const getHelpText = (clueType: 'year' | 'country' | 'genre' | 'duration' | 'artist' | 'album' | 'artist_type', clueObj: any): string => {
+  const getHelpText = (clueType: 'year' | 'country' | 'genre' | 'duration' | 'artist' | 'album' | 'artist_type' | 'gender', clueObj: any): string => {
     if (!clueObj || typeof clueObj !== 'object') return '';
     
     switch (clueType) {
@@ -673,25 +640,46 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guess
         return `The secret song's country is ${distance}km away${directionText}.`;
       }
       case 'genre': {
-        const guessedGenre = clueObj.given || clueObj.name || genre.display || '';
-        if (clueObj.status === 'correct') return 'The genre matches exactly!';
-        if (guessedGenre) return `The genre of the secret song is not ${guessedGenre}.`;
+        // Get the genre name - for correct status, use the actual genre name from the clue
+        // For incorrect, use the guessed genre
+        const genreName = clueObj.status === 'correct' 
+          ? (clueObj.name || clueObj.genre || clueObj.value || clueObj.given || '')
+          : (clueObj.given || clueObj.name || '');
+        
+        if (clueObj.status === 'correct') {
+          if (genreName) {
+            return `The secret song's genre is ${genreName}.`;
+          }
+          return 'The genre matches exactly!';
+        }
+        if (genreName) return `The genre of the secret song is not ${genreName}.`;
         return 'The genre does not match.';
       }
       case 'duration': {
         const diff = clueObj.diff_sec || clueObj.diff || 0;
-        if (diff === 0) return 'The duration matches exactly!';
-        if (diff > 0) {
+        const threshold = DEFAULT_CLUE_THRESHOLDS.duration.secondsThreshold;
+        const thresholdText = threshold ? `${threshold}` : 'the threshold';
+        
+        let mainText = '';
+        if (diff === 0) {
+          mainText = 'The duration matches exactly!';
+        } else if (diff > 0) {
           const minutes = Math.floor(diff / 60);
           const seconds = diff % 60;
           const timeText = minutes > 0 ? `${minutes}m ${seconds}s` : `${seconds}s`;
-          return `The secret song is ${timeText} longer than your guess.`;
+          mainText = `The secret song is ${timeText} longer than your guess.`;
+        } else {
+          const absDiff = Math.abs(diff);
+          const minutes = Math.floor(absDiff / 60);
+          const seconds = absDiff % 60;
+          const timeText = minutes > 0 ? `${minutes}m ${seconds}s` : `${seconds}s`;
+          mainText = `The secret song is ${timeText} shorter than your guess.`;
         }
-        const absDiff = Math.abs(diff);
-        const minutes = Math.floor(absDiff / 60);
-        const seconds = absDiff % 60;
-        const timeText = minutes > 0 ? `${minutes}m ${seconds}s` : `${seconds}s`;
-        return `The secret song is ${timeText} shorter than your guess.`;
+        
+        if (threshold) {
+          return `${mainText} The Duration clue starts showing up only after a guess with a duration difference larger than ${threshold} seconds is made.`;
+        }
+        return mainText;
       }
       case 'artist': {
         return 'You guessed the correct artist! This is a great clue to narrow down your search.';
@@ -756,6 +744,20 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guess
           }
         }
       }
+      case 'gender': {
+        const guessedGenderValue = clueObj._guessedGender || clueObj.given || clueObj.value || clueObj.gender || guessedGender || '';
+        const formattedGender = formatGenderValue(guessedGenderValue);
+        if (clueObj.status === 'correct') {
+          if (formattedGender) {
+            return `The gender of the secret song's artist is ${formattedGender}. The Gender clue only shows up if there is a match in the artist type (solo, group, etc.).`;
+          }
+          return 'The gender matches exactly! The Gender clue only shows up if there is a match in the artist type (solo, group, etc.).';
+        }
+        if (formattedGender) {
+          return `The gender of the secret song's artist isn't ${formattedGender}. The Gender clue only shows up if there is a match in the artist type (solo, group, etc.).`;
+        }
+        return 'The gender does not match. The Gender clue only shows up if there is a match in the artist type (solo, group, etc.).';
+      }
       default:
         return '';
     }
@@ -802,7 +804,7 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guess
                                country.status === 'correct' ? 'correct' :
                                getCountryStatus(countryObj);
           return (
-            <div className={`clue-tag clue-status-${countryStatus}`}>
+            <div className={`clue-tag clue-status-${countryStatus} country-clue`}>
               <span className="clue-label country-icon-wrapper">
                 <svg className="country-icon" viewBox="0 0 24 24" fill="currentColor" width="14" height="14">
                   <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
@@ -862,6 +864,27 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guess
           return null;
         })()}
         {duration && durationObj && (() => {
+          // Check if duration clue should be shown based on threshold for THIS specific guess
+          const durationThreshold = DEFAULT_CLUE_THRESHOLDS.duration.secondsThreshold;
+          let shouldShowDuration = true;
+          
+          if (durationThreshold && durationThreshold > 0) {
+            // Get the absolute difference for THIS specific guess
+            const durationDiff = durationObj.diff_sec !== undefined ? durationObj.diff_sec :
+                                durationObj.diff !== undefined ? durationObj.diff : 0;
+            const absDiff = Math.abs(Number(durationDiff));
+            
+            // Only show if THIS guess's diff meets or exceeds the threshold
+            // Don't check session-level state - each guess is independent
+            shouldShowDuration = absDiff >= durationThreshold;
+          }
+          
+          // If threshold is not set (null/0/empty), always show (existing behavior)
+          
+          if (!shouldShowDuration) {
+            return null; // Don't render the duration clue for this guess
+          }
+          
           const durationStatus = getDurationStatus(durationObj);
           return (
             <div className={`clue-tag clue-status-${durationStatus}`}>
@@ -954,6 +977,34 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guess
               <span className="clue-value artist-type-icon-wrapper">{iconSvg}</span>
               {displayText && <span className="clue-value">{displayText}</span>}
               <ClueTooltip helpText={helpText} clueType="artist_type" />
+            </div>
+          );
+        })()}
+        {/* Gender clue - only show when relevant (when artist types match) */}
+        {genderObj && (() => {
+          const isCorrect = genderObj.status === 'correct' || genderObj.status === true;
+          const statusClass = isCorrect ? 'correct' : 'incorrect';
+          
+          // Get the guessed gender value
+          const guessedGenderValue = guessedGender || genderObj?.given || genderObj?.value || genderObj?.gender || '';
+          const formattedGender = formatGenderValue(guessedGenderValue);
+          
+          // Gender icon - using ⚧ symbol
+          const genderIcon = <span className="gender-icon">⚧</span>;
+          
+          // Pass the guessed gender to help text function
+          const helpText = getHelpText('gender', { 
+            ...genderObj, 
+            _guessedGender: guessedGenderValue
+          });
+          
+          return (
+            <div className={`clue-tag clue-status-${statusClass}`}>
+              <span className="clue-label gender-icon-wrapper">
+                {genderIcon}
+              </span>
+              {formattedGender && <span className="clue-value">{formattedGender}</span>}
+              <ClueTooltip helpText={helpText} clueType="gender" />
             </div>
           );
         })()}
