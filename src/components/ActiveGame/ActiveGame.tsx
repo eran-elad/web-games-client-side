@@ -4,8 +4,8 @@ import GuessBox from '../GuessBox/GuessBox';
 import WinConfetti from '../WinAnimation/WinConfetti';
 import ShareResult from '../ShareResult/ShareResult';
 import { MUSIC_GAME_ID } from '../../config/gameConfig';
-import { getPlayerId, setPlayerId, setSessionId, setGameId, clearSession, getPuzzleId, clearPuzzleId, getLocalDate, clearLocalDate } from '../../utils/storage';
-import { initGame, submitGuess } from '../../services/gameApi';
+import { getPlayerId, setPlayerId, setSessionId, setGameId, clearSession, getPuzzleId, getLocalDate } from '../../utils/storage';
+import { initGame, submitGuess, giveUp } from '../../services/gameApi';
 import type { GameInitResponse } from '../../services/gameApi';
 import './ActiveGame.css';
 
@@ -33,7 +33,7 @@ interface SessionState {
   guesses_remaining: number;
   is_solved: boolean;
   is_over: boolean;
-  status: 'in_progress' | 'won' | 'lost' | 'abandoned';
+  status: 'in_progress' | 'won' | 'lost' | 'abandoned' | 'quit';
   puzzle?: {
     max_guesses: number;
     solution?: {
@@ -54,7 +54,125 @@ interface SessionState {
     country: string;
     genre: string;
     duration_sec: number;
+    artist_type?: string;
+    gender?: string;
   };
+}
+
+// Helper function to format duration
+const formatDuration = (seconds: number): string => {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
+};
+
+// Helper function to format country code to country name
+const getCountryName = (countryCode: string): string => {
+  // Simple mapping for common codes, can be expanded
+  const countryMap: { [key: string]: string } = {
+    'US': 'United States',
+    'GB': 'United Kingdom',
+    'CA': 'Canada',
+    'AU': 'Australia',
+    'FR': 'France',
+    'DE': 'Germany',
+    'IT': 'Italy',
+    'ES': 'Spain',
+    'JP': 'Japan',
+    'KR': 'South Korea',
+    'BR': 'Brazil',
+    'MX': 'Mexico',
+    'AR': 'Argentina',
+    'SE': 'Sweden',
+    'NO': 'Norway',
+    'DK': 'Denmark',
+    'FI': 'Finland',
+    'NL': 'Netherlands',
+    'BE': 'Belgium',
+    'CH': 'Switzerland',
+    'AT': 'Austria',
+    'IE': 'Ireland',
+    'NZ': 'New Zealand',
+    'ZA': 'South Africa',
+    'IN': 'India',
+    'CN': 'China',
+    'RU': 'Russia',
+    'PL': 'Poland',
+    'TR': 'Turkey',
+    'GR': 'Greece',
+    'PT': 'Portugal',
+  };
+  return countryMap[countryCode] || countryCode;
+};
+
+// Helper function to format gender value
+const formatGenderValue = (gender?: string): string => {
+  if (!gender) return 'N/A';
+  const genderMap: { [key: string]: string } = {
+    'male': 'Male',
+    'female': 'Female',
+    'non_binary': 'Non-Binary',
+    'non-binary': 'Non-Binary',
+    'all_male': 'All Male',
+    'all_males': 'All Male',
+    'all_female': 'All Female',
+    'all_females': 'All Female',
+    'mixed': 'Mixed',
+  };
+  return genderMap[gender.toLowerCase()] || gender;
+};
+
+// Component to display secret song details
+const SecretSongDetails = ({ secretSong }: { secretSong: NonNullable<SessionState['secret_song']> }) => {
+  return (
+    <div className="secret-song-details">
+      <div className="secret-song-details-title">Details</div>
+      <div className="secret-song-info-grid">
+        <div className="secret-song-info-item">
+          <span className="secret-song-label">Title:</span>
+          <span className="secret-song-value">{secretSong.title}</span>
+        </div>
+        <div className="secret-song-info-item">
+          <span className="secret-song-label">Artist:</span>
+          <span className="secret-song-value">{secretSong.artist}</span>
+        </div>
+        {secretSong.album && (
+          <div className="secret-song-info-item">
+            <span className="secret-song-label">Album:</span>
+            <span className="secret-song-value">{secretSong.album}</span>
+          </div>
+        )}
+        <div className="secret-song-info-item">
+          <span className="secret-song-label">Year:</span>
+          <span className="secret-song-value">{secretSong.year}</span>
+        </div>
+        <div className="secret-song-info-item">
+          <span className="secret-song-label">Country:</span>
+          <span className="secret-song-value">{getCountryName(secretSong.country)}</span>
+        </div>
+        <div className="secret-song-info-item">
+          <span className="secret-song-label">Genre:</span>
+          <span className="secret-song-value">{secretSong.genre}</span>
+        </div>
+        <div className="secret-song-info-item">
+          <span className="secret-song-label">Duration:</span>
+          <span className="secret-song-value">{formatDuration(secretSong.duration_sec)}</span>
+        </div>
+        {secretSong.artist_type && (
+          <div className="secret-song-info-item">
+            <span className="secret-song-label">Type:</span>
+            <span className="secret-song-value">{secretSong.artist_type === 'Person' ? 'Solo' : secretSong.artist_type}</span>
+          </div>
+        )}
+        {secretSong.gender && (
+          <div className="secret-song-info-item">
+            <span className="secret-song-label">Gender:</span>
+            <span className="secret-song-value">{formatGenderValue(secretSong.gender)}</span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }
 
 interface ActiveGameProps {
@@ -125,13 +243,10 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
           guess_count: response.session.state.guess_count
         });
         
-        // Clear puzzle parameters after successful API call (they're one-time use)
-        if (puzzleId) {
-          clearPuzzleId();
-        }
-        if (localDate) {
-          clearLocalDate();
-        }
+        // Don't clear puzzle parameters here - they should persist when navigating back from statistics
+        // They will be cleared when:
+        // 1. User starts a new daily game (via handlePlay in App.tsx)
+        // 2. User selects a different puzzle from archive
         
         if (!isMounted) return;
         
@@ -330,7 +445,7 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
         setTimeout(() => {
           setHasShownStats(true);
           onShowStatistics();
-        }, 1500);
+        }, 3000);
       }
     } catch (err) {
       // Log detailed error to console for developers
@@ -347,6 +462,60 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
         // Detailed error information is already logged to console above
         setError('Unable to submit your guess. Please try again.');
       }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGiveUp = async () => {
+    if (!sessionId) {
+      setError('Session not found. Please refresh the page.');
+      return;
+    }
+
+    // Confirm with user
+    const confirmed = window.confirm('Are you sure you want to give up? This will end the game and reveal the secret song.');
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Call give-up API
+      const response: GameInitResponse = await giveUp(sessionId);
+      
+      // Update session state (same structure as handleGuess)
+      const newSessionState = {
+        guess_count: response.session.state.guess_count,
+        guesses_remaining: response.session.state.guesses_remaining,
+        is_solved: response.session.state.is_solved,
+        is_over: response.session.state.is_over,
+        status: response.session.status,
+        puzzle: {
+          max_guesses: response.session.puzzle.max_guesses,
+          solution: response.session.puzzle.solution,
+        },
+        secret_song: response.session.secret_song,
+      };
+      setSessionState(newSessionState);
+      
+      // If game is over, show statistics after a short delay
+      // Only auto-show if user hasn't manually closed it
+      if (newSessionState.is_over && onShowStatistics && !hasShownStats && !userClosedStats) {
+        setTimeout(() => {
+          setHasShownStats(true);
+          onShowStatistics();
+        }, 3000);
+      }
+    } catch (err) {
+      // Log detailed error to console for developers
+      console.error('Error giving up:', err);
+      
+      // Show user-friendly error message
+      const errorMessage = err instanceof Error ? err.message : '';
+      setError(errorMessage || 'Unable to give up. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -375,7 +544,7 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
           <h1 className="daily-song-title">
             <span className="music-icon">♪</span>
             {puzzleDate && puzzleDate !== new Date().toISOString().split('T')[0] ? (
-              `Puzzle: ${new Date(puzzleDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
+              `Archived Puzzle: ${new Date(puzzleDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
             ) : (
               'Daily Song'
             )}
@@ -393,7 +562,7 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
           <h1 className="daily-song-title">
             <span className="music-icon">♪</span>
             {puzzleDate && puzzleDate !== new Date().toISOString().split('T')[0] ? (
-              `Puzzle: ${new Date(puzzleDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
+              `Archived Puzzle: ${new Date(puzzleDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
             ) : (
               'Daily Song'
             )}
@@ -426,32 +595,66 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
               <>
                 <div>🎉 Congratulations! You guessed it!</div>
                 {sessionState?.secret_song && (
-                  <div className="solution-display">
-                    The secret song was: <strong>{sessionState.secret_song.display || 
-                      `${sessionState.secret_song.title || ''} - ${sessionState.secret_song.artist || ''}`.trim() || 
-                      'Unknown'}</strong>
-                  </div>
+                  <>
+                    <div className="solution-display">
+                      The secret song was: <strong>{sessionState.secret_song.display || 
+                        `${sessionState.secret_song.title || ''} - ${sessionState.secret_song.artist || ''}`.trim() || 
+                        'Unknown'}</strong>
+                    </div>
+                    <ShareResult 
+                      guesses={guesses}
+                      guessCount={guessedCount}
+                      maxGuesses={maxGuesses}
+                      isWon={true}
+                      puzzleDate={puzzleDate || undefined}
+                    />
+                    <SecretSongDetails secretSong={sessionState.secret_song} />
+                  </>
+                )}
+              </>
+            ) : gameStatus === 'quit' ? (
+              <>
+                <div>😔 You gave up. Better luck next time!</div>
+                {sessionState?.secret_song && (
+                  <>
+                    <div className="solution-display">
+                      The secret song was: <strong>{sessionState.secret_song.display || 
+                        `${sessionState.secret_song.title || ''} - ${sessionState.secret_song.artist || ''}`.trim() || 
+                        'Unknown'}</strong>
+                    </div>
+                    <ShareResult 
+                      guesses={guesses}
+                      guessCount={guessedCount}
+                      maxGuesses={maxGuesses}
+                      isWon={false}
+                      puzzleDate={puzzleDate || undefined}
+                    />
+                    <SecretSongDetails secretSong={sessionState.secret_song} />
+                  </>
                 )}
               </>
             ) : (
               <>
                 <div>😔 Game Over. Better luck next time!</div>
                 {sessionState?.secret_song && (
-                  <div className="solution-display">
-                    The secret song was: <strong>{sessionState.secret_song.display || 
-                      `${sessionState.secret_song.title || ''} - ${sessionState.secret_song.artist || ''}`.trim() || 
-                      'Unknown'}</strong>
-                  </div>
+                  <>
+                    <div className="solution-display">
+                      The secret song was: <strong>{sessionState.secret_song.display || 
+                        `${sessionState.secret_song.title || ''} - ${sessionState.secret_song.artist || ''}`.trim() || 
+                        'Unknown'}</strong>
+                    </div>
+                    <ShareResult 
+                      guesses={guesses}
+                      guessCount={guessedCount}
+                      maxGuesses={maxGuesses}
+                      isWon={false}
+                      puzzleDate={puzzleDate || undefined}
+                    />
+                    <SecretSongDetails secretSong={sessionState.secret_song} />
+                  </>
                 )}
               </>
             )}
-            <ShareResult 
-              guesses={guesses}
-              guessCount={guessedCount}
-              maxGuesses={maxGuesses}
-              isWon={gameStatus === 'won'}
-              puzzleDate={puzzleDate || undefined}
-            />
           </div>
         )}
         <div className="search-container">
@@ -464,13 +667,25 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
             />
             <span className="search-icon">🔍</span>
           </div>
-          <button 
-            className="submit-button" 
-            onClick={handleGuess}
-            disabled={loading || !selectedSongId || !canSubmit}
-          >
-            {loading ? 'Loading...' : 'Guess'}
-          </button>
+          <div className="action-buttons">
+            <button 
+              className="submit-button" 
+              onClick={handleGuess}
+              disabled={loading || !selectedSongId || !canSubmit}
+            >
+              {loading ? 'Loading...' : 'Guess'}
+            </button>
+            {/* Show Give-up button only after 3 guesses and if game is not over */}
+            {guessedCount >= 3 && !isGameOver && sessionState?.status === 'in_progress' && (
+              <button 
+                className="give-up-button" 
+                onClick={handleGiveUp}
+                disabled={loading}
+              >
+                Give Up
+              </button>
+            )}
+          </div>
         </div>
         {error && (
           <div className="error-message">{error}</div>

@@ -16,6 +16,9 @@ function App() {
   const cameFromArchiveRef = useRef<boolean>(false)
 
   const handlePlay = () => {
+    // Clear any archive puzzle parameters when starting a new daily game
+    localStorage.removeItem('music_game_puzzle_id')
+    localStorage.removeItem('music_game_local_date')
     setCurrentView('game')
     // Reset stats closed flag when starting a new game
     statsClosedRef.current = false
@@ -30,14 +33,9 @@ function App() {
 
   const handleCloseStatistics = () => {
     statsClosedRef.current = true // Mark that user manually closed stats
-    // If we came from archive (either via ref or localStorage flag), go back to archive
-    if (cameFromArchiveRef.current || isViewingArchive()) {
-      cameFromArchiveRef.current = false
-      clearViewingArchive()
-      setCurrentView('archive')
-    } else {
-      setCurrentView('game')
-    }
+    // Always go back to game view when closing statistics
+    // (even if the game was started from archive, we're still in the game view)
+    setCurrentView('game')
   }
 
   const handleShowHelp = () => {
@@ -59,6 +57,9 @@ function App() {
   }
 
   const handlePlayDate = (date: string, puzzleId: string | null) => {
+    // Clear any existing puzzle parameters first (in case switching between archive puzzles)
+    localStorage.removeItem('music_game_puzzle_id')
+    localStorage.removeItem('music_game_local_date')
     // Store the puzzle info for ActiveGame to use
     if (puzzleId) {
       localStorage.setItem('music_game_puzzle_id', puzzleId)

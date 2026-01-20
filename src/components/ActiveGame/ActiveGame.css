@@ -134,6 +134,12 @@
   width: 100%;
 }
 
+.action-buttons {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
 .submit-button {
   padding: 1rem 2.5rem;
   font-size: 1rem;
@@ -146,6 +152,36 @@
   transition: transform 0.2s, box-shadow 0.2s;
   box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
   white-space: nowrap;
+}
+
+.give-up-button {
+  padding: 0.6rem 1.2rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #666;
+  background: rgba(200, 200, 200, 0.3);
+  border: 1px solid rgba(150, 150, 150, 0.4);
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+  opacity: 0.7;
+}
+
+.give-up-button:hover:not(:disabled) {
+  opacity: 0.9;
+  background: rgba(200, 200, 200, 0.4);
+  border-color: rgba(150, 150, 150, 0.5);
+}
+
+.give-up-button:active:not(:disabled) {
+  opacity: 0.8;
+  transform: scale(0.98);
+}
+
+.give-up-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .submit-button:hover {
@@ -197,6 +233,56 @@
   padding-top: 0.75rem;
   font-size: 1rem;
   font-weight: 500;
+}
+
+.secret-song-details {
+  margin-top: 0.75rem;
+  padding: 0.5rem;
+  background: rgba(255, 255, 255, 0.4);
+  border-radius: 6px;
+  border: 1px solid rgba(102, 126, 234, 0.1);
+}
+
+.secret-song-details-title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #666;
+  margin: 0 0 0.4rem 0;
+  text-align: left;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.secret-song-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.35rem;
+  margin-top: 0.35rem;
+}
+
+.secret-song-info-item {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  gap: 0.4rem;
+  padding: 0.25rem 0.4rem;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
+.secret-song-label {
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: #888;
+  white-space: nowrap;
+}
+
+.secret-song-value {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #333;
+  flex: 1;
+  text-align: left;
 }
 
 .game-status-message .share-result-button {

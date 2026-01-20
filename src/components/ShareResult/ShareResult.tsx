@@ -276,6 +276,9 @@ const ShareResult = ({ guesses, guessCount, maxGuesses, isWon, puzzleDate }: Sha
       onClick={handleShare}
       title={canUseNativeShare ? "Share via WhatsApp, Messages, etc." : "Copy result to clipboard"}
     >
+      <span className="sparkle sparkle-1">✨</span>
+      <span className="sparkle sparkle-2">✨</span>
+      <span className="sparkle sparkle-3">✨</span>
       {copied ? (
         <>
           <span className="share-icon">✓</span>

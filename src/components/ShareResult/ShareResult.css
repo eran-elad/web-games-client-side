@@ -13,11 +13,163 @@
   cursor: pointer;
   transition: all 0.2s ease;
   box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+  position: relative;
+  overflow: hidden;
+  animation: magicGlow 2s ease-in-out infinite;
+}
+
+/* Scattered wind-blown shimmer effect */
+.share-result-button::before {
+  content: '';
+  position: absolute;
+  top: -30%;
+  left: -100%;
+  width: 300%;
+  height: 160%;
+  background: 
+    radial-gradient(circle 15px at 15% 20%, rgba(255, 255, 255, 0.5) 0%, transparent 50%),
+    radial-gradient(circle 20px at 25% 35%, rgba(255, 255, 255, 0.4) 0%, transparent 55%),
+    radial-gradient(circle 12px at 40% 15%, rgba(255, 255, 255, 0.45) 0%, transparent 50%),
+    radial-gradient(circle 18px at 55% 40%, rgba(255, 255, 255, 0.35) 0%, transparent 60%),
+    radial-gradient(circle 14px at 70% 25%, rgba(255, 255, 255, 0.4) 0%, transparent 52%),
+    radial-gradient(circle 16px at 85% 45%, rgba(255, 255, 255, 0.3) 0%, transparent 58%),
+    radial-gradient(circle 10px at 30% 60%, rgba(255, 255, 255, 0.25) 0%, transparent 48%),
+    radial-gradient(circle 22px at 65% 70%, rgba(255, 255, 255, 0.2) 0%, transparent 62%);
+  animation: windBlown 4s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 1;
+  filter: blur(2px);
+  transform: rotate(-15deg);
+  transform-origin: center;
+}
+
+@keyframes windBlown {
+  0% {
+    left: -100%;
+    top: -30%;
+    transform: rotate(-15deg) translateY(0px);
+  }
+  25% {
+    transform: rotate(-12deg) translateY(-5px);
+  }
+  50% {
+    transform: rotate(-18deg) translateY(3px);
+  }
+  75% {
+    transform: rotate(-14deg) translateY(-2px);
+  }
+  100% {
+    left: 100%;
+    top: 30%;
+    transform: rotate(-15deg) translateY(0px);
+  }
+}
+
+/* Magic wand sparkle animation */
+@keyframes magicGlow {
+  0%, 100% {
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 4px 20px rgba(102, 126, 234, 0.6);
+    transform: scale(1.02);
+  }
+}
+
+/* Subtle silver sparkle particles */
+.share-result-button .sparkle {
+  position: absolute;
+  font-size: 0.6rem;
+  color: rgba(255, 255, 255, 0.8);
+  text-shadow: 0 0 4px rgba(192, 192, 192, 0.6),
+               0 0 8px rgba(255, 255, 255, 0.4);
+  pointer-events: none;
+  z-index: 2;
+  opacity: 0;
+}
+
+.share-result-button .sparkle-1 {
+  top: 15%;
+  left: 15%;
+  animation: sparkleFloat1 3s ease-in-out infinite;
+}
+
+.share-result-button .sparkle-2 {
+  top: 25%;
+  right: 20%;
+  animation: sparkleFloat2 3s ease-in-out infinite 0.8s;
+}
+
+.share-result-button .sparkle-3 {
+  bottom: 20%;
+  left: 30%;
+  animation: sparkleFloat3 3s ease-in-out infinite 1.6s;
+}
+
+@keyframes sparkleFloat1 {
+  0%, 100% {
+    opacity: 0;
+    transform: translateY(0) scale(0.8) rotate(0deg);
+  }
+  20% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-8px) scale(1) rotate(180deg);
+  }
+  80% {
+    opacity: 0.6;
+  }
+}
+
+@keyframes sparkleFloat2 {
+  0%, 100% {
+    opacity: 0;
+    transform: translateY(0) scale(0.8) rotate(0deg);
+  }
+  20% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 0.9;
+    transform: translateY(-6px) scale(1) rotate(-180deg);
+  }
+  80% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes sparkleFloat3 {
+  0%, 100% {
+    opacity: 0;
+    transform: translateY(0) scale(0.8) rotate(0deg);
+  }
+  20% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.8;
+    transform: translateY(-7px) scale(1) rotate(180deg);
+  }
+  80% {
+    opacity: 0.4;
+  }
 }
 
 .share-result-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 6px 25px rgba(102, 126, 234, 0.7);
+  animation: magicGlow 1s ease-in-out infinite;
+}
+
+.share-result-button:hover::before {
+  animation-duration: 1.5s;
+}
+
+.share-result-button:hover .sparkle {
+  animation-duration: 2s;
 }
 
 .share-result-button:active {
@@ -27,6 +179,13 @@
 .share-icon {
   font-size: 1.2rem;
   display: inline-block;
+  position: relative;
+  z-index: 2;
+}
+
+.share-result-button > span:not(.sparkle) {
+  position: relative;
+  z-index: 2;
 }
 
 /* Mobile responsiveness */

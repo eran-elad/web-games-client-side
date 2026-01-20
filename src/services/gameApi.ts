@@ -20,7 +20,7 @@ export type GameInitResponse = {
   };
   session: {
     session_id: string;
-    status: 'in_progress' | 'won' | 'lost' | 'abandoned';
+    status: 'in_progress' | 'won' | 'lost' | 'abandoned' | 'quit';
     game: string;
     puzzle: {
       puzzle_id: string;
@@ -98,6 +98,8 @@ export type GameInitResponse = {
       country: string;
       genre: string;
       duration_sec: number;
+      artist_type?: string;
+      gender?: string;
     };
   };
 };
@@ -171,6 +173,38 @@ export const submitGuess = async (
       session_id: sessionId,
       guess_song_id: guessSongId,
       raw_input: rawInput,
+    }),
+  });
+
+  if (!response.ok) {
+    let errorMessage = `Server error (${response.status})`;
+    try {
+      const errorData = await response.json();
+      if (errorData.detail) {
+        errorMessage = errorData.detail;
+      }
+    } catch {
+      errorMessage = response.statusText || `Server error (${response.status})`;
+    }
+    throw new Error(errorMessage);
+  }
+
+  return await response.json();
+};
+
+/**
+ * Give up on the current puzzle session
+ */
+export const giveUp = async (
+  sessionId: string
+): Promise<GameInitResponse> => {
+  const response = await fetch(getApiUrl('/api/game/give-up'), {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      session_id: sessionId,
     }),
   });
 
