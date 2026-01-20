@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { setViewingArchive, clearViewingArchive, isViewingArchive } from './utils/storage'
+import { setViewingArchive, clearViewingArchive } from './utils/storage'
 import WelcomePage from './components/WelcomePage'
 import ActiveGame from './components/ActiveGame/ActiveGame'
 import StatisticsPage from './components/StatisticsPage/StatisticsPage'
