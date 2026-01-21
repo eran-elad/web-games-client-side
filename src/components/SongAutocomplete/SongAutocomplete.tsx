@@ -34,8 +34,10 @@ const removeAccents = (text: string): string => {
 };
 
 // Helper function to normalize text for matching (lowercase, trim, remove accents)
-const normalizeText = (text: string): string => {
-  const normalized = (text || '').toLowerCase().trim();
+const normalizeText = (text: string | number | null | undefined): string => {
+  // Convert to string first, handling null/undefined/numbers
+  const textStr = text != null ? String(text) : '';
+  const normalized = textStr.toLowerCase().trim();
   return removeAccents(normalized);
 };
 

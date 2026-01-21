@@ -222,12 +222,13 @@ interface GuessBoxProps {
   guessedCountry?: string; // Country code from the guess object (guess.country)
   guessedArtistType?: string; // Artist type from the guess object (guess.artist_type)
   guessedGender?: string; // Gender from the guess object (guess.gender)
+  guessedYear?: number; // Year from the guess object (guess.year)
   isWinning?: boolean; // Whether to show win animation
   pulseDelay?: number; // Delay in seconds for staggered pulse effect
   durationClueShown?: boolean; // Whether duration clue has been shown in this session (for threshold logic)
 }
 
-const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guessedArtistType, guessedGender, isWinning = false, pulseDelay = 0 }: GuessBoxProps) => {
+const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guessedArtistType, guessedGender, guessedYear, isWinning = false, pulseDelay = 0 }: GuessBoxProps) => {
   // Helper to determine clue status (correct/close/incorrect/neighboring) based on thresholds
   type ClueStatus = 'correct' | 'close' | 'incorrect' | 'neighboring' | 'unknown';
   
@@ -789,7 +790,10 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guess
                 </svg>
               </span>
               {isExactMatch ? (
-                <span className="clue-value clue-value-checkmark">✓</span>
+                <>
+                  <span className="clue-value clue-value-checkmark">✓</span>
+                  {guessedYear && <span className="clue-value">{guessedYear}</span>}
+                </>
               ) : (
                 <span className="clue-value">{yearDisplay}</span>
               )}

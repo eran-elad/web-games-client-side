@@ -25,6 +25,7 @@ interface Guess {
   guessedCountry?: string; // Country code from guess.country
   guessedArtistType?: string; // Artist type from guess.artist_type
   guessedGender?: string; // Gender from guess.gender
+  guessedYear?: number; // Year from guess.year
   songId?: string; // Store song ID for duplicate checking
 }
 
@@ -287,6 +288,7 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
             guessedCountry: guess.guess.country, // Extract country code from the guess
             guessedArtistType: (guess.guess as any).artist_type, // Extract artist_type from the guess
             guessedGender: (guess.guess as any).gender, // Extract gender from the guess
+            guessedYear: guess.guess.year, // Extract year from the guess
             songId: guess.guess.entity_id, // Store song ID for duplicate checking
           };
         });
@@ -429,6 +431,7 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
           guessedCountry: latestGuess.guess.country, // Extract country code from the guess
           guessedArtistType: artistTypeFromGuess, // Extract artist_type from the guess object
           guessedGender: genderFromGuess, // Extract gender from the guess object
+          guessedYear: latestGuess.guess.year, // Extract year from the guess
           songId: latestGuess.guess.entity_id, // Store song ID for duplicate checking
         };
         
@@ -702,6 +705,7 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
                 guessedCountry={guess.guessedCountry}
                 guessedArtistType={guess.guessedArtistType}
                 guessedGender={guess.guessedGender}
+                guessedYear={guess.guessedYear}
                 isWinning={isWinning}
                 pulseDelay={index * 0.1}
               />
