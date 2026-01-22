@@ -308,7 +308,7 @@ export type ArchiveResponse = {
   puzzles: Array<{
     date: string;
     puzzle_id: string | null;
-    player_status: 'won' | 'lost' | 'abandoned' | 'in_progress' | 'not_played' | null;
+    player_status: 'won' | 'lost' | 'abandoned' | 'in_progress' | 'not_played' | 'quit' | null;
   }>;
 };
 

@@ -624,12 +624,12 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guess
         const distance = clueObj.distance_km || clueObj.distance || 0;
         if (distance === 0 && clueObj.status !== 'correct') {
           const dir = clueObj.dir || clueObj.direction || '';
-          const directionText = dir ? ` Look ${dir === 'N' ? 'north' : dir === 'S' ? 'south' : dir === 'E' ? 'east' : dir === 'W' ? 'west' : dir === 'NE' ? 'northeast' : dir === 'NW' ? 'northwest' : dir === 'SE' ? 'southeast' : dir === 'SW' ? 'southwest' : dir.toLowerCase()} (${dir}).` : '';
+          const directionText = dir ? ` Look ${dir === 'N' ? 'North' : dir === 'S' ? 'South' : dir === 'E' ? 'East' : dir === 'W' ? 'West' : dir === 'NE' ? 'Northeast' : dir === 'NW' ? 'Northwest' : dir === 'SE' ? 'Southeast' : dir === 'SW' ? 'Southwest' : dir.charAt(0).toUpperCase() + dir.slice(1).toLowerCase()}.` : '';
           
           if (countryName) {
-            return `The secret song is not from ${countryName}. This is a neighboring country (shares a border).${directionText}`;
+            return `The artist's country is not ${countryName}. It is a neighboring country (Shares a border).${directionText}`;
           }
-          return `This is a neighboring country (shares a border).${directionText}`;
+          return `It is a neighboring country (Shares a border).${directionText}`;
         }
         
         const dir = clueObj.dir || clueObj.direction || '';
@@ -813,10 +813,10 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guess
                   <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
                 </svg>
               </span>
-              {country.countryCode && <span className="clue-value">{country.countryCode}</span>}
               {country.status === 'neighboring' ? (
-                // Neighboring country: show country code, +/- 0km, and arrow if direction is available
+                // Neighboring country: show country code, +/- 0km, and arrow
                 <>
+                  {country.countryCode && <span className="clue-value">{country.countryCode}</span>}
                   <span className="clue-value neighboring">±0km</span>
                   {country.arrow && <span className="clue-arrow">{country.arrow}</span>}
                   <ClueTooltip helpText={getHelpText('country', countryObj)} clueType="country" />
@@ -824,6 +824,7 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guess
               ) : (
                 // Regular country: show country code, distance with arrow
                 <>
+                  {country.countryCode && <span className="clue-value">{country.countryCode}</span>}
                   {country.distance && <span className="clue-value">{country.distance}</span>}
                   {country.arrow && <span className="clue-arrow">{country.arrow}</span>}
                   <ClueTooltip helpText={getHelpText('country', countryObj)} clueType="country" />

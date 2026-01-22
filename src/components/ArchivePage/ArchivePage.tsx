@@ -38,6 +38,7 @@ const ArchivePage = ({ onClose, onPlayDate }: ArchivePageProps) => {
       case 'won':
         return '✓';
       case 'lost':
+      case 'quit':
         return '✗';
       case 'abandoned':
       case 'in_progress':
@@ -56,6 +57,7 @@ const ArchivePage = ({ onClose, onPlayDate }: ArchivePageProps) => {
       case 'won':
         return 'status-won';
       case 'lost':
+      case 'quit':
         return 'status-lost';
       case 'abandoned':
       case 'in_progress':
@@ -75,6 +77,8 @@ const ArchivePage = ({ onClose, onPlayDate }: ArchivePageProps) => {
         return 'Won';
       case 'lost':
         return 'Lost';
+      case 'quit':
+        return 'Quit';
       case 'abandoned':
         return 'Abandoned';
       case 'in_progress':
@@ -243,7 +247,7 @@ const ArchivePage = ({ onClose, onPlayDate }: ArchivePageProps) => {
           </div>
           <div className="legend-item">
             <span className="status-indicator status-abandoned">○</span>
-            <span>Abandoned/In Progress</span>
+            <span>In Progress</span>
           </div>
           <div className="legend-item">
             <span className="status-indicator status-not-played"></span>
