@@ -786,23 +786,42 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guess
       }
       case 'gender': {
         const guessedGenderValue = clueObj._guessedGender || clueObj.given || clueObj.value || clueObj.gender || guessedGender || '';
-        const genderForTooltip = formatGenderForTooltip(guessedGenderValue);
+        const genderLower = guessedGenderValue.toLowerCase();
         
-        if (clueObj.status === 'correct') {
-          // When correct: "The secret artist is a mixed-gender group" (with "is" bold)
+        // Determine if this is a solo artist (male/female) or a group (all_male, all_female, mixed)
+        const isSoloArtist = genderLower === 'male' || genderLower === 'female' || genderLower === 'non_binary' || genderLower === 'non-binary';
+        
+        if (isSoloArtist) {
+          // For solo artists: "The secret artist is/isn't male/female"
+          const genderDisplay = formatGenderForTooltip(guessedGenderValue);
+          if (clueObj.status === 'correct') {
+            return (
+              <>
+                The secret artist <strong>is</strong> {genderDisplay}
+              </>
+            );
+          }
           return (
             <>
-              The secret artist <strong>is</strong> a {genderForTooltip} group
+              The secret artist <strong>isn't</strong> {genderDisplay}
+            </>
+          );
+        } else {
+          // For groups: "The secret artist is/isn't an all-male/all-female/mixed-gender group"
+          const genderForTooltip = formatGenderForTooltip(guessedGenderValue);
+          if (clueObj.status === 'correct') {
+            return (
+              <>
+                The secret artist <strong>is</strong> an {genderForTooltip} group
+              </>
+            );
+          }
+          return (
+            <>
+              The secret artist <strong>isn't</strong> an {genderForTooltip} group
             </>
           );
         }
-        
-        // When incorrect: "The secret artist isn't a mixed-gender group" (with "isn't" bold)
-        return (
-          <>
-            The secret artist <strong>isn't</strong> a {genderForTooltip} group
-          </>
-        );
       }
       default:
         return '';
