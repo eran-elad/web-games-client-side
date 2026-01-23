@@ -52,7 +52,6 @@ const detectUserCountry = (): string | null => {
 };
 
 const SettingsPage = ({ onClose }: SettingsPageProps) => {
-  const [selectedUnit, setSelectedUnit] = useState<'km' | 'miles' | null>(null);
   const [displayUnit, setDisplayUnit] = useState<'km' | 'miles'>('km');
 
   useEffect(() => {
@@ -61,11 +60,9 @@ const SettingsPage = ({ onClose }: SettingsPageProps) => {
     
     if (userPreference) {
       // User has a preference, use it
-      setSelectedUnit(userPreference);
       setDisplayUnit(userPreference);
     } else {
       // No user preference - detect what would be used as default
-      setSelectedUnit(null);
       const detectedCountry = detectUserCountry();
       const defaultUnit = getCountryMeasurementSystem(detectedCountry);
       setDisplayUnit(defaultUnit); // Show what would be used by default
@@ -73,7 +70,6 @@ const SettingsPage = ({ onClose }: SettingsPageProps) => {
   }, []);
 
   const handleUnitChange = (unit: 'km' | 'miles') => {
-    setSelectedUnit(unit);
     setDisplayUnit(unit);
     setDistanceUnit(unit);
     // Trigger a custom event to notify other components

@@ -35,7 +35,7 @@ export const HELP_CONTENT = {
     },
     {
       title: "🌍 Country",
-      content: "Reveals the distance and direction to the secret song's country. A green box means the country matches exactly. If it's wrong, you'll see the distance in kilometers and a directional arrow (N, S, E, W, etc.).",
+      content: "Reveals the distance and direction to the secret song's country. A green box means the country matches exactly. If it's wrong, you'll see the distance and a directional arrow (N, S, E, W, etc.). Distance is shown in kilometers or miles based on your settings.",
       icon: "🌍"
     },
     {
@@ -54,8 +54,28 @@ export const HELP_CONTENT = {
       icon: "🎤"
     },
     {
+      title: "🛟 Lifeline",
+      content: "Need help narrowing down your options? The Lifeline button reduces the song list in the search box based on your previous clues.\n• Available after a few guesses (shown in the button tooltip)\n• Costs 1 guess to activate\n• Can only be used once per puzzle\n• The narrowed list updates after each subsequent guess\n• Look for the 🛟 button next to the Guess button",
+      icon: "🛟"
+    },
+    {
+      title: "🏳️ Give Up",
+      content: "Stuck and want to see the answer? The Give Up button (🏳️) lets you surrender and reveal the secret song.\n• Available after 3 guesses\n• The button appears grayed out until available\n• Once you give up, the game ends and the answer is revealed",
+      icon: "🏳️"
+    },
+    {
+      title: "⚙️ Settings & Navigation",
+      content: "Access settings and navigation through the hamburger menu (☰) in the top corner:\n• 🏠 Home - Return to the welcome page at any time\n• ⚙️ Settings - Choose your preferred distance unit (km or miles)\n• Distance units are auto-detected based on your location, but you can change them anytime",
+      icon: "⚙️"
+    },
+    {
+      title: "📚 Archive",
+      content: "Missed a day? Play past puzzles from the Archive! Access it from the welcome page to explore previous daily puzzles. Your progress on archived puzzles is tracked separately from the daily puzzle.",
+      icon: "📚"
+    },
+    {
       title: "💡 Pro Tips",
-      content: "• Use the info icons (ℹ️) next to each clue for detailed explanations\n• Try different artists from the same era if year is close\n• Pay attention to genre - it can narrow down your search significantly\n• Country clues help you think about music scenes and origins\n• Don't forget you can't guess the same song twice!",
+      content: "• Use the info icons (ℹ️) next to each clue for detailed explanations\n• Hover over the ℹ️ next to the action buttons for button explanations\n• Try different artists from the same era if year is close\n• Pay attention to genre - it can narrow down your search significantly\n• Country clues help you think about music scenes and origins\n• Use the Lifeline when you're stuck to narrow down the search\n• Don't forget you can't guess the same song twice!",
       icon: "💡"
     },
     {

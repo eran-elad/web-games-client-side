@@ -786,7 +786,6 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guess
       }
       case 'gender': {
         const guessedGenderValue = clueObj._guessedGender || clueObj.given || clueObj.value || clueObj.gender || guessedGender || '';
-        const formattedGender = formatGenderValue(guessedGenderValue);
         const genderForTooltip = formatGenderForTooltip(guessedGenderValue);
         
         if (clueObj.status === 'correct') {

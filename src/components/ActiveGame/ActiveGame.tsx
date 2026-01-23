@@ -206,7 +206,7 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
   const [puzzleDate, setPuzzleDate] = useState<string | null>(null);
   const [lifelineActivated, setLifelineActivated] = useState<boolean>(false);
   const [narrowedCatalog, setNarrowedCatalog] = useState<Song[] | null>(null);
-  const [catalogSize, setCatalogSize] = useState<number | null>(null);
+  const [, setCatalogSize] = useState<number | null>(null); // Used to store catalog size state
   const [distanceUnitKey, setDistanceUnitKey] = useState<number>(0); // Force re-render when distance unit changes
 
   // Listen for distance unit changes from settings
@@ -902,7 +902,6 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
                   guessCount={guessedCount}
                   guessesRemaining={guessesRemaining}
                   minGuessesRequired={sessionState.lifeline_min_guesses_required ?? Math.floor((sessionState.puzzle?.max_guesses ?? 6) / 2)}
-                  minSongs={sessionState.lifeline_min_songs ?? 100}
                   onActivate={handleLifelineActivation}
                   loading={loading}
                 />
@@ -967,7 +966,6 @@ interface LifelineButtonProps {
   guessCount: number;
   guessesRemaining: number;
   minGuessesRequired: number;
-  minSongs: number;
   onActivate: () => void;
   loading: boolean;
 }
@@ -977,7 +975,6 @@ const LifelineButton = ({
   guessCount, 
   guessesRemaining, 
   minGuessesRequired, 
-  minSongs, 
   onActivate, 
   loading 
 }: LifelineButtonProps) => {
