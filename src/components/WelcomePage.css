@@ -116,6 +116,10 @@
   z-index: 1;
 }
 
+.welcome-header-menu {
+  /* HamburgerMenu now uses fixed positioning, no need for absolute positioning here */
+}
+
 .title-icon {
   font-size: 4rem;
   margin-bottom: 0.5rem;

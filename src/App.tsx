@@ -5,9 +5,10 @@ import ActiveGame from './components/ActiveGame/ActiveGame'
 import StatisticsPage from './components/StatisticsPage/StatisticsPage'
 import HelpPage from './components/HelpPage/HelpPage'
 import ArchivePage from './components/ArchivePage/ArchivePage'
+import SettingsPage from './components/SettingsPage/SettingsPage'
 import './App.css'
 
-type View = 'welcome' | 'game' | 'statistics' | 'help' | 'archive'
+type View = 'welcome' | 'game' | 'statistics' | 'help' | 'archive' | 'settings'
 
 function App() {
   const [currentView, setCurrentView] = useState<View>('welcome')
@@ -56,6 +57,19 @@ function App() {
     setCurrentView(previousView) // Return to previous view
   }
 
+  const handleShowSettings = () => {
+    setPreviousView(currentView) // Remember where we came from
+    setCurrentView('settings')
+  }
+
+  const handleCloseSettings = () => {
+    setCurrentView(previousView) // Return to previous view
+  }
+
+  const handleGoHome = () => {
+    setCurrentView('welcome')
+  }
+
   const handlePlayDate = (date: string, puzzleId: string | null) => {
     // Clear any existing puzzle parameters first (in case switching between archive puzzles)
     localStorage.removeItem('music_game_puzzle_id')
@@ -76,11 +90,12 @@ function App() {
 
   return (
     <div className="app">
-      {currentView === 'welcome' && <WelcomePage onPlay={handlePlay} onShowStatistics={handleShowStatistics} onShowHelp={handleShowHelp} onShowArchive={handleShowArchive} />}
-      {currentView === 'game' && <ActiveGame onShowStatistics={handleShowStatistics} userClosedStats={statsClosedRef.current} onShowHelp={handleShowHelp} onShowArchive={handleShowArchive} />}
+      {currentView === 'welcome' && <WelcomePage onPlay={handlePlay} onShowStatistics={handleShowStatistics} onShowHelp={handleShowHelp} onShowArchive={handleShowArchive} onShowSettings={handleShowSettings} />}
+      {currentView === 'game' && <ActiveGame onShowStatistics={handleShowStatistics} userClosedStats={statsClosedRef.current} onShowHelp={handleShowHelp} onShowArchive={handleShowArchive} onShowSettings={handleShowSettings} onGoHome={handleGoHome} />}
       {currentView === 'statistics' && <StatisticsPage onClose={handleCloseStatistics} />}
       {currentView === 'help' && <HelpPage onClose={handleCloseHelp} />}
       {currentView === 'archive' && <ArchivePage onClose={handleCloseArchive} onPlayDate={handlePlayDate} />}
+      {currentView === 'settings' && <SettingsPage onClose={handleCloseSettings} />}
     </div>
   )
 }

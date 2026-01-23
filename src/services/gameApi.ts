@@ -43,12 +43,16 @@ export type GameInitResponse = {
       started_at_utc: string;
       last_activity_at_utc: string;
       ended_at_utc: string | null;
+      lifeline_min_songs?: number;
+      lifeline_min_guesses_required?: number;
     };
     history: {
       guesses: Array<{
         guess_id: string;
         submitted_at_utc: string;
-        guess: {
+        type?: 'lifeline';
+        message?: string;
+        guess?: {
           entity_type: string;
           entity_id: string;
           display: string;
@@ -57,7 +61,7 @@ export type GameInitResponse = {
           genre: string;
           duration_sec: number;
         };
-        result: {
+        result?: {
           is_correct: boolean;
           clues: {
             year?: {
@@ -102,6 +106,16 @@ export type GameInitResponse = {
       gender?: string;
     };
   };
+  lifeline_active?: boolean;
+  narrowed_catalog?: Array<{
+    id: string;
+    title: string;
+    artist: string;
+    album: string;
+    aliases: string;
+    popularity_rank: number | null;
+  }>;
+  catalog_size?: number;
 };
 
 /**
@@ -214,6 +228,62 @@ export const giveUp = async (
       const errorData = await response.json();
       if (errorData.detail) {
         errorMessage = errorData.detail;
+      }
+    } catch {
+      errorMessage = response.statusText || `Server error (${response.status})`;
+    }
+    throw new Error(errorMessage);
+  }
+
+  return await response.json();
+};
+
+/**
+ * Response structure from /api/game/activate-lifeline
+ */
+export type ActivateLifelineResponse = {
+  success: boolean;
+  lifeline_activated?: boolean;
+  narrowed_catalog?: Array<{
+    id: string;
+    title: string;
+    artist: string;
+    album: string;
+    aliases: string;
+    popularity_rank: number | null;
+  }>;
+  catalog_size?: number;
+  message?: string;
+  session?: GameInitResponse['session'];
+  error?: string;
+  guesses_required?: number;
+  current_guesses?: number;
+};
+
+/**
+ * Activate lifeline for the current puzzle session
+ */
+export const activateLifeline = async (
+  sessionId: string
+): Promise<ActivateLifelineResponse> => {
+  const response = await fetch(getApiUrl('/api/game/activate-lifeline'), {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      session_id: sessionId,
+    }),
+  });
+
+  if (!response.ok) {
+    let errorMessage = `Server error (${response.status})`;
+    try {
+      const errorData = await response.json();
+      if (errorData.detail) {
+        errorMessage = errorData.detail;
+      } else if (errorData.error) {
+        errorMessage = errorData.error;
       }
     } catch {
       errorMessage = response.statusText || `Server error (${response.status})`;

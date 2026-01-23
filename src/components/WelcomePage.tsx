@@ -1,3 +1,8 @@
+import { useState, useEffect } from 'react';
+import HamburgerMenu from './HamburgerMenu/HamburgerMenu';
+import { initGame } from '../services/gameApi';
+import { getPlayerId } from '../utils/storage';
+import { MUSIC_GAME_ID } from '../config/gameConfig';
 import './WelcomePage.css';
 
 interface WelcomePageProps {
@@ -5,9 +10,65 @@ interface WelcomePageProps {
   onShowStatistics?: () => void;
   onShowHelp?: () => void;
   onShowArchive?: () => void;
+  onShowSettings?: () => void;
 }
 
-const WelcomePage = ({ onPlay, onShowStatistics, onShowHelp, onShowArchive }: WelcomePageProps) => {
+const WelcomePage = ({ onPlay, onShowStatistics, onShowHelp, onShowArchive, onShowSettings }: WelcomePageProps) => {
+  const [dailyPuzzleStatus, setDailyPuzzleStatus] = useState<'in_progress' | 'won' | 'lost' | 'abandoned' | 'quit' | 'not_played' | null>(null);
+  const [isLoadingStatus, setIsLoadingStatus] = useState(true);
+
+  useEffect(() => {
+    const checkDailyPuzzleStatus = async () => {
+      try {
+        setIsLoadingStatus(true);
+        const storedPlayerId = getPlayerId();
+        const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+        
+        // Call init API without puzzle_id/local_date to get today's puzzle
+        const response = await initGame(
+          MUSIC_GAME_ID,
+          storedPlayerId,
+          timezone,
+          undefined,
+          undefined
+        );
+        
+        // Check if puzzle is completed
+        if (response.session.state.is_over) {
+          setDailyPuzzleStatus(response.session.status);
+        } else {
+          setDailyPuzzleStatus('in_progress');
+        }
+      } catch (err) {
+        console.error('Error checking daily puzzle status:', err);
+        setDailyPuzzleStatus('not_played');
+      } finally {
+        setIsLoadingStatus(false);
+      }
+    };
+
+    checkDailyPuzzleStatus();
+  }, []);
+
+  const getPlayButtonText = () => {
+    if (isLoadingStatus) {
+      return 'Play';
+    }
+    
+    switch (dailyPuzzleStatus) {
+      case 'won':
+        return 'View Daily Puzzle';
+      case 'lost':
+      case 'abandoned':
+      case 'quit':
+        return 'Review Daily Puzzle';
+      case 'in_progress':
+        return 'Continue Playing';
+      default:
+        return 'Play';
+    }
+  };
+
   return (
     <div className="welcome-container">
       {/* Floating musical notes background */}
@@ -27,28 +88,21 @@ const WelcomePage = ({ onPlay, onShowStatistics, onShowHelp, onShowArchive }: We
       <div className="vinyl-record vinyl-2"></div>
       
       <div className="welcome-content">
+        <div className="welcome-header-menu">
+          <HamburgerMenu
+            onShowStatistics={onShowStatistics}
+            onShowArchive={onShowArchive}
+            onShowHelp={onShowHelp}
+            onShowSettings={onShowSettings}
+          />
+        </div>
         <div className="title-icon">🎵</div>
         <h1 className="welcome-title">HitFinder</h1>
         <p className="welcome-subtitle">Can you reveal today's secret song?</p>
         <div className="welcome-buttons">
           <button className="play-button" onClick={onPlay}>
-            <span className="play-icon">▶</span> Play
+            <span className="play-icon">▶</span> {getPlayButtonText()}
           </button>
-          {onShowStatistics && (
-            <button className="statistics-button" onClick={onShowStatistics}>
-              Statistics
-            </button>
-          )}
-          {onShowHelp && (
-            <button className="help-button" onClick={onShowHelp} title="How to Play">
-              ❓ Help
-            </button>
-          )}
-          {onShowArchive && (
-            <button className="archive-button" onClick={onShowArchive} title="View Archive">
-              📅 Archive
-            </button>
-          )}
         </div>
       </div>
     </div>

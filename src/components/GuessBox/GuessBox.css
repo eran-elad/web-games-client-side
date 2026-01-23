@@ -350,6 +350,7 @@
   /* iOS Safari touch improvements */
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation; /* Prevent double-tap zoom */
+  cursor: pointer; /* Explicit cursor to prevent Chrome's touch circle */
 }
 
 .clue-help-button:hover {
@@ -388,11 +389,20 @@
   left: 0;
   opacity: 0; /* Invisible but still measurable */
   visibility: hidden; /* Hidden until positioned */
+}
+
+.clue-tooltip strong {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
   /* iOS Safari fixes */
   -webkit-transform: translateZ(0); /* Create new stacking context for iOS */
   transform: translate3d(0, 0, 0); /* Force hardware acceleration */
   will-change: transform; /* Optimize for transforms */
   touch-action: none; /* Prevent scrolling interference on iOS */
+  cursor: default; /* Explicit cursor to prevent Chrome's touch circle */
 }
 
 /* Arrow indicator pointing to the button */
@@ -447,6 +457,40 @@
   
   .clue-value {
     color: #fff;
+  }
+}
+
+.lifeline-box {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+  border: 2px solid rgba(102, 126, 234, 0.3);
+}
+
+.lifeline-catalog-size {
+  margin-top: 0.75rem;
+  font-size: 0.85rem;
+  color: #667eea;
+  text-align: center;
+}
+
+.catalog-size-after-guess {
+  margin-top: 0.75rem;
+  font-size: 0.8rem;
+  color: #667eea;
+  text-align: center;
+}
+
+@media (prefers-color-scheme: dark) {
+  .lifeline-box {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%);
+    border-color: rgba(102, 126, 234, 0.4);
+  }
+  
+  .lifeline-catalog-size {
+    color: #818cf8;
+  }
+  
+  .catalog-size-after-guess {
+    color: #818cf8;
   }
 }
 

@@ -9,6 +9,7 @@ const STORAGE_KEYS = {
   PUZZLE_ID: 'music_game_puzzle_id',
   LOCAL_DATE: 'music_game_local_date',
   VIEWING_ARCHIVE: 'music_game_viewing_archive',
+  DISTANCE_UNIT: 'music_game_distance_unit',
 } as const;
 
 /**
@@ -125,6 +126,37 @@ export const isViewingArchive = (): boolean => {
 };
 
 /**
+ * Get the stored distance unit preference
+ * @returns 'km' | 'miles' | null (null means use country default)
+ */
+export const getDistanceUnit = (): 'km' | 'miles' | null => {
+  const unit = localStorage.getItem(STORAGE_KEYS.DISTANCE_UNIT);
+  if (unit === 'km' || unit === 'miles') {
+    return unit;
+  }
+  return null;
+};
+
+/**
+ * Store the distance unit preference
+ * @param unit - 'km' | 'miles' | null (null means use country default)
+ */
+export const setDistanceUnit = (unit: 'km' | 'miles' | null): void => {
+  if (unit === null) {
+    localStorage.removeItem(STORAGE_KEYS.DISTANCE_UNIT);
+  } else {
+    localStorage.setItem(STORAGE_KEYS.DISTANCE_UNIT, unit);
+  }
+};
+
+/**
+ * Clear the distance unit preference (revert to country default)
+ */
+export const clearDistanceUnit = (): void => {
+  localStorage.removeItem(STORAGE_KEYS.DISTANCE_UNIT);
+};
+
+/**
  * Clear all game data including player ID
  */
 export const clearAll = (): void => {
@@ -134,5 +166,6 @@ export const clearAll = (): void => {
   localStorage.removeItem(STORAGE_KEYS.PUZZLE_ID);
   localStorage.removeItem(STORAGE_KEYS.LOCAL_DATE);
   localStorage.removeItem(STORAGE_KEYS.VIEWING_ARCHIVE);
+  localStorage.removeItem(STORAGE_KEYS.DISTANCE_UNIT);
 };
 

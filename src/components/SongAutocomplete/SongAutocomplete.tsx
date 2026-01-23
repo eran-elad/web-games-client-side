@@ -17,6 +17,7 @@ interface SongAutocompleteProps {
   value?: Song | null;
   placeholder?: string;
   onSubmit?: () => void; // Called when Enter is pressed and a song is selected
+  catalog?: Song[] | null | undefined; // Optional catalog to use instead of fetching
 }
 
 // Helper function to tokenize query into lowercase tokens
@@ -59,6 +60,28 @@ const getWords = (text: string): string[] => {
   return normalizeText(text).split(/\s+/).filter(w => w.length > 0);
 };
 
+// Common stop words that should receive reduced weight
+const STOP_WORDS = new Set([
+  'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 
+  'of', 'with', 'by', 'from', 'as', 'is', 'was', 'are', 'were', 'be', 
+  'been', 'being', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 
+  'would', 'should', 'could', 'may', 'might', 'must', 'can', 'this', 
+  'that', 'these', 'those', 'i', 'you', 'he', 'she', 'it', 'we', 'they'
+]);
+
+// Helper function to check if a token is a stop word
+const isStopWord = (token: string): boolean => {
+  return STOP_WORDS.has(token.toLowerCase());
+};
+
+// Helper function to normalize text by removing hyphens and standardizing whitespace
+const normalizeForCombinedMatch = (text: string): string => {
+  return normalizeText(text)
+    .replace(/[-–—]/g, ' ') // Replace hyphens/dashes with spaces
+    .replace(/\s+/g, ' ') // Normalize multiple spaces to single space
+    .trim();
+};
+
 // Calculate relevance score for a song based on query
 const calculateRelevanceScore = (song: Song, query: string, tokens: string[]): number => {
   let score = 0;
@@ -76,33 +99,77 @@ const calculateRelevanceScore = (song: Song, query: string, tokens: string[]): n
   // Track which fields matched for cross-field bonus
   const matchedFields = new Set<string>();
   
+  // MAJOR BONUS: Exact phrase match in artist name
+  if (normalizedArtist === normalizedQuery || normalizedArtist.includes(normalizedQuery)) {
+    score += 500;
+    matchedFields.add('artist');
+  }
+  
+  // MAJOR BONUS: Combined field matching (title + artist)
+  // Normalize both query and song display string (remove hyphens, standardize spaces)
+  const normalizedQueryForCombined = normalizeForCombinedMatch(query);
+  const normalizedTitleForCombined = normalizeForCombinedMatch(song.title);
+  const normalizedArtistForCombined = normalizeForCombinedMatch(song.artist);
+  
+  // Create combined strings in both possible orderings
+  const combinedTitleArtist = `${normalizedTitleForCombined} ${normalizedArtistForCombined}`;
+  const combinedArtistTitle = `${normalizedArtistForCombined} ${normalizedTitleForCombined}`;
+  
+  // Check if all query tokens appear in the combined string (either ordering)
+  const queryTokensForCombined = normalizedQueryForCombined.split(/\s+/).filter(t => t.length > 0);
+  const allTokensMatchTitleArtist = queryTokensForCombined.every(token => 
+    combinedTitleArtist.includes(token)
+  );
+  const allTokensMatchArtistTitle = queryTokensForCombined.every(token => 
+    combinedArtistTitle.includes(token)
+  );
+  
+  if (allTokensMatchTitleArtist || allTokensMatchArtistTitle) {
+    // Strong match: all tokens match both fields
+    score += 400;
+    matchedFields.add('title');
+    matchedFields.add('artist');
+  } else if (combinedTitleArtist.includes(normalizedQueryForCombined) || 
+             combinedArtistTitle.includes(normalizedQueryForCombined)) {
+    // Phrase match: query appears as substring in combined string
+    score += 200;
+    matchedFields.add('title');
+    matchedFields.add('artist');
+  }
+  
+  // Stop word multiplier for reducing weight of common words
+  const stopWordMultiplier = 0.3;
+  
   for (const token of tokens) {
+    const isStop = isStopWord(token);
+    const multiplier = isStop ? stopWordMultiplier : 1.0;
+    
     let tokenMatched = false;
     
     // 1. Exact/Prefix Matches (highest weight)
     
     // Exact match in title
     if (normalizedTitle === token) {
-      score += 150;
+      score += 150 * multiplier;
       tokenMatched = true;
       matchedFields.add('title');
     }
     // Title starts with token
     else if (normalizedTitle.startsWith(token)) {
-      score += 100;
+      score += 100 * multiplier;
       tokenMatched = true;
       matchedFields.add('title');
     }
     
     // Exact match in artist
     if (normalizedArtist === token) {
-      score += 120;
+      score += 120 * multiplier;
       tokenMatched = true;
       matchedFields.add('artist');
     }
     // Artist starts with token
     else if (normalizedArtist.startsWith(token)) {
-      score += 80;
+      score += 80 * multiplier;
       tokenMatched = true;
       matchedFields.add('artist');
     }
@@ -110,7 +177,7 @@ const calculateRelevanceScore = (song: Song, query: string, tokens: string[]): n
     // Any word in title starts with token
     for (const word of titleWords) {
       if (wordStartsWith(word, token)) {
-        score += 60;
+        score += 60 * multiplier;
         tokenMatched = true;
         matchedFields.add('title');
         break; // Only count once per token
@@ -120,7 +187,7 @@ const calculateRelevanceScore = (song: Song, query: string, tokens: string[]): n
     // Any word in artist starts with token
     for (const word of artistWords) {
       if (wordStartsWith(word, token)) {
-        score += 60;
+        score += 60 * multiplier;
         tokenMatched = true;
         matchedFields.add('artist');
         break; // Only count once per token
@@ -129,19 +196,19 @@ const calculateRelevanceScore = (song: Song, query: string, tokens: string[]): n
     
     // 2. Token Coverage - base points for any match
     if (tokenMatched) {
-      score += 40;
+      score += 40 * multiplier;
     }
     
     // Check album
     if (normalizedAlbum.includes(token)) {
-      score += 30;
+      score += 30 * multiplier;
       tokenMatched = true;
       matchedFields.add('album');
     }
     
     // 4. Aliases (lower weight)
     if (normalizedAliases.includes(token)) {
-      score += 30;
+      score += 30 * multiplier;
       tokenMatched = true;
       matchedFields.add('aliases');
     }
@@ -224,7 +291,8 @@ const SongAutocomplete = ({
   onSongSelect, 
   value = null, 
   placeholder = 'Type a song title or artist...',
-  onSubmit
+  onSubmit,
+  catalog = undefined
 }: SongAutocompleteProps) => {
   const [songs, setSongs] = useState<Song[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -241,44 +309,60 @@ const SongAutocomplete = ({
     }
   }, [value]);
 
+  // Use provided catalog or fetch from API
   useEffect(() => {
-    const fetchSongs = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const response = await fetch(getApiUrl('/api/catalog/searchable'));
-        
-        if (!response.ok) {
-          // Try to get error details from response
-          let errorMessage = `Server error (${response.status})`;
-          try {
-            const errorData = await response.json();
-            if (errorData.message || errorData.error) {
-              errorMessage = errorData.message || errorData.error;
-            }
-          } catch {
-            // If response is not JSON, use status text
-            errorMessage = response.statusText || `Server error (${response.status})`;
-          }
-          throw new Error(errorMessage);
-        }
-        
-        const data: Song[] = await response.json();
-        setSongs(data);
-      } catch (err) {
-        // Log detailed error to console for developers
-        console.error('Error fetching songs:', err);
-        
-        // Show user-friendly error message
-        // Detailed error information is already logged to console above
-        setError('Unable to load songs. Please try again later.');
-      } finally {
-        setLoading(false);
-      }
-    };
+    // If catalog is provided and is an array, use it directly
+    if (catalog !== null && catalog !== undefined && Array.isArray(catalog)) {
+      console.log('SongAutocomplete: Using provided catalog with', catalog.length, 'songs');
+      // Create a new array reference to ensure React detects the change
+      setSongs([...catalog]);
+      setLoading(false);
+      setError(null);
+      return;
+    }
 
-    fetchSongs();
-  }, []);
+    // Only fetch if catalog is not provided (null or undefined)
+    if (catalog === null || catalog === undefined) {
+      // Fetch catalog from API
+      const fetchSongs = async () => {
+        try {
+          setLoading(true);
+          setError(null);
+          const response = await fetch(getApiUrl('/api/catalog/searchable'));
+          
+          if (!response.ok) {
+            // Try to get error details from response
+            let errorMessage = `Server error (${response.status})`;
+            try {
+              const errorData = await response.json();
+              if (errorData.message || errorData.error) {
+                errorMessage = errorData.message || errorData.error;
+              }
+            } catch {
+              // If response is not JSON, use status text
+              errorMessage = response.statusText || `Server error (${response.status})`;
+            }
+            throw new Error(errorMessage);
+          }
+          
+          const data: Song[] = await response.json();
+          console.log('SongAutocomplete: Fetched full catalog with', data.length, 'songs');
+          setSongs(data);
+        } catch (err) {
+          // Log detailed error to console for developers
+          console.error('Error fetching songs:', err);
+          
+          // Show user-friendly error message
+          // Detailed error information is already logged to console above
+          setError('Unable to load songs. Please try again later.');
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      fetchSongs();
+    }
+  }, [catalog]);
 
   const getOptionLabel = (option: Song | string): string => {
     if (typeof option === 'string') {

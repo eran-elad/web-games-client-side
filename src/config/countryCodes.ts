@@ -257,6 +257,19 @@ export const COUNTRY_CODES: Record<string, string> = {
 };
 
 /**
+ * Country measurement system mapping
+ * Countries that use miles: US, GB, LR, MM
+ * All others use kilometers (km) as default
+ */
+export const COUNTRY_MEASUREMENT_SYSTEM: Record<string, 'km' | 'miles'> = {
+  'US': 'miles', // United States
+  'GB': 'miles', // United Kingdom
+  'LR': 'miles', // Liberia
+  'MM': 'miles', // Myanmar
+  // All other countries default to 'km'
+};
+
+/**
  * Get country name from 2-letter ISO code
  * @param code - 2-letter country code (case-insensitive)
  * @returns Full country name or the code itself if not found
@@ -265,6 +278,17 @@ export const getCountryName = (code: string | null | undefined): string => {
   if (!code) return '';
   const upperCode = code.toUpperCase();
   return COUNTRY_CODES[upperCode] || code;
+};
+
+/**
+ * Get the measurement system (km or miles) for a country
+ * @param countryCode - 2-letter country code (case-insensitive)
+ * @returns 'km' or 'miles', defaults to 'km' if country not found or not specified
+ */
+export const getCountryMeasurementSystem = (countryCode: string | null | undefined): 'km' | 'miles' => {
+  if (!countryCode) return 'km';
+  const upperCode = countryCode.toUpperCase();
+  return COUNTRY_MEASUREMENT_SYSTEM[upperCode] || 'km';
 };
 
 /**

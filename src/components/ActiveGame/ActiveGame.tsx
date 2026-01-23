@@ -1,12 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import SongAutocomplete from '../SongAutocomplete/SongAutocomplete';
 import GuessBox from '../GuessBox/GuessBox';
 import WinConfetti from '../WinAnimation/WinConfetti';
 import ShareResult from '../ShareResult/ShareResult';
+import HamburgerMenu from '../HamburgerMenu/HamburgerMenu';
 import { MUSIC_GAME_ID } from '../../config/gameConfig';
-import { getPlayerId, setPlayerId, setSessionId, setGameId, clearSession, getPuzzleId, getLocalDate } from '../../utils/storage';
-import { initGame, submitGuess, giveUp } from '../../services/gameApi';
-import type { GameInitResponse } from '../../services/gameApi';
+import { getApiUrl } from '../../config/apiConfig';
+import { getPlayerId, setPlayerId, setSessionId, setGameId, clearSession, getPuzzleId, getLocalDate, getDistanceUnit } from '../../utils/storage';
+import { initGame, submitGuess, giveUp, activateLifeline } from '../../services/gameApi';
+import type { GameInitResponse, ActivateLifelineResponse } from '../../services/gameApi';
 import './ActiveGame.css';
 
 interface Song {
@@ -27,6 +29,9 @@ interface Guess {
   guessedGender?: string; // Gender from guess.gender
   guessedYear?: number; // Year from guess.year
   songId?: string; // Store song ID for duplicate checking
+  isLifeline?: boolean; // Indicates this is a lifeline entry
+  catalogSize?: number; // Catalog size for lifeline entries
+  catalogSizeAfterGuess?: number; // Catalog size after this guess (when lifeline active)
 }
 
 interface SessionState {
@@ -35,6 +40,8 @@ interface SessionState {
   is_solved: boolean;
   is_over: boolean;
   status: 'in_progress' | 'won' | 'lost' | 'abandoned' | 'quit';
+  lifeline_min_songs?: number;
+  lifeline_min_guesses_required?: number;
   puzzle?: {
     max_guesses: number;
     solution?: {
@@ -181,9 +188,11 @@ interface ActiveGameProps {
   userClosedStats?: boolean; // True if user manually closed statistics
   onShowHelp?: () => void;
   onShowArchive?: () => void;
+  onShowSettings?: () => void;
+  onGoHome?: () => void;
 }
 
-const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onShowArchive }: ActiveGameProps = {}) => {
+const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onShowArchive, onShowSettings, onGoHome }: ActiveGameProps = {}) => {
   const [selectedSongId, setSelectedSongId] = useState<string | null>(null);
   const [selectedSong, setSelectedSong] = useState<Song | null>(null);
   const [guesses, setGuesses] = useState<Guess[]>([]);
@@ -195,6 +204,22 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
   const [hasShownStats, setHasShownStats] = useState<boolean>(false);
   const [isWinning, setIsWinning] = useState<boolean>(false);
   const [puzzleDate, setPuzzleDate] = useState<string | null>(null);
+  const [lifelineActivated, setLifelineActivated] = useState<boolean>(false);
+  const [narrowedCatalog, setNarrowedCatalog] = useState<Song[] | null>(null);
+  const [catalogSize, setCatalogSize] = useState<number | null>(null);
+  const [distanceUnitKey, setDistanceUnitKey] = useState<number>(0); // Force re-render when distance unit changes
+
+  // Listen for distance unit changes from settings
+  useEffect(() => {
+    const handleDistanceUnitChange = () => {
+      setDistanceUnitKey(prev => prev + 1); // Force re-render of GuessBox components
+    };
+    
+    window.addEventListener('distanceUnitChanged', handleDistanceUnitChange);
+    return () => {
+      window.removeEventListener('distanceUnitChanged', handleDistanceUnitChange);
+    };
+  }, []);
 
   // Initialize game session on mount
   useEffect(() => {
@@ -264,6 +289,8 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
           is_solved: response.session.state.is_solved,
           is_over: response.session.state.is_over,
           status: response.session.status,
+          lifeline_min_songs: response.session.state.lifeline_min_songs,
+          lifeline_min_guesses_required: response.session.state.lifeline_min_guesses_required,
           puzzle: {
             max_guesses: response.session.puzzle.max_guesses,
             solution: response.session.puzzle.solution,
@@ -271,28 +298,120 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
           secret_song: response.session.secret_song,
         });
         
+        // Check if lifeline is already activated
+        // The server may not return lifeline_active in init response, so check history
+        const hasLifelineInHistory = response.session.history.guesses.some(g => g.type === 'lifeline');
+        const isLifelineActive = response.lifeline_active === true || hasLifelineInHistory;
+        console.log('ActiveGame: Checking lifeline status on init:', {
+          lifeline_active: response.lifeline_active,
+          narrowed_catalog: response.narrowed_catalog ? response.narrowed_catalog.length : null,
+          catalog_size: response.catalog_size,
+          has_lifeline_in_history: hasLifelineInHistory,
+          inferred_lifeline_active: isLifelineActive
+        });
+        setLifelineActivated(isLifelineActive);
+        
+        // Track catalog size for use in guess history
+        let catalogSizeFromResponse: number | undefined = undefined;
+        
+        // If lifeline is active but server didn't provide narrowed catalog, fetch it
+        if (isLifelineActive && !response.narrowed_catalog && response.session.session_id) {
+          console.log('ActiveGame: Lifeline active but no catalog in response, fetching narrowed catalog...');
+          try {
+            const hintResponse = await fetch(getApiUrl(`/api/catalog/hint?session_id=${response.session.session_id}`));
+            if (hintResponse.ok) {
+              const narrowedCatalogData: Song[] = await hintResponse.json();
+              console.log('ActiveGame: Fetched narrowed catalog:', narrowedCatalogData.length, 'songs');
+              catalogSizeFromResponse = narrowedCatalogData.length;
+              setNarrowedCatalog(narrowedCatalogData);
+              setCatalogSize(narrowedCatalogData.length);
+            }
+          } catch (err) {
+            console.error('ActiveGame: Error fetching narrowed catalog:', err);
+          }
+        }
+        
+        // Fetch full catalog on init (if lifeline not active)
+        if (!isLifelineActive) {
+          try {
+            const catalogResponse = await fetch(getApiUrl('/api/catalog/searchable'));
+            if (catalogResponse.ok) {
+              await catalogResponse.json(); // Just fetch to ensure catalog is available
+            }
+          } catch (err) {
+            console.error('Error fetching catalog:', err);
+          }
+        }
+        
+        // If lifeline is active and we have narrowed catalog from response, use it
+        if (isLifelineActive && response.narrowed_catalog) {
+          console.log('ActiveGame: Setting narrowed catalog on init:', response.narrowed_catalog.length, 'songs');
+          catalogSizeFromResponse = response.catalog_size || response.narrowed_catalog.length;
+          setNarrowedCatalog(response.narrowed_catalog);
+          setCatalogSize(catalogSizeFromResponse);
+        }
+        
         // Store puzzle date to show in title
         setPuzzleDate(response.session.puzzle.local_date);
         
         // Load historical guesses
-        const historicalGuesses: Guess[] = response.session.history.guesses.map((guess) => {
-          // Parse display string "Title - Artist" to extract title and artist
-          const displayParts = guess.guess.display.split(' - ');
-          const songTitle = displayParts[0] || guess.guess.display;
-          const artist = displayParts.slice(1).join(' - ') || '';
-          
-          return {
-            songTitle,
-            artist,
-            clues: guess.result.clues,
-            guessedCountry: guess.guess.country, // Extract country code from the guess
-            guessedArtistType: (guess.guess as any).artist_type, // Extract artist_type from the guess
-            guessedGender: (guess.guess as any).gender, // Extract gender from the guess
-            guessedYear: guess.guess.year, // Extract year from the guess
-            songId: guess.guess.entity_id, // Store song ID for duplicate checking
-          };
-        });
+        // First, find if there's a lifeline entry to get its catalog size
+        const lifelineEntryIndex = response.session.history.guesses.findIndex(g => g.type === 'lifeline');
+        // If lifeline is active, use catalog size from response or fetched catalog
+        let lifelineCatalogSize: number | undefined = undefined;
+        if (isLifelineActive && lifelineEntryIndex !== -1) {
+          lifelineCatalogSize = catalogSizeFromResponse;
+          console.log('ActiveGame: Lifeline entry found, catalog size:', lifelineCatalogSize);
+        }
         
+        const historicalGuesses: Guess[] = response.session.history.guesses
+          .map((guess, index) => {
+            // Check if this is a lifeline entry
+            if (guess.type === 'lifeline') {
+              console.log('ActiveGame: Found lifeline entry in history at index', index, 'catalog size:', lifelineCatalogSize);
+              return {
+                songTitle: '',
+                artist: '',
+                clues: {},
+                isLifeline: true,
+                catalogSize: lifelineCatalogSize,
+              };
+            }
+            
+            // Regular guess entry - skip if no guess/result
+            if (!guess.guess || !guess.result) {
+              return null;
+            }
+            
+            // Parse display string "Title - Artist" to extract title and artist
+            const displayParts = guess.guess.display.split(' - ');
+            const songTitle = displayParts[0] || guess.guess.display;
+            const artist = displayParts.slice(1).join(' - ') || '';
+            
+            // Get catalog size after this guess if lifeline is active
+            // For historical guesses, we don't have the catalog size at that point in time
+            // So we'll only set it for the last guess if lifeline is active
+            let catalogSizeAfterGuess: number | undefined = undefined;
+            if (isLifelineActive && index === response.session.history.guesses.length - 1) {
+              catalogSizeAfterGuess = catalogSizeFromResponse;
+              console.log('ActiveGame: Setting catalog size after last guess:', catalogSizeAfterGuess);
+            }
+            
+            return {
+              songTitle,
+              artist,
+              clues: guess.result.clues,
+              guessedCountry: guess.guess.country,
+              guessedArtistType: (guess.guess as any).artist_type,
+              guessedGender: (guess.guess as any).gender,
+              guessedYear: guess.guess.year,
+              songId: guess.guess.entity_id,
+              catalogSizeAfterGuess,
+            };
+          })
+          .filter((g) => g !== null) as Guess[];
+        
+        console.log('ActiveGame: Loaded', historicalGuesses.length, 'guesses, lifeline activated:', isLifelineActive, 'lifeline catalog size:', lifelineCatalogSize);
         setGuesses(historicalGuesses);
         
         // Don't auto-show statistics when loading a game (even if completed)
@@ -401,6 +520,8 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
         is_solved: response.session.state.is_solved,
         is_over: response.session.state.is_over,
         status: response.session.status,
+        lifeline_min_songs: response.session.state.lifeline_min_songs,
+        lifeline_min_guesses_required: response.session.state.lifeline_min_guesses_required,
         puzzle: {
           max_guesses: response.session.puzzle.max_guesses,
           solution: response.session.puzzle.solution,
@@ -409,9 +530,15 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
       };
       setSessionState(newSessionState);
       
+      // Handle lifeline catalog updates
+      if (response.lifeline_active && response.narrowed_catalog) {
+        setNarrowedCatalog(response.narrowed_catalog);
+        setCatalogSize(response.catalog_size || response.narrowed_catalog.length);
+      }
+      
       // Get the latest guess from history (should be the last one)
       const latestGuess = response.session.history.guesses[response.session.history.guesses.length - 1];
-      if (latestGuess) {
+      if (latestGuess && latestGuess.guess && latestGuess.result) {
         // Parse display string "Title - Artist" to extract title and artist
         const displayParts = latestGuess.guess.display.split(' - ');
         const songTitle = displayParts[0] || latestGuess.guess.display;
@@ -433,6 +560,7 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
           guessedGender: genderFromGuess, // Extract gender from the guess object
           guessedYear: latestGuess.guess.year, // Extract year from the guess
           songId: latestGuess.guess.entity_id, // Store song ID for duplicate checking
+          catalogSizeAfterGuess: response.lifeline_active ? (response.catalog_size ?? undefined) : undefined,
         };
         
         setGuesses(prev => [...prev, newGuess]);
@@ -470,6 +598,95 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
     }
   };
 
+  const handleLifelineActivation = async () => {
+    if (!sessionId || !sessionState) {
+      setError('Session not found. Please refresh the page.');
+      return;
+    }
+
+    // Check eligibility
+    const minGuessesRequired = sessionState.lifeline_min_guesses_required ?? Math.floor((sessionState.puzzle?.max_guesses ?? 6) / 2);
+    const minSongs = sessionState.lifeline_min_songs ?? 100;
+    
+    if (sessionState.guess_count < minGuessesRequired) {
+      setError(`Not enough guesses yet. Need at least ${minGuessesRequired} guesses.`);
+      return;
+    }
+    
+    if (lifelineActivated) {
+      setError('Lifeline already activated');
+      return;
+    }
+    
+    if (sessionState.guesses_remaining <= 1) {
+      setError('Unavailable on the last guess');
+      return;
+    }
+
+    // Show confirmation dialog with tooltip text
+    const tooltipText = `Using a Lifeline reduces the song list in the search box using your clues (approximate).\nUpdates after every guess, but never below ${minSongs} songs.\nAvailable after ${minGuessesRequired} guesses. One use per puzzle. Costs 1 guess.`;
+    const confirmed = window.confirm(tooltipText + '\n\nDo you want to activate the lifeline?');
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Call activate-lifeline API
+      const response: ActivateLifelineResponse = await activateLifeline(sessionId);
+      
+      if (!response.success || !response.lifeline_activated) {
+        setError(response.error || 'Failed to activate lifeline');
+        return;
+      }
+      
+      // Update state with narrowed catalog
+      if (response.narrowed_catalog) {
+        console.log('ActiveGame: Lifeline activated, setting narrowed catalog:', response.narrowed_catalog.length, 'songs');
+        setNarrowedCatalog(response.narrowed_catalog);
+        setCatalogSize(response.catalog_size || response.narrowed_catalog.length);
+      }
+      
+      setLifelineActivated(true);
+      
+      // Update session state if provided
+      if (response.session) {
+        setSessionState({
+          guess_count: response.session.state.guess_count,
+          guesses_remaining: response.session.state.guesses_remaining,
+          is_solved: response.session.state.is_solved,
+          is_over: response.session.state.is_over,
+          status: response.session.status,
+          lifeline_min_songs: response.session.state.lifeline_min_songs,
+          lifeline_min_guesses_required: response.session.state.lifeline_min_guesses_required,
+          puzzle: {
+            max_guesses: response.session.puzzle.max_guesses,
+            solution: response.session.puzzle.solution,
+          },
+          secret_song: response.session.secret_song,
+        });
+        
+        // Add lifeline entry to guess history
+        const lifelineGuess: Guess = {
+          songTitle: '',
+          artist: '',
+          clues: {},
+          isLifeline: true,
+          catalogSize: response.catalog_size ?? undefined,
+        };
+        setGuesses(prev => [...prev, lifelineGuess]);
+      }
+    } catch (err) {
+      console.error('Error activating lifeline:', err);
+      const errorMessage = err instanceof Error ? err.message : '';
+      setError(errorMessage || 'Unable to activate lifeline. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleGiveUp = async () => {
     if (!sessionId) {
       setError('Session not found. Please refresh the page.');
@@ -496,6 +713,8 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
         is_solved: response.session.state.is_solved,
         is_over: response.session.state.is_over,
         status: response.session.status,
+        lifeline_min_songs: response.session.state.lifeline_min_songs,
+        lifeline_min_guesses_required: response.session.state.lifeline_min_guesses_required,
         puzzle: {
           max_guesses: response.session.puzzle.max_guesses,
           solution: response.session.puzzle.solution,
@@ -524,6 +743,10 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
     }
   };
 
+  // Check if this is today's daily puzzle (regardless of how we accessed it)
+  const todayDate = new Date().toISOString().split('T')[0];
+  const isDailyPuzzle = puzzleDate === todayDate || puzzleDate === null;
+
   // Use server's session state as the source of truth
   const maxGuesses = sessionState?.puzzle?.max_guesses ?? 6;
   const guessedCount = sessionState 
@@ -546,10 +769,10 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
         <div className="active-game-content">
           <h1 className="daily-song-title">
             <span className="music-icon">♪</span>
-            {puzzleDate && puzzleDate !== new Date().toISOString().split('T')[0] ? (
-              `Archived Puzzle: ${new Date(puzzleDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
+            {isDailyPuzzle ? (
+              'Daily Puzzle'
             ) : (
-              'Daily Song'
+              `Archived Puzzle: ${new Date(puzzleDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
             )}
           </h1>
           <p>Loading game...</p>
@@ -564,28 +787,20 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
         <div className="game-header">
           <h1 className="daily-song-title">
             <span className="music-icon">♪</span>
-            {puzzleDate && puzzleDate !== new Date().toISOString().split('T')[0] ? (
-              `Archived Puzzle: ${new Date(puzzleDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
+            {isDailyPuzzle ? (
+              'Daily Puzzle'
             ) : (
-              'Daily Song'
+              `Archived Puzzle: ${new Date(puzzleDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
             )}
           </h1>
           <div className="header-buttons">
-            {onShowHelp && (
-              <button className="help-link-button" onClick={onShowHelp} title="How to Play">
-                ❓ Help
-              </button>
-            )}
-            {onShowStatistics && (
-              <button className="statistics-link-button" onClick={onShowStatistics} title="View Statistics">
-                📊 Stats
-              </button>
-            )}
-            {onShowArchive && (
-              <button className="archive-link-button" onClick={onShowArchive} title="View Archive">
-                📅 Archive
-              </button>
-            )}
+            <HamburgerMenu
+              onShowStatistics={onShowStatistics}
+              onShowArchive={onShowArchive}
+              onShowHelp={onShowHelp}
+              onShowSettings={onShowSettings}
+              onGoHome={onGoHome}
+            />
           </div>
         </div>
         <p className="guess-counter">
@@ -667,27 +882,51 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
               placeholder="Type a song title or artist..."
               value={selectedSong}
               onSubmit={handleGuess}
+              catalog={lifelineActivated && narrowedCatalog ? narrowedCatalog : undefined}
             />
             <span className="search-icon">🔍</span>
           </div>
           <div className="action-buttons">
-            <button 
-              className="submit-button" 
-              onClick={handleGuess}
-              disabled={loading || !selectedSongId || !canSubmit}
-            >
-              {loading ? 'Loading...' : 'Guess'}
-            </button>
-            {/* Show Give-up button only after 3 guesses and if game is not over */}
-            {guessedCount >= 3 && !isGameOver && sessionState?.status === 'in_progress' && (
+            <div className="action-buttons-group">
               <button 
-                className="give-up-button" 
-                onClick={handleGiveUp}
-                disabled={loading}
+                className="submit-button" 
+                onClick={handleGuess}
+                disabled={loading || !selectedSongId || !canSubmit}
               >
-                Give Up
+                {loading ? 'Loading...' : 'Guess'}
               </button>
-            )}
+              {/* Lifeline button */}
+              {!isGameOver && sessionState?.status === 'in_progress' && (
+                <LifelineButton
+                  lifelineActivated={lifelineActivated}
+                  guessCount={guessedCount}
+                  guessesRemaining={guessesRemaining}
+                  minGuessesRequired={sessionState.lifeline_min_guesses_required ?? Math.floor((sessionState.puzzle?.max_guesses ?? 6) / 2)}
+                  minSongs={sessionState.lifeline_min_songs ?? 100}
+                  onActivate={handleLifelineActivation}
+                  loading={loading}
+                />
+              )}
+              {/* Give-up button - always shown, enabled after 3 guesses */}
+              {!isGameOver && sessionState?.status === 'in_progress' && (
+                <button 
+                  className={`give-up-button ${guessedCount >= 3 ? 'enabled' : ''}`}
+                  onClick={handleGiveUp}
+                  disabled={loading || guessedCount < 3}
+                  title={guessedCount < 3 ? 'Available after 3 guesses' : 'Give Up'}
+                >
+                  🏳️
+                </button>
+              )}
+              {/* Info icon explaining both buttons */}
+              {!isGameOver && sessionState?.status === 'in_progress' && (
+                <HelpButtonsInfo
+                  minGuessesRequired={sessionState.lifeline_min_guesses_required ?? Math.floor((sessionState.puzzle?.max_guesses ?? 6) / 2)}
+                  minSongs={sessionState.lifeline_min_songs ?? 100}
+                  lifelineActivated={lifelineActivated}
+                />
+              )}
+            </div>
           </div>
         </div>
         {error && (
@@ -697,7 +936,7 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
           <div className="guesses-container">
             {guesses.slice().reverse().map((guess, index) => (
               <GuessBox
-                key={guesses.length - index}
+                key={`guess-${guesses.length - index}-${distanceUnitKey}`}
                 songTitle={guess.songTitle}
                 artist={guess.artist}
                 clues={guess.clues}
@@ -706,8 +945,12 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
                 guessedArtistType={guess.guessedArtistType}
                 guessedGender={guess.guessedGender}
                 guessedYear={guess.guessedYear}
+                preferredDistanceUnit={getDistanceUnit()}
                 isWinning={isWinning}
                 pulseDelay={index * 0.1}
+                isLifeline={guess.isLifeline}
+                catalogSize={guess.catalogSize ?? undefined}
+                catalogSizeAfterGuess={guess.catalogSizeAfterGuess}
               />
             ))}
           </div>
@@ -718,5 +961,129 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
   );
 };
 
+// Lifeline Button Component with Tooltip
+interface LifelineButtonProps {
+  lifelineActivated: boolean;
+  guessCount: number;
+  guessesRemaining: number;
+  minGuessesRequired: number;
+  minSongs: number;
+  onActivate: () => void;
+  loading: boolean;
+}
+
+const LifelineButton = ({ 
+  lifelineActivated, 
+  guessCount, 
+  guessesRemaining, 
+  minGuessesRequired, 
+  minSongs, 
+  onActivate, 
+  loading 
+}: LifelineButtonProps) => {
+  const buttonRef = useRef<HTMLButtonElement>(null);
+
+  const isEnabled = !lifelineActivated && 
+                    guessCount >= minGuessesRequired && 
+                    guessesRemaining > 1;
+
+  const disabledMessage = lifelineActivated 
+    ? 'Lifeline already activated'
+    : guessesRemaining <= 1
+    ? 'Unavailable on the last guess'
+    : guessCount < minGuessesRequired
+    ? `Available after ${minGuessesRequired} guesses`
+    : '';
+
+  return (
+    <div className="lifeline-button-wrapper">
+      <button
+        ref={buttonRef}
+        className={`lifeline-button ${lifelineActivated ? 'activated' : ''}`}
+        onClick={() => {
+          if (lifelineActivated) {
+            // Show message if already activated
+            alert('Lifeline has already been activated for this puzzle.');
+            return;
+          }
+          if (isEnabled && onActivate) {
+            onActivate();
+          }
+        }}
+        disabled={(!isEnabled && !lifelineActivated) || loading}
+        title={disabledMessage || undefined}
+      >
+        <span className="lifeline-icon">🛟</span>
+      </button>
+    </div>
+  );
+};
+
 export default ActiveGame;
+
+// Help Buttons Info Component
+interface HelpButtonsInfoProps {
+  minGuessesRequired: number;
+  minSongs: number;
+  lifelineActivated: boolean;
+}
+
+const HelpButtonsInfo = ({ 
+  minGuessesRequired, 
+  minSongs,
+  lifelineActivated 
+}: HelpButtonsInfoProps) => {
+  const [showTooltip, setShowTooltip] = useState(false);
+  const tooltipRef = useRef<HTMLDivElement>(null);
+  const iconRef = useRef<HTMLSpanElement>(null);
+
+  const giveUpText = `🏳️ Give Up: Surrender and reveal the answer. Available after 3 guesses.`;
+  const lifelineText = `🛟 Lifeline: Reduces the song list in the search box using your clues (approximate). Updates after every consequent guess, but never below ${minSongs} songs. Available after ${minGuessesRequired} guesses. One use per puzzle. Costs 1 guess.${lifelineActivated ? ' (Already activated)' : ''}`;
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        tooltipRef.current &&
+        iconRef.current &&
+        !tooltipRef.current.contains(event.target as Node) &&
+        !iconRef.current.contains(event.target as Node)
+      ) {
+        setShowTooltip(false);
+      }
+    };
+
+    if (showTooltip) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showTooltip]);
+
+  return (
+    <div className="help-buttons-info-wrapper">
+      <span 
+        ref={iconRef}
+        className="help-buttons-info-icon"
+        onMouseEnter={() => setShowTooltip(true)}
+        onMouseLeave={() => setShowTooltip(false)}
+        onClick={(e) => {
+          e.stopPropagation();
+          setShowTooltip(!showTooltip);
+        }}
+        title="Button information"
+      >
+        ℹ
+      </span>
+      {showTooltip && (
+        <div 
+          ref={tooltipRef}
+          className="help-buttons-tooltip"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div>{giveUpText}</div>
+          <div style={{ marginTop: '0.5rem' }}>{lifelineText}</div>
+        </div>
+      )}
+    </div>
+  );
+};
 

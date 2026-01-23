@@ -3,9 +3,10 @@ import { createPortal } from 'react-dom';
 import './GuessBox.css';
 import { getCountryName, normalizeCountryCode } from '../../config/countryCodes';
 import { DEFAULT_CLUE_THRESHOLDS } from '../../config/clueThresholds';
+import { formatDistance, getDefaultDistanceUnit } from '../../utils/distanceUtils';
 
 interface ClueTooltipProps {
-  helpText: string;
+  helpText: string | React.ReactNode;
   clueType?: string; // For debugging - which clue this tooltip is for
 }
 
@@ -223,12 +224,16 @@ interface GuessBoxProps {
   guessedArtistType?: string; // Artist type from the guess object (guess.artist_type)
   guessedGender?: string; // Gender from the guess object (guess.gender)
   guessedYear?: number; // Year from the guess object (guess.year)
+  preferredDistanceUnit?: 'km' | 'miles' | null; // User's preferred distance unit (null = use country default)
   isWinning?: boolean; // Whether to show win animation
   pulseDelay?: number; // Delay in seconds for staggered pulse effect
   durationClueShown?: boolean; // Whether duration clue has been shown in this session (for threshold logic)
+  isLifeline?: boolean; // Indicates this is a lifeline entry
+  catalogSize?: number; // Catalog size for lifeline entries
+  catalogSizeAfterGuess?: number; // Catalog size after this guess (when lifeline active)
 }
 
-const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guessedArtistType, guessedGender, guessedYear, isWinning = false, pulseDelay = 0 }: GuessBoxProps) => {
+const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guessedArtistType, guessedGender, guessedYear, preferredDistanceUnit = null, isWinning = false, pulseDelay = 0, isLifeline = false, catalogSize, catalogSizeAfterGuess }: GuessBoxProps) => {
   // Helper to determine clue status (correct/close/incorrect/neighboring) based on thresholds
   type ClueStatus = 'correct' | 'close' | 'incorrect' | 'neighboring' | 'unknown';
   
@@ -348,13 +353,8 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guess
       if (distValue !== undefined) {
         distanceValue = Number(distValue);
         if (!isNaN(distanceValue)) {
-          // Format large distances more compactly
-          if (distanceValue >= 1000) {
-            const thousands = (distanceValue / 1000).toFixed(1);
-            distance = `${thousands.replace(/\.0$/, '')}k`; // e.g., "5.1k" or "5k" (more compact, no "km")
-          } else {
-            distance = `${distanceValue}km`;
-          }
+          // Use formatDistance utility to format with correct unit
+          distance = formatDistance(distanceValue, preferredDistanceUnit);
         }
       }
       
@@ -596,9 +596,38 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guess
         ).join(' ');
     }
   };
+
+  // Helper to format gender for tooltip display (e.g., "Mixed" -> "mixed-gender")
+  const formatGenderForTooltip = (gender: string): string => {
+    if (!gender) return '';
+    const lower = gender.toLowerCase();
+    switch (lower) {
+      case 'mixed':
+        return 'mixed-gender';
+      case 'all_male':
+      case 'all males':
+        return 'all-male';
+      case 'all_female':
+      case 'all_females':
+      case 'all females':
+        return 'all-female';
+      case 'male':
+        return 'male';
+      case 'female':
+        return 'female';
+      case 'non_binary':
+      case 'non-binary':
+        return 'non-binary';
+      case 'other':
+        return 'other';
+      default:
+        // Convert snake_case to kebab-case and lowercase
+        return gender.toLowerCase().replace(/_/g, '-');
+    }
+  };
   
   // Helper to get help text for clues
-  const getHelpText = (clueType: 'year' | 'country' | 'genre' | 'duration' | 'artist' | 'album' | 'artist_type' | 'gender', clueObj: any): string => {
+  const getHelpText = (clueType: 'year' | 'country' | 'genre' | 'duration' | 'artist' | 'album' | 'artist_type' | 'gender', clueObj: any, preferredUnit?: 'km' | 'miles' | null): string | React.ReactNode => {
     if (!clueObj || typeof clueObj !== 'object') return '';
     
     switch (clueType) {
@@ -635,10 +664,21 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guess
         const dir = clueObj.dir || clueObj.direction || '';
         const directionText = dir ? ` in the ${dir === 'N' ? 'north' : dir === 'S' ? 'south' : dir === 'E' ? 'east' : dir === 'W' ? 'west' : dir === 'NE' ? 'northeast' : dir === 'NW' ? 'northwest' : dir === 'SE' ? 'southeast' : dir === 'SW' ? 'southwest' : dir.toLowerCase()} direction` : '';
         
-        if (countryName) {
-          return `The secret song is not from ${countryName}. The secret song's country is ${distance}km away${directionText}.`;
+        // Format distance with correct unit
+        const distanceKm = Number(distance);
+        if (!isNaN(distanceKm) && distanceKm > 0) {
+          const formattedDistance = formatDistance(distanceKm, preferredUnit ?? null);
+          if (countryName) {
+            return `The secret song is not from ${countryName}. The secret song's country is ${formattedDistance} away${directionText}.`;
+          }
+          return `The secret song's country is ${formattedDistance} away${directionText}.`;
         }
-        return `The secret song's country is ${distance}km away${directionText}.`;
+        
+        // Fallback for invalid distance
+        if (countryName) {
+          return `The secret song is not from ${countryName}.`;
+        }
+        return 'The secret song is from a different country.';
       }
       case 'genre': {
         // Get the genre name - for correct status, use the actual genre name from the clue
@@ -747,16 +787,23 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guess
       case 'gender': {
         const guessedGenderValue = clueObj._guessedGender || clueObj.given || clueObj.value || clueObj.gender || guessedGender || '';
         const formattedGender = formatGenderValue(guessedGenderValue);
+        const genderForTooltip = formatGenderForTooltip(guessedGenderValue);
+        
         if (clueObj.status === 'correct') {
-          if (formattedGender) {
-            return `The gender of the secret song's artist is ${formattedGender}. The Gender clue only shows up if there is a match in the artist type (solo, group, etc.).`;
-          }
-          return 'The gender matches exactly! The Gender clue only shows up if there is a match in the artist type (solo, group, etc.).';
+          // When correct: "The secret artist is a mixed-gender group" (with "is" bold)
+          return (
+            <>
+              The secret artist <strong>is</strong> a {genderForTooltip} group
+            </>
+          );
         }
-        if (formattedGender) {
-          return `The gender of the secret song's artist isn't ${formattedGender}. The Gender clue only shows up if there is a match in the artist type (solo, group, etc.).`;
-        }
-        return 'The gender does not match. The Gender clue only shows up if there is a match in the artist type (solo, group, etc.).';
+        
+        // When incorrect: "The secret artist isn't a mixed-gender group" (with "isn't" bold)
+        return (
+          <>
+            The secret artist <strong>isn't</strong> a {genderForTooltip} group
+          </>
+        );
       }
       default:
         return '';
@@ -765,19 +812,42 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guess
 
   return (
     <div 
-      className={`guess-box ${isWinning ? 'win-pulse' : ''}`}
+      className={`guess-box ${isWinning ? 'win-pulse' : ''} ${isLifeline ? 'lifeline-box' : ''}`}
       data-pulse-delay={isWinning ? pulseDelay : undefined}
       style={isWinning ? { '--pulse-delay': `${pulseDelay}s` } as React.CSSProperties : undefined}
     >
-      {guessNumber && (
-        <div className="guess-number-badge">Guess {guessNumber}</div>
-      )}
-      <div className="guess-box-header">
-        <h3 className="guess-song-title">
-          {songTitle} — {artist}
-        </h3>
-      </div>
-      <div className="guess-clues">
+      {isLifeline ? (
+        // Lifeline entry display
+        <>
+          {guessNumber && (
+            <div className="guess-number-badge">Lifeline</div>
+          )}
+          <div className="guess-box-header">
+            <h3 className="guess-song-title">
+              Lifeline activated
+            </h3>
+            <div style={{ fontSize: '0.85rem', color: '#666', marginTop: '0.25rem' }}>
+              at the cost of 1 guess
+            </div>
+          </div>
+          {catalogSize !== null && catalogSize !== undefined && (
+            <div className="lifeline-catalog-size">
+              Search narrowed to {catalogSize} songs
+            </div>
+          )}
+        </>
+      ) : (
+        // Regular guess display
+        <>
+          {guessNumber && (
+            <div className="guess-number-badge">Guess {guessNumber}</div>
+          )}
+          <div className="guess-box-header">
+            <h3 className="guess-song-title">
+              {songTitle} — {artist}
+            </h3>
+          </div>
+          <div className="guess-clues">
         {yearObj && (() => {
           const yearStatus = getYearStatus(yearObj);
           const yearDisplay = year || '?';
@@ -814,12 +884,17 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guess
                 </svg>
               </span>
               {country.status === 'neighboring' ? (
-                // Neighboring country: show country code, +/- 0km, and arrow
+                // Neighboring country: show country code, +/- 0 with correct unit, and arrow
                 <>
                   {country.countryCode && <span className="clue-value">{country.countryCode}</span>}
-                  <span className="clue-value neighboring">±0km</span>
+                  <span className="clue-value neighboring">
+                    {(() => {
+                      const unit = preferredDistanceUnit || getDefaultDistanceUnit();
+                      return unit === 'miles' ? '±0mi' : '±0km';
+                    })()}
+                  </span>
                   {country.arrow && <span className="clue-arrow">{country.arrow}</span>}
-                  <ClueTooltip helpText={getHelpText('country', countryObj)} clueType="country" />
+                  <ClueTooltip helpText={getHelpText('country', countryObj, preferredDistanceUnit)} clueType="country" />
                 </>
               ) : (
                 // Regular country: show country code, distance with arrow
@@ -827,7 +902,7 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guess
                   {country.countryCode && <span className="clue-value">{country.countryCode}</span>}
                   {country.distance && <span className="clue-value">{country.distance}</span>}
                   {country.arrow && <span className="clue-arrow">{country.arrow}</span>}
-                  <ClueTooltip helpText={getHelpText('country', countryObj)} clueType="country" />
+                  <ClueTooltip helpText={getHelpText('country', countryObj, preferredDistanceUnit)} clueType="country" />
                 </>
               )}
             </div>
@@ -1036,6 +1111,13 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guess
           </div>
         )}
       </div>
+      {catalogSizeAfterGuess !== null && catalogSizeAfterGuess !== undefined && (
+        <div className="catalog-size-after-guess">
+          Search narrowed to {catalogSizeAfterGuess} songs
+        </div>
+      )}
+        </>
+      )}
     </div>
   );
 };
