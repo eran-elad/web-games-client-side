@@ -342,3 +342,23 @@
   }
 }
 
+.privacy-link {
+  margin-top: 2rem;
+  font-size: 0.75rem;
+  color: #999;
+  text-decoration: none;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.privacy-link:hover {
+  opacity: 1;
+  text-decoration: underline;
+}
+
+@media (prefers-color-scheme: dark) {
+  .privacy-link {
+    color: #777;
+  }
+}
+

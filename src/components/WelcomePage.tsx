@@ -104,6 +104,14 @@ const WelcomePage = ({ onPlay, onShowStatistics, onShowHelp, onShowArchive, onSh
             <span className="play-icon">▶</span> {getPlayButtonText()}
           </button>
         </div>
+        <a 
+          href="https://puzzlio.games/privacy" 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          className="privacy-link"
+        >
+          Privacy Policy
+        </a>
       </div>
     </div>
   );
