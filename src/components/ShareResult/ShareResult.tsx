@@ -70,9 +70,8 @@ const ShareResult = ({ guesses, guessCount, maxGuesses, isWon, puzzleDate }: Sha
       ? new Date(puzzleDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
       : new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     
-    // Calculate actual guesses used (excluding lifeline entries)
-    const actualGuesses = guesses.filter(g => !g.isLifeline).length;
-    const displayGuessCount = isWon ? actualGuesses : guessCount;
+    // Lifeline counts as a guess, so use total guesses count
+    const displayGuessCount = guessCount;
     
     // Title format: HitFinder <MMM dd, yyyy> <guesses>/<max>
     const gameTitle = `🎵 ${GAME_NAME} ${dateStr} ${displayGuessCount}/${maxGuesses}`;
@@ -136,12 +135,10 @@ const ShareResult = ({ guesses, guessCount, maxGuesses, isWon, puzzleDate }: Sha
                            window.location.hostname.includes('127.0.0.1');
     
     // Generate title for share dialog
-    const dateStr = puzzleDate 
+    const shareDateStr = puzzleDate 
       ? new Date(puzzleDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
       : new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-    const actualGuesses = guesses.filter(g => !g.isLifeline).length;
-    const displayGuessCount = isWon ? actualGuesses : guessCount;
-    const shareTitle = `${GAME_NAME} ${dateStr} ${displayGuessCount}/${maxGuesses}`;
+    const shareTitle = `${GAME_NAME} ${shareDateStr} ${guessCount}/${maxGuesses}`;
     
     // ALWAYS try Web Share API first if available (mobile browsers)
     // This will open native share dialog with WhatsApp, Messages, etc.
