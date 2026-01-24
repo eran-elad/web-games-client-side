@@ -6,9 +6,10 @@ import StatisticsPage from './components/StatisticsPage/StatisticsPage'
 import HelpPage from './components/HelpPage/HelpPage'
 import ArchivePage from './components/ArchivePage/ArchivePage'
 import SettingsPage from './components/SettingsPage/SettingsPage'
+import PrivacyPolicy from './components/PrivacyPolicy/PrivacyPolicy'
 import './App.css'
 
-type View = 'welcome' | 'game' | 'statistics' | 'help' | 'archive' | 'settings'
+type View = 'welcome' | 'game' | 'statistics' | 'help' | 'archive' | 'settings' | 'privacy'
 
 function App() {
   const [currentView, setCurrentView] = useState<View>('welcome')
@@ -66,6 +67,15 @@ function App() {
     setCurrentView(previousView) // Return to previous view
   }
 
+  const handleShowPrivacy = () => {
+    setPreviousView(currentView)
+    setCurrentView('privacy')
+  }
+
+  const handleClosePrivacy = () => {
+    setCurrentView(previousView)
+  }
+
   const handleGoHome = () => {
     setCurrentView('welcome')
   }
@@ -90,12 +100,13 @@ function App() {
 
   return (
     <div className="app">
-      {currentView === 'welcome' && <WelcomePage onPlay={handlePlay} onShowStatistics={handleShowStatistics} onShowHelp={handleShowHelp} onShowArchive={handleShowArchive} onShowSettings={handleShowSettings} />}
+      {currentView === 'welcome' && <WelcomePage onPlay={handlePlay} onShowStatistics={handleShowStatistics} onShowHelp={handleShowHelp} onShowArchive={handleShowArchive} onShowSettings={handleShowSettings} onShowPrivacy={handleShowPrivacy} />}
       {currentView === 'game' && <ActiveGame onShowStatistics={handleShowStatistics} userClosedStats={statsClosedRef.current} onShowHelp={handleShowHelp} onShowArchive={handleShowArchive} onShowSettings={handleShowSettings} onGoHome={handleGoHome} />}
       {currentView === 'statistics' && <StatisticsPage onClose={handleCloseStatistics} />}
       {currentView === 'help' && <HelpPage onClose={handleCloseHelp} />}
       {currentView === 'archive' && <ArchivePage onClose={handleCloseArchive} onPlayDate={handlePlayDate} />}
       {currentView === 'settings' && <SettingsPage onClose={handleCloseSettings} />}
+      {currentView === 'privacy' && <PrivacyPolicy onClose={handleClosePrivacy} />}
     </div>
   )
 }

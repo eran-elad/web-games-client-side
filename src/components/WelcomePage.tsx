@@ -11,9 +11,10 @@ interface WelcomePageProps {
   onShowHelp?: () => void;
   onShowArchive?: () => void;
   onShowSettings?: () => void;
+  onShowPrivacy?: () => void;
 }
 
-const WelcomePage = ({ onPlay, onShowStatistics, onShowHelp, onShowArchive, onShowSettings }: WelcomePageProps) => {
+const WelcomePage = ({ onPlay, onShowStatistics, onShowHelp, onShowArchive, onShowSettings, onShowPrivacy }: WelcomePageProps) => {
   const [dailyPuzzleStatus, setDailyPuzzleStatus] = useState<'in_progress' | 'won' | 'lost' | 'abandoned' | 'quit' | 'not_played' | null>(null);
   const [isLoadingStatus, setIsLoadingStatus] = useState(true);
 
@@ -104,14 +105,9 @@ const WelcomePage = ({ onPlay, onShowStatistics, onShowHelp, onShowArchive, onSh
             <span className="play-icon">▶</span> {getPlayButtonText()}
           </button>
         </div>
-        <a 
-          href="https://puzzlio.games/privacy" 
-          target="_blank" 
-          rel="noopener noreferrer" 
-          className="privacy-link"
-        >
+        <button className="privacy-link" onClick={onShowPrivacy}>
           Privacy Policy
-        </a>
+        </button>
       </div>
     </div>
   );
