@@ -85,7 +85,7 @@ const ShareResult = ({ guesses, guessCount, maxGuesses, isWon, puzzleDate }: Sha
     
     // Add guess results with emoji grid
     // Y = Year | C = Country | G = Genre | X = Gender
-    guesses.forEach((guess, index) => {
+    guesses.forEach((guess) => {
       // Check if this is a lifeline entry
       if (guess.isLifeline) {
         shareText += `🛟 Lifeline\n`;
