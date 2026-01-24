@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import './ShareResult.css';
+import { GAME_NAME, GAME_URL } from '../../config/gameConfig';
 
 interface ShareResultProps {
   guesses: Array<{
     songTitle: string;
     artist: string;
     clues: any;
+    isLifeline?: boolean;
   }>;
   guessCount: number;
   maxGuesses: number;
@@ -30,7 +32,7 @@ const ShareResult = ({ guesses, guessCount, maxGuesses, isWon, puzzleDate }: Sha
   // Show "Share" if we have the API OR if it's a mobile device (will try API on click anyway)
   const canUseNativeShare = hasWebShareAPI || isMobileDevice;
 
-  const getClueEmoji = (clueObj: any, clueType: 'year' | 'country' | 'genre' | 'duration'): string => {
+  const getClueEmoji = (clueObj: any, clueType: 'year' | 'country' | 'genre' | 'gender'): string => {
     if (!clueObj || typeof clueObj !== 'object') return '⬜';
     
     // Year clue
@@ -54,12 +56,10 @@ const ShareResult = ({ guesses, guessCount, maxGuesses, isWon, puzzleDate }: Sha
       return '🟥';
     }
     
-    // Duration clue
-    if (clueType === 'duration') {
-      const diff = Math.abs(clueObj.diff_sec || 0);
-      if (diff === 0) return '🟩'; // Correct
-      if (diff <= 60) return '🟨'; // Close (within 1 minute)
-      return '🟥'; // Incorrect
+    // Gender clue
+    if (clueType === 'gender') {
+      if (clueObj.status === 'correct') return '🟩';
+      return '🟥';
     }
     
     return '⬜';
@@ -70,47 +70,63 @@ const ShareResult = ({ guesses, guessCount, maxGuesses, isWon, puzzleDate }: Sha
       ? new Date(puzzleDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
       : new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     
-    const isToday = !puzzleDate || puzzleDate === new Date().toISOString().split('T')[0];
-    const gameTitle = isToday 
-      ? `🎵 Music Game - ${dateStr}`
-      : `🎵 Music Game - ${dateStr} (Archive)`;
+    // Calculate actual guesses used (excluding lifeline entries)
+    const actualGuesses = guesses.filter(g => !g.isLifeline).length;
+    const displayGuessCount = isWon ? actualGuesses : guessCount;
+    
+    // Title format: HitFinder <MMM dd, yyyy> <guesses>/<max>
+    const gameTitle = `🎵 ${GAME_NAME} ${dateStr} ${displayGuessCount}/${maxGuesses}`;
     
     const resultLine = isWon 
-      ? `🎉 Solved in ${guessCount}/${maxGuesses} guesses!`
-      : `😔 Couldn't solve it (${guessCount}/${maxGuesses} guesses)`;
+      ? `🎉 Solved!`
+      : `😔 Better luck next time!`;
     
     let shareText = `${gameTitle}\n${resultLine}\n\n`;
     
     // Add guess results with emoji grid
-    shareText += 'Clue Results:\n';
-    shareText += 'Y = Year | C = Country | G = Genre | D = Duration\n';
-    shareText += '🟩 Correct | 🟨 Close | 🟥 Wrong\n\n';
-    
+    // Y = Year | C = Country | G = Genre | X = Gender
     guesses.forEach((guess, index) => {
+      // Check if this is a lifeline entry
+      if (guess.isLifeline) {
+        shareText += `🛟 Lifeline\n`;
+        return;
+      }
+      
       const yearEmoji = getClueEmoji(guess.clues.year, 'year');
       const countryEmoji = getClueEmoji(guess.clues.country, 'country');
       const genreEmoji = getClueEmoji(guess.clues.genre, 'genre');
-      const durationEmoji = getClueEmoji(guess.clues.duration || guess.clues.time, 'duration');
+      const genderEmoji = getClueEmoji(guess.clues.gender, 'gender');
       
-      shareText += `Guess ${index + 1}: ${yearEmoji}${countryEmoji}${genreEmoji}${durationEmoji}\n`;
+      // Check for artist and album matches
+      const artistMatch = guess.clues.artist?.status === 'correct';
+      const albumMatch = guess.clues.album?.status === 'correct';
+      
+      let line = `${yearEmoji}${countryEmoji}${genreEmoji}${genderEmoji}`;
+      
+      // Add artist/album icons if matched
+      if (artistMatch) line += ' 🎤';
+      if (albumMatch) line += ' 💿';
+      
+      shareText += `${line}\n`;
     });
     
-    // Add empty guesses if game was lost
-    if (!isWon && guessCount < maxGuesses) {
-      for (let i = guessCount; i < maxGuesses; i++) {
-        shareText += `Guess ${i + 1}: ⬜⬜⬜⬜\n`;
+    // Add empty guesses if game was lost (4 boxes: year, country, genre, gender)
+    if (!isWon) {
+      const guessesUsed = guesses.filter(g => !g.isLifeline).length;
+      for (let i = guessesUsed; i < maxGuesses; i++) {
+        shareText += `⬜⬜⬜⬜\n`;
       }
     }
     
-    shareText += `\n🎮 Play Music Game: ${window.location.origin}`;
+    shareText += `\n🎮 Play ${GAME_NAME}: ${GAME_URL}`;
     
     return shareText;
   };
 
   const handleShare = async () => {
     const shareText = generateShareText();
-    const shareUrl = window.location.origin;
-    const fullText = `${shareText}\n\n${shareUrl}`;
+    // The shareText already contains the URL, so we don't need to add it again
+    const fullText = shareText;
     
     // Check if we're on HTTPS (required for Web Share API, except localhost)
     const isSecureContext = window.isSecureContext || 
@@ -118,6 +134,14 @@ const ShareResult = ({ guesses, guessCount, maxGuesses, isWon, puzzleDate }: Sha
                            window.location.hostname === 'localhost' ||
                            window.location.hostname === '127.0.0.1' ||
                            window.location.hostname.includes('127.0.0.1');
+    
+    // Generate title for share dialog
+    const dateStr = puzzleDate 
+      ? new Date(puzzleDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+      : new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    const actualGuesses = guesses.filter(g => !g.isLifeline).length;
+    const displayGuessCount = isWon ? actualGuesses : guessCount;
+    const shareTitle = `${GAME_NAME} ${dateStr} ${displayGuessCount}/${maxGuesses}`;
     
     // ALWAYS try Web Share API first if available (mobile browsers)
     // This will open native share dialog with WhatsApp, Messages, etc.
@@ -131,37 +155,25 @@ const ShareResult = ({ guesses, guessCount, maxGuesses, isWon, puzzleDate }: Sha
           userAgent: navigator.userAgent?.substring(0, 80)
         });
         
-        // Try with all fields first (most common format)
-        // If it fails, we'll try simpler formats
+        // Try with text only (already contains URL) - this works best across platforms
         try {
           await navigator.share({
-            title: 'Music Game Result',
+            title: shareTitle,
             text: shareText,
-            url: shareUrl,
           });
-          console.log('Web Share API succeeded (with all fields)!');
+          console.log('Web Share API succeeded!');
           return; // Successfully shared via native share
-        } catch (allFieldsErr) {
-          console.log('Share with all fields failed, trying text+url only...', allFieldsErr);
+        } catch (textOnlyErr) {
+          console.log('Share with text only failed, trying with url...', textOnlyErr);
           
-          // Try with just text and url (some browsers don't like title)
-          try {
-            await navigator.share({
-              text: shareText,
-              url: shareUrl,
-            });
-            console.log('Web Share API succeeded (text+url only)!');
-            return;
-          } catch (textUrlErr) {
-            console.log('Share with text+url failed, trying text only...', textUrlErr);
-            
-            // Try with just text (some browsers require at least text)
-            await navigator.share({
-              text: `${shareText}\n${shareUrl}`,
-            });
-            console.log('Web Share API succeeded (text only)!');
-            return;
-          }
+          // Fallback: try without URL in text
+          await navigator.share({
+            title: shareTitle,
+            text: shareText,
+            url: GAME_URL,
+          });
+          console.log('Web Share API succeeded (with url field)!');
+          return;
         }
       } catch (err) {
         // User cancelled sharing (AbortError) - don't show error, just return
