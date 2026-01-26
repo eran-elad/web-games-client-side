@@ -173,7 +173,7 @@ function App() {
   return (
     <div className="app">
       {currentView === 'welcome' && <WelcomePage onPlay={handlePlay} onShowStatistics={handleShowStatistics} onShowHelp={handleShowHelp} onShowArchive={handleShowArchive} onShowSettings={handleShowSettings} onShowPrivacy={handleShowPrivacy} />}
-      {currentView === 'game' && <ActiveGame key={gameKey} onShowStatistics={handleShowStatistics} userClosedStats={statsClosedRef.current} onShowHelp={handleShowHelp} onShowArchive={handleShowArchive} onShowSettings={handleShowSettings} onGoHome={handleGoHome} onGoToDailyPuzzle={handleGoToDailyPuzzle} />}
+      {currentView === 'game' && <ActiveGame key={gameKey} onShowStatistics={handleShowStatistics} userClosedStats={statsClosedRef.current} onShowHelp={handleShowHelp} onShowArchive={handleShowArchive} onShowSettings={handleShowSettings} onGoToDailyPuzzle={handleGoToDailyPuzzle} />}
       {currentView === 'statistics' && <StatisticsPage onClose={handleCloseStatistics} />}
       {currentView === 'help' && <HelpPage onClose={handleCloseHelp} />}
       {currentView === 'archive' && <ArchivePage onClose={handleCloseArchive} onPlayDate={handlePlayDate} />}

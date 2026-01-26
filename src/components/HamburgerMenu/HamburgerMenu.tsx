@@ -6,7 +6,6 @@ interface HamburgerMenuProps {
   onShowArchive?: () => void;
   onShowHelp?: () => void;
   onShowSettings?: () => void;
-  onGoHome?: () => void;
   onGoToDailyPuzzle?: () => void;
 }
 
@@ -15,7 +14,6 @@ const HamburgerMenu = ({
   onShowArchive, 
   onShowHelp, 
   onShowSettings,
-  onGoHome,
   onGoToDailyPuzzle
 }: HamburgerMenuProps) => {
   const [isOpen, setIsOpen] = useState(false);

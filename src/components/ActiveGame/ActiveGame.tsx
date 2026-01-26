@@ -191,11 +191,10 @@ interface ActiveGameProps {
   onShowHelp?: () => void;
   onShowArchive?: () => void;
   onShowSettings?: () => void;
-  onGoHome?: () => void;
   onGoToDailyPuzzle?: () => void;
 }
 
-const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onShowArchive, onShowSettings, onGoHome, onGoToDailyPuzzle }: ActiveGameProps = {}) => {
+const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onShowArchive, onShowSettings, onGoToDailyPuzzle }: ActiveGameProps = {}) => {
   const [selectedSongId, setSelectedSongId] = useState<string | null>(null);
   const [selectedSong, setSelectedSong] = useState<Song | null>(null);
   const [guesses, setGuesses] = useState<Guess[]>([]);
@@ -931,7 +930,6 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
               onShowArchive={onShowArchive}
               onShowHelp={onShowHelp}
               onShowSettings={onShowSettings}
-              onGoHome={onGoHome}
               onGoToDailyPuzzle={onGoToDailyPuzzle}
             />
           </div>
