@@ -100,6 +100,22 @@
   font-weight: 500;
 }
 
+.instruction-text {
+  font-size: 1rem;
+  color: #555;
+  margin-bottom: 1rem;
+  font-style: italic;
+  line-height: 1.5;
+  padding: 0.75rem 1rem;
+  background: rgba(102, 126, 234, 0.08);
+  border-left: 3px solid #667eea;
+  border-radius: 6px;
+  text-align: left;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
 .search-container {
   display: flex;
   gap: 1rem;
@@ -230,12 +246,25 @@
   width: 44px;
   height: 44px;
   min-width: 44px;
+  opacity: 0.5;
+}
+
+.lifeline-button.enabled:not(:disabled) {
+  opacity: 1;
+  color: #667eea;
+  background: rgba(102, 126, 234, 0.15);
+  border-color: rgba(102, 126, 234, 0.5);
 }
 
 .lifeline-button:hover:not(:disabled) {
   background: rgba(102, 126, 234, 0.2);
   border-color: rgba(102, 126, 234, 0.6);
   transform: translateY(-2px) scale(1.05);
+}
+
+.lifeline-button.enabled:hover:not(:disabled) {
+  background: rgba(102, 126, 234, 0.25);
+  border-color: rgba(102, 126, 234, 0.7);
 }
 
 .lifeline-button:active:not(:disabled) {
@@ -250,6 +279,7 @@
 }
 
 .lifeline-button.activated {
+  opacity: 1;
   background: rgba(34, 197, 94, 0.15);
   border-color: rgba(34, 197, 94, 0.5);
   cursor: default;

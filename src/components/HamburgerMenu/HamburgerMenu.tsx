@@ -7,6 +7,7 @@ interface HamburgerMenuProps {
   onShowHelp?: () => void;
   onShowSettings?: () => void;
   onGoHome?: () => void;
+  onGoToDailyPuzzle?: () => void;
 }
 
 const HamburgerMenu = ({ 
@@ -14,7 +15,8 @@ const HamburgerMenu = ({
   onShowArchive, 
   onShowHelp, 
   onShowSettings,
-  onGoHome
+  onGoHome,
+  onGoToDailyPuzzle
 }: HamburgerMenuProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -67,13 +69,13 @@ const HamburgerMenu = ({
       
       {isOpen && (
         <div ref={menuRef} className="hamburger-menu-dropdown">
-          {onGoHome && (
+          {onGoToDailyPuzzle && (
             <button
               className="hamburger-menu-item"
-              onClick={() => handleMenuClick(onGoHome)}
+              onClick={() => handleMenuClick(onGoToDailyPuzzle)}
             >
-              <span className="menu-item-icon">🏠</span>
-              Home
+              <span className="menu-item-icon">🎯</span>
+              Daily Puzzle
             </button>
           )}
           {onShowStatistics && (

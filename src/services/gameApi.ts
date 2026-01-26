@@ -45,6 +45,7 @@ export type GameInitResponse = {
       ended_at_utc: string | null;
       lifeline_min_songs?: number;
       lifeline_min_guesses_required?: number;
+      give_up_min_guesses_required?: number;
     };
     history: {
       guesses: Array<{
@@ -116,6 +117,7 @@ export type GameInitResponse = {
     popularity_rank: number | null;
   }>;
   catalog_size?: number;
+  new_daily_puzzle_available?: boolean;
 };
 
 /**
@@ -258,6 +260,7 @@ export type ActivateLifelineResponse = {
   error?: string;
   guesses_required?: number;
   current_guesses?: number;
+  new_daily_puzzle_available?: boolean;
 };
 
 /**
@@ -339,6 +342,68 @@ export const getPlayerStats = async (
 
   const endpoint = `/api/game/stats/${playerId}${params.toString() ? `?${params.toString()}` : ''}`;
   const response = await fetch(getApiUrl(endpoint), {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    let errorMessage = `Server error (${response.status})`;
+    try {
+      const errorData = await response.json();
+      if (errorData.detail) {
+        errorMessage = errorData.detail;
+      }
+    } catch {
+      errorMessage = response.statusText || `Server error (${response.status})`;
+    }
+    throw new Error(errorMessage);
+  }
+
+  return await response.json();
+};
+
+/**
+ * Response structure from /api/game/daily-puzzle-status
+ */
+export type DailyPuzzleStatusResponse = {
+  meta: {
+    schema_version: string;
+    request_id: string;
+    server_time_utc: string;
+  };
+  game_id: string;
+  puzzle: {
+    puzzle_id: string;
+    puzzle_key: string;
+    local_date: string;
+    type: string;
+    max_guesses: number;
+  };
+  new_daily_puzzle_available?: boolean;
+};
+
+/**
+ * Get daily puzzle status
+ */
+export const getDailyPuzzleStatus = async (
+  gameId: string,
+  playerId?: string | null,
+  timezone?: string
+): Promise<DailyPuzzleStatusResponse> => {
+  const params = new URLSearchParams();
+  params.append('game_id', gameId);
+  
+  if (playerId) {
+    params.append('player_id', playerId);
+  }
+  
+  if (timezone) {
+    params.append('timezone', timezone);
+  }
+
+  const response = await fetch(getApiUrl(`/api/game/daily-puzzle-status?${params.toString()}`), {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',

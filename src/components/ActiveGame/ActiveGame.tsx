@@ -4,9 +4,10 @@ import GuessBox from '../GuessBox/GuessBox';
 import WinConfetti from '../WinAnimation/WinConfetti';
 import ShareResult from '../ShareResult/ShareResult';
 import HamburgerMenu from '../HamburgerMenu/HamburgerMenu';
+import NewDailyPuzzleBanner from '../NewDailyPuzzleBanner/NewDailyPuzzleBanner';
 import { MUSIC_GAME_ID } from '../../config/gameConfig';
 import { getApiUrl } from '../../config/apiConfig';
-import { getPlayerId, setPlayerId, setSessionId, setGameId, clearSession, getPuzzleId, getLocalDate, getDistanceUnit } from '../../utils/storage';
+import { getPlayerId, setPlayerId, setSessionId, setGameId, clearSession, getPuzzleId, getLocalDate, getDistanceUnit, isViewingArchive, clearPuzzleId, clearLocalDate } from '../../utils/storage';
 import { initGame, submitGuess, giveUp, activateLifeline } from '../../services/gameApi';
 import type { GameInitResponse, ActivateLifelineResponse } from '../../services/gameApi';
 import './ActiveGame.css';
@@ -42,6 +43,7 @@ interface SessionState {
   status: 'in_progress' | 'won' | 'lost' | 'abandoned' | 'quit';
   lifeline_min_songs?: number;
   lifeline_min_guesses_required?: number;
+  give_up_min_guesses_required?: number;
   puzzle?: {
     max_guesses: number;
     solution?: {
@@ -190,9 +192,10 @@ interface ActiveGameProps {
   onShowArchive?: () => void;
   onShowSettings?: () => void;
   onGoHome?: () => void;
+  onGoToDailyPuzzle?: () => void;
 }
 
-const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onShowArchive, onShowSettings, onGoHome }: ActiveGameProps = {}) => {
+const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onShowArchive, onShowSettings, onGoHome, onGoToDailyPuzzle }: ActiveGameProps = {}) => {
   const [selectedSongId, setSelectedSongId] = useState<string | null>(null);
   const [selectedSong, setSelectedSong] = useState<Song | null>(null);
   const [guesses, setGuesses] = useState<Guess[]>([]);
@@ -208,6 +211,9 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
   const [narrowedCatalog, setNarrowedCatalog] = useState<Song[] | null>(null);
   const [, setCatalogSize] = useState<number | null>(null); // Used to store catalog size state
   const [distanceUnitKey, setDistanceUnitKey] = useState<number>(0); // Force re-render when distance unit changes
+  const [newDailyPuzzleAvailable, setNewDailyPuzzleAvailable] = useState<boolean>(false);
+  const [puzzleType, setPuzzleType] = useState<string | null>(null); // Track puzzle type from API
+  const [bannerDismissed, setBannerDismissed] = useState<boolean>(false); // Track dismissal state
 
   // Listen for distance unit changes from settings
   useEffect(() => {
@@ -243,23 +249,53 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
         // Detect timezone or default to UTC
         const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
         
-        // Check for historical puzzle parameters
-        const puzzleId = getPuzzleId();
-        const localDate = getLocalDate();
+        // Only use puzzle_id/local_date if we're explicitly viewing an archive puzzle
+        // OR if we have a puzzle_id that matches today's daily puzzle (from daily-puzzle-status)
+        // Otherwise, clear old puzzle parameters and let the server decide which puzzle to show
+        // (server will show daily puzzle if idle-expired, or resume current puzzle if active)
+        let puzzleId: string | undefined = undefined;
+        let localDate: string | undefined = undefined;
         
-        // If loading a historical puzzle, clear existing session to force server to load the correct one
-        if (puzzleId || localDate) {
-          console.log('Loading historical puzzle:', { puzzleId, localDate });
-          clearSession();
+        const storedPuzzleId = getPuzzleId();
+        const storedLocalDate = getLocalDate();
+        const todayDateStr = new Date().toISOString().split('T')[0];
+        
+        if (isViewingArchive()) {
+          // User explicitly navigated from archive - use stored puzzle parameters
+          puzzleId = storedPuzzleId || undefined;
+          localDate = storedLocalDate || undefined;
+          if (puzzleId || localDate) {
+            console.log('Loading historical puzzle from archive:', { puzzleId, localDate });
+            clearSession(); // Clear session to force server to load the correct puzzle
+          }
+        } else if (storedPuzzleId && storedLocalDate === todayDateStr) {
+          // We have a puzzle_id for today's date (from daily-puzzle-status) - use it
+          puzzleId = storedPuzzleId;
+          console.log('Using daily puzzle_id from daily-puzzle-status:', { puzzleId, localDate: storedLocalDate });
+          clearSession(); // Clear session to force server to load the daily puzzle
+        } else {
+          // Not viewing archive and no valid daily puzzle_id - clear old puzzle parameters
+          if (storedPuzzleId || storedLocalDate) {
+            console.log('Clearing old puzzle parameters on initial load:', { storedPuzzleId, storedLocalDate });
+            clearPuzzleId();
+            clearLocalDate();
+          }
         }
         
         // Call init API - note: we're NOT sending session_id, only player_id
+        console.log('ActiveGame: Calling initGame with:', {
+          gameId: MUSIC_GAME_ID,
+          playerId: clearSessionData ? null : storedPlayerId,
+          timezone,
+          puzzleId,
+          localDate
+        });
         const response: GameInitResponse = await initGame(
           MUSIC_GAME_ID,
           clearSessionData ? null : storedPlayerId, // Clear player_id on retry too
           timezone,
-          puzzleId || undefined,
-          localDate || undefined
+          puzzleId,
+          localDate
         );
         
         console.log('Game initialized:', {
@@ -291,6 +327,7 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
           status: response.session.status,
           lifeline_min_songs: response.session.state.lifeline_min_songs,
           lifeline_min_guesses_required: response.session.state.lifeline_min_guesses_required,
+          give_up_min_guesses_required: response.session.state.give_up_min_guesses_required,
           puzzle: {
             max_guesses: response.session.puzzle.max_guesses,
             solution: response.session.puzzle.solution,
@@ -353,6 +390,14 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
         
         // Store puzzle date to show in title
         setPuzzleDate(response.session.puzzle.local_date);
+        
+        // Store puzzle type
+        setPuzzleType(response.session.puzzle.type);
+        
+        // Capture new_daily_puzzle_available from response
+        if (response.new_daily_puzzle_available !== undefined) {
+          setNewDailyPuzzleAvailable(response.new_daily_puzzle_available);
+        }
         
         // Load historical guesses
         // First, find if there's a lifeline entry to get its catalog size
@@ -522,6 +567,7 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
         status: response.session.status,
         lifeline_min_songs: response.session.state.lifeline_min_songs,
         lifeline_min_guesses_required: response.session.state.lifeline_min_guesses_required,
+        give_up_min_guesses_required: response.session.state.give_up_min_guesses_required,
         puzzle: {
           max_guesses: response.session.puzzle.max_guesses,
           solution: response.session.puzzle.solution,
@@ -529,6 +575,11 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
         secret_song: response.session.secret_song,
       };
       setSessionState(newSessionState);
+      
+      // Capture new_daily_puzzle_available from response
+      if (response.new_daily_puzzle_available !== undefined) {
+        setNewDailyPuzzleAvailable(response.new_daily_puzzle_available);
+      }
       
       // Handle lifeline catalog updates
       if (response.lifeline_active && response.narrowed_catalog) {
@@ -604,22 +655,22 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
       return;
     }
 
-    // Check eligibility
+    // Check eligibility (safety check - button click handler already validated)
     const minGuessesRequired = sessionState.lifeline_min_guesses_required ?? Math.floor((sessionState.puzzle?.max_guesses ?? 6) / 2);
     const minSongs = sessionState.lifeline_min_songs ?? 100;
     
     if (sessionState.guess_count < minGuessesRequired) {
-      setError(`Not enough guesses yet. Need at least ${minGuessesRequired} guesses.`);
+      // This shouldn't happen as button handler checks, but keep as safety
       return;
     }
     
     if (lifelineActivated) {
-      setError('Lifeline already activated');
+      // This shouldn't happen as button handler checks, but keep as safety
       return;
     }
     
     if (sessionState.guesses_remaining <= 1) {
-      setError('Unavailable on the last guess');
+      // This shouldn't happen as button handler checks, but keep as safety
       return;
     }
 
@@ -661,12 +712,18 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
           status: response.session.status,
           lifeline_min_songs: response.session.state.lifeline_min_songs,
           lifeline_min_guesses_required: response.session.state.lifeline_min_guesses_required,
+          give_up_min_guesses_required: response.session.state.give_up_min_guesses_required,
           puzzle: {
             max_guesses: response.session.puzzle.max_guesses,
             solution: response.session.puzzle.solution,
           },
           secret_song: response.session.secret_song,
         });
+        
+        // Capture new_daily_puzzle_available from response
+        if (response.new_daily_puzzle_available !== undefined) {
+          setNewDailyPuzzleAvailable(response.new_daily_puzzle_available);
+        }
         
         // Add lifeline entry to guess history
         const lifelineGuess: Guess = {
@@ -723,6 +780,11 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
       };
       setSessionState(newSessionState);
       
+      // Capture new_daily_puzzle_available from response
+      if (response.new_daily_puzzle_available !== undefined) {
+        setNewDailyPuzzleAvailable(response.new_daily_puzzle_available);
+      }
+      
       // If game is over, show statistics after a short delay
       // Only auto-show if user hasn't manually closed it
       if (newSessionState.is_over && onShowStatistics && !hasShownStats && !userClosedStats) {
@@ -743,9 +805,49 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
     }
   };
 
-  // Check if this is today's daily puzzle (regardless of how we accessed it)
+  // Check if this is today's daily puzzle
   const todayDate = new Date().toISOString().split('T')[0];
-  const isDailyPuzzle = puzzleDate === todayDate || puzzleDate === null;
+  const isDailyPuzzle = puzzleType === 'daily' && (puzzleDate === todayDate || puzzleDate === null);
+  
+  // Check if banner is dismissed for today
+  useEffect(() => {
+    const todayDateStr = new Date().toISOString().split('T')[0];
+    const dismissedKey = `daily_puzzle_banner_dismissed_${todayDateStr}`;
+    const isDismissed = localStorage.getItem(dismissedKey) === 'true';
+    setBannerDismissed(isDismissed);
+  }, []); // Only check on mount
+  
+  // Helper function to check if banner is dismissed for today
+  const isBannerDismissed = (): boolean => {
+    return bannerDismissed;
+  };
+  
+  // Handler to dismiss banner
+  const handleDismissBanner = () => {
+    const todayDateStr = new Date().toISOString().split('T')[0];
+    const dismissedKey = `daily_puzzle_banner_dismissed_${todayDateStr}`;
+    localStorage.setItem(dismissedKey, 'true');
+    // Update state to force re-render
+    setBannerDismissed(true);
+  };
+  
+  // Handler to switch to daily puzzle
+  const handleSwitchToDailyPuzzle = async () => {
+    console.log('ActiveGame: handleSwitchToDailyPuzzle called, onGoToDailyPuzzle:', !!onGoToDailyPuzzle);
+    if (onGoToDailyPuzzle) {
+      console.log('ActiveGame: Calling onGoToDailyPuzzle');
+      onGoToDailyPuzzle();
+    } else {
+      console.warn('ActiveGame: onGoToDailyPuzzle is not defined');
+    }
+  };
+  
+  // Determine if banner should be shown
+  const shouldShowBanner = (): boolean => {
+    if (!newDailyPuzzleAvailable) return false;
+    if (isBannerDismissed()) return false;
+    return true;
+  };
 
   // Use server's session state as the source of truth
   const maxGuesses = sessionState?.puzzle?.max_guesses ?? 6;
@@ -763,17 +865,47 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
   const isGameOver = sessionState?.is_over ?? false;
   const gameStatus = sessionState?.status;
 
+  // Determine instruction text to show above search box
+  const getInstructionText = (): string | null => {
+    // Don't show instruction if game is over
+    if (isGameOver) {
+      return null;
+    }
+    
+    // Only show instruction when game is in progress
+    if (sessionState?.status !== 'in_progress') {
+      return null;
+    }
+    
+    // First guess - show initial instruction
+    if (guessedCount === 0) {
+      return "You don't hear the song. You hunt it. Type any song to begin.";
+    }
+    
+    // Don't show instruction if lifeline is already activated
+    if (lifelineActivated) {
+      return null;
+    }
+    
+    // Check if lifeline is available
+    const minGuessesRequired = sessionState?.lifeline_min_guesses_required ?? Math.floor((maxGuesses) / 2);
+    if (guessedCount >= minGuessesRequired) {
+      return "Need help? A lifeline (🛟) is now available.";
+    }
+    
+    // After first guess, show clue guidance
+    return "Use the clues below to guide your next guess.";
+  };
+  
+  const instructionText = getInstructionText();
+
   if (initLoading) {
     return (
       <div className="active-game-container">
         <div className="active-game-content">
           <h1 className="daily-song-title">
             <span className="music-icon">♪</span>
-            {isDailyPuzzle ? (
-              'Daily Puzzle'
-            ) : (
-              `Archived Puzzle: ${new Date(puzzleDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
-            )}
+            Daily Puzzle
           </h1>
           <p>Loading game...</p>
         </div>
@@ -800,9 +932,17 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
               onShowHelp={onShowHelp}
               onShowSettings={onShowSettings}
               onGoHome={onGoHome}
+              onGoToDailyPuzzle={onGoToDailyPuzzle}
             />
           </div>
         </div>
+        {/* Show banner at top during gameplay if playing non-daily puzzle */}
+        {!isDailyPuzzle && !isGameOver && shouldShowBanner() && (
+          <NewDailyPuzzleBanner
+            onSwitchToDaily={handleSwitchToDailyPuzzle}
+            onDismiss={handleDismissBanner}
+          />
+        )}
         <p className="guess-counter">
           Guessed {guessedCount} / {maxGuesses}
           {sessionState && ` (${guessesRemaining} remaining)`}
@@ -826,6 +966,13 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
                       isWon={true}
                       puzzleDate={puzzleDate || undefined}
                     />
+                    {/* Show banner after puzzle ends if new daily puzzle is available */}
+                    {shouldShowBanner() && (
+                      <NewDailyPuzzleBanner
+                        onSwitchToDaily={handleSwitchToDailyPuzzle}
+                        onDismiss={handleDismissBanner}
+                      />
+                    )}
                     <SecretSongDetails secretSong={sessionState.secret_song} />
                   </>
                 )}
@@ -847,6 +994,13 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
                       isWon={false}
                       puzzleDate={puzzleDate || undefined}
                     />
+                    {/* Show banner after puzzle ends if new daily puzzle is available */}
+                    {shouldShowBanner() && (
+                      <NewDailyPuzzleBanner
+                        onSwitchToDaily={handleSwitchToDailyPuzzle}
+                        onDismiss={handleDismissBanner}
+                      />
+                    )}
                     <SecretSongDetails secretSong={sessionState.secret_song} />
                   </>
                 )}
@@ -868,12 +1022,22 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
                       isWon={false}
                       puzzleDate={puzzleDate || undefined}
                     />
+                    {/* Show banner after puzzle ends if new daily puzzle is available */}
+                    {shouldShowBanner() && (
+                      <NewDailyPuzzleBanner
+                        onSwitchToDaily={handleSwitchToDailyPuzzle}
+                        onDismiss={handleDismissBanner}
+                      />
+                    )}
                     <SecretSongDetails secretSong={sessionState.secret_song} />
                   </>
                 )}
               </>
             )}
           </div>
+        )}
+        {instructionText && (
+          <p className="instruction-text">{instructionText}</p>
         )}
         <div className="search-container">
           <div className="search-box-wrapper">
@@ -906,23 +1070,35 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
                   loading={loading}
                 />
               )}
-              {/* Give-up button - always shown, enabled after 3 guesses */}
-              {!isGameOver && sessionState?.status === 'in_progress' && (
-                <button 
-                  className={`give-up-button ${guessedCount >= 3 ? 'enabled' : ''}`}
-                  onClick={handleGiveUp}
-                  disabled={loading || guessedCount < 3}
-                  title={guessedCount < 3 ? 'Available after 3 guesses' : 'Give Up'}
-                >
-                  🏳️
-                </button>
-              )}
+              {/* Give-up button - always shown, enabled after minimum guesses */}
+              {!isGameOver && sessionState?.status === 'in_progress' && (() => {
+                const minGiveUpGuesses = sessionState?.give_up_min_guesses_required ?? 5;
+                const canGiveUp = guessedCount >= minGiveUpGuesses;
+                
+                return (
+                  <button 
+                    className={`give-up-button ${canGiveUp ? 'enabled' : ''}`}
+                    onClick={() => {
+                      if (guessedCount < minGiveUpGuesses) {
+                        alert(`Giving-up is only available after ${minGiveUpGuesses} guesses`);
+                        return;
+                      }
+                      handleGiveUp();
+                    }}
+                    disabled={loading}
+                    title="Give-Up"
+                  >
+                    🏳️
+                  </button>
+                );
+              })()}
               {/* Info icon explaining both buttons */}
               {!isGameOver && sessionState?.status === 'in_progress' && (
                 <HelpButtonsInfo
                   minGuessesRequired={sessionState.lifeline_min_guesses_required ?? Math.floor((sessionState.puzzle?.max_guesses ?? 6) / 2)}
                   minSongs={sessionState.lifeline_min_songs ?? 100}
                   lifelineActivated={lifelineActivated}
+                  giveUpMinGuessesRequired={sessionState.give_up_min_guesses_required ?? 5}
                 />
               )}
             </div>
@@ -984,31 +1160,31 @@ const LifelineButton = ({
                     guessCount >= minGuessesRequired && 
                     guessesRemaining > 1;
 
-  const disabledMessage = lifelineActivated 
-    ? 'Lifeline already activated'
-    : guessesRemaining <= 1
-    ? 'Unavailable on the last guess'
-    : guessCount < minGuessesRequired
-    ? `Available after ${minGuessesRequired} guesses`
-    : '';
-
   return (
     <div className="lifeline-button-wrapper">
       <button
         ref={buttonRef}
-        className={`lifeline-button ${lifelineActivated ? 'activated' : ''}`}
+        className={`lifeline-button ${lifelineActivated ? 'activated' : ''} ${isEnabled ? 'enabled' : ''}`}
         onClick={() => {
           if (lifelineActivated) {
             // Show message if already activated
             alert('Lifeline has already been activated for this puzzle.');
             return;
           }
+          if (guessCount < minGuessesRequired) {
+            alert(`Lifeline is only available after ${minGuessesRequired} guesses`);
+            return;
+          }
+          if (guessesRemaining <= 1) {
+            alert('Lifeline is unavailable on the last guess');
+            return;
+          }
           if (isEnabled && onActivate) {
             onActivate();
           }
         }}
-        disabled={(!isEnabled && !lifelineActivated) || loading}
-        title={disabledMessage || undefined}
+        disabled={loading}
+        title="Lifeline"
       >
         <span className="lifeline-icon">🛟</span>
       </button>
@@ -1023,18 +1199,20 @@ interface HelpButtonsInfoProps {
   minGuessesRequired: number;
   minSongs: number;
   lifelineActivated: boolean;
+  giveUpMinGuessesRequired: number;
 }
 
 const HelpButtonsInfo = ({ 
   minGuessesRequired, 
   minSongs,
-  lifelineActivated 
+  lifelineActivated,
+  giveUpMinGuessesRequired
 }: HelpButtonsInfoProps) => {
   const [showTooltip, setShowTooltip] = useState(false);
   const tooltipRef = useRef<HTMLDivElement>(null);
   const iconRef = useRef<HTMLSpanElement>(null);
 
-  const giveUpText = `🏳️ Give Up: Surrender and reveal the answer. Available after 3 guesses.`;
+  const giveUpText = `🏳️ Give Up: Surrender and reveal the answer. Available after ${giveUpMinGuessesRequired} guesses.`;
   const lifelineText = `🛟 Lifeline: Reduces the song list in the search box using your clues (approximate). Updates after every consequent guess, but never below ${minSongs} songs. Available after ${minGuessesRequired} guesses. One use per puzzle. Costs 1 guess.${lifelineActivated ? ' (Already activated)' : ''}`;
 
   useEffect(() => {
