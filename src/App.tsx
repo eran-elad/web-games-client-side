@@ -81,10 +81,6 @@ function App() {
     setCurrentView(previousView)
   }
 
-  const handleGoHome = () => {
-    setCurrentView('welcome')
-  }
-
   const handleGoToDailyPuzzle = async () => {
     console.log('App: handleGoToDailyPuzzle called');
     console.log('App: Current view:', currentView);
