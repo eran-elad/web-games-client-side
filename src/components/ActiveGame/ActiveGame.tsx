@@ -7,7 +7,7 @@ import HamburgerMenu from '../HamburgerMenu/HamburgerMenu';
 import NewDailyPuzzleBanner from '../NewDailyPuzzleBanner/NewDailyPuzzleBanner';
 import { MUSIC_GAME_ID } from '../../config/gameConfig';
 import { getApiUrl } from '../../config/apiConfig';
-import { getPlayerId, setPlayerId, setSessionId, setGameId, clearSession, getPuzzleId, getLocalDate, getDistanceUnit, isViewingArchive, clearPuzzleId, clearLocalDate } from '../../utils/storage';
+import { getPlayerId, setPlayerId, setSessionId, setGameId, clearSession, getPuzzleId, getLocalDate, getDistanceUnit, isViewingArchive, clearPuzzleId, clearLocalDate, clearViewingArchive, setPuzzleId, setLocalDate } from '../../utils/storage';
 import { initGame, submitGuess, giveUp, activateLifeline } from '../../services/gameApi';
 import type { GameInitResponse, ActivateLifelineResponse } from '../../services/gameApi';
 import './ActiveGame.css';
@@ -213,6 +213,7 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
   const [newDailyPuzzleAvailable, setNewDailyPuzzleAvailable] = useState<boolean>(false);
   const [puzzleType, setPuzzleType] = useState<string | null>(null); // Track puzzle type from API
   const [bannerDismissed, setBannerDismissed] = useState<boolean>(false); // Track dismissal state
+  const initInProgressRef = useRef<boolean>(false);
 
   // Listen for distance unit changes from settings
   useEffect(() => {
@@ -228,6 +229,10 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
 
   // Initialize game session on mount
   useEffect(() => {
+    // Prevent double init when React Strict Mode runs the effect twice (mount → cleanup → mount)
+    if (initInProgressRef.current) return;
+    initInProgressRef.current = true;
+
     let isMounted = true;
     let retryCount = 0;
     const MAX_RETRIES = 1; // Only retry once
@@ -309,7 +314,28 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
         // 1. User starts a new daily game (via handlePlay in App.tsx)
         // 2. User selects a different puzzle from archive
         
-        if (!isMounted) return;
+        // Apply state even when isMounted is false: under Strict Mode the effect cleanup runs
+        // before the init response arrives, but the component is still mounted and we must
+        // show the loaded game (setInitLoading(false) is always called in finally).
+        
+        // When we had sent a puzzle_id (viewing archive or daily-puzzle-status) but the server
+        // returned a different puzzle (e.g. daily due to idle), sync localStorage to the response
+        // so any re-init or later logic uses what the server actually gave us.
+        const responsePuzzleId = response.session.puzzle.puzzle_id;
+        const responseLocalDate = response.session.puzzle.local_date;
+        if (
+          (puzzleId !== undefined || localDate !== undefined) &&
+          (responsePuzzleId !== puzzleId || responseLocalDate !== (localDate ?? ''))
+        ) {
+          setPuzzleId(responsePuzzleId);
+          setLocalDate(responseLocalDate);
+          if (
+            response.session.puzzle.type === 'daily' ||
+            responseLocalDate === todayDateStr
+          ) {
+            clearViewingArchive();
+          }
+        }
         
         // Store player and session data in localStorage
         setPlayerId(response.player.player_uuid);
@@ -484,15 +510,17 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
         // Detailed error information is already logged to console above
         setError('Unable to load the game. Please try refreshing the page.');
       } finally {
-        if (isMounted) {
-          setInitLoading(false);
-        }
+        initInProgressRef.current = false;
+        // Always clear loading when init attempt finishes so the UI does not stay stuck
+        // (isMounted can be false under Strict Mode cleanup even though the component is still visible)
+        setInitLoading(false);
       }
     };
     
     initializeGame();
     
-    // Cleanup function
+    // Cleanup function - do not clear initInProgressRef here so Strict Mode's second run
+    // sees init still in progress and skips
     return () => {
       isMounted = false;
     };
