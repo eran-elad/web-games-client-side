@@ -191,10 +191,12 @@ interface ActiveGameProps {
   onShowHelp?: () => void;
   onShowArchive?: () => void;
   onShowSettings?: () => void;
+  onShowPrivacy?: () => void;
+  onShowCredits?: () => void;
   onGoToDailyPuzzle?: () => void;
 }
 
-const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onShowArchive, onShowSettings, onGoToDailyPuzzle }: ActiveGameProps = {}) => {
+const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onShowArchive, onShowSettings, onShowPrivacy, onShowCredits, onGoToDailyPuzzle }: ActiveGameProps = {}) => {
   const [selectedSongId, setSelectedSongId] = useState<string | null>(null);
   const [selectedSong, setSelectedSong] = useState<Song | null>(null);
   const [guesses, setGuesses] = useState<Guess[]>([]);
@@ -935,6 +937,15 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
             Daily Puzzle
           </h1>
           <p>Loading game...</p>
+          <div className="puzzle-page-footer">
+            <button type="button" className="puzzle-footer-link" onClick={onShowPrivacy}>
+              Privacy Policy
+            </button>
+            <span className="puzzle-footer-sep"> · </span>
+            <button type="button" className="puzzle-footer-link" onClick={onShowCredits}>
+              Credits
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -1157,6 +1168,15 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
           </div>
         )}
         <WinConfetti isActive={isWinning} />
+        <div className="puzzle-page-footer">
+          <button type="button" className="puzzle-footer-link" onClick={onShowPrivacy}>
+            Privacy Policy
+          </button>
+          <span className="puzzle-footer-sep"> · </span>
+          <button type="button" className="puzzle-footer-link" onClick={onShowCredits}>
+            Credits
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -11,9 +11,10 @@ import HelpPage from './components/HelpPage/HelpPage'
 import ArchivePage from './components/ArchivePage/ArchivePage'
 import SettingsPage from './components/SettingsPage/SettingsPage'
 import PrivacyPolicy from './components/PrivacyPolicy/PrivacyPolicy'
+import CreditsPage from './components/CreditsPage/CreditsPage'
 import './App.css'
 
-type View = 'welcome' | 'game' | 'statistics' | 'help' | 'archive' | 'settings' | 'privacy'
+type View = 'welcome' | 'game' | 'statistics' | 'help' | 'archive' | 'settings' | 'privacy' | 'credits'
 
 function App() {
   const [currentView, setCurrentView] = useState<View>('game')
@@ -78,6 +79,15 @@ function App() {
   }
 
   const handleClosePrivacy = () => {
+    setCurrentView(previousView)
+  }
+
+  const handleShowCredits = () => {
+    setPreviousView(currentView)
+    setCurrentView('credits')
+  }
+
+  const handleCloseCredits = () => {
     setCurrentView(previousView)
   }
 
@@ -169,12 +179,13 @@ function App() {
   return (
     <div className="app">
       {currentView === 'welcome' && <WelcomePage onPlay={handlePlay} onShowStatistics={handleShowStatistics} onShowHelp={handleShowHelp} onShowArchive={handleShowArchive} onShowSettings={handleShowSettings} onShowPrivacy={handleShowPrivacy} />}
-      {currentView === 'game' && <ActiveGame key={gameKey} onShowStatistics={handleShowStatistics} userClosedStats={statsClosedRef.current} onShowHelp={handleShowHelp} onShowArchive={handleShowArchive} onShowSettings={handleShowSettings} onGoToDailyPuzzle={handleGoToDailyPuzzle} />}
+      {currentView === 'game' && <ActiveGame key={gameKey} onShowStatistics={handleShowStatistics} userClosedStats={statsClosedRef.current} onShowHelp={handleShowHelp} onShowPrivacy={handleShowPrivacy} onShowCredits={handleShowCredits} onShowArchive={handleShowArchive} onShowSettings={handleShowSettings} onGoToDailyPuzzle={handleGoToDailyPuzzle} />}
       {currentView === 'statistics' && <StatisticsPage onClose={handleCloseStatistics} />}
       {currentView === 'help' && <HelpPage onClose={handleCloseHelp} />}
       {currentView === 'archive' && <ArchivePage onClose={handleCloseArchive} onPlayDate={handlePlayDate} />}
       {currentView === 'settings' && <SettingsPage onClose={handleCloseSettings} />}
       {currentView === 'privacy' && <PrivacyPolicy onClose={handleClosePrivacy} />}
+      {currentView === 'credits' && <CreditsPage onClose={handleCloseCredits} />}
     </div>
   )
 }

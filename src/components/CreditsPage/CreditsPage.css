@@ -1,0 +1,128 @@
+.credits-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 2rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.credits-content {
+  max-width: 700px;
+  width: 100%;
+  padding: 2rem;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.credits-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #eee;
+}
+
+.credits-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #333;
+  margin: 0;
+}
+
+.credits-close-button {
+  background: none;
+  border: none;
+  font-size: 2rem;
+  color: #999;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  transition: color 0.2s;
+}
+
+.credits-close-button:hover {
+  color: #333;
+}
+
+.credits-body {
+  color: #444;
+  font-size: 0.95rem;
+  line-height: 1.7;
+}
+
+.credits-body p {
+  margin: 0 0 0.75rem 0;
+}
+
+.credits-body a {
+  color: #667eea;
+  text-decoration: none;
+}
+
+.credits-body a:hover {
+  text-decoration: underline;
+}
+
+.credits-footer {
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid #eee;
+}
+
+.credits-back-button {
+  padding: 0.6rem 1.5rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #667eea;
+  background: white;
+  border: 2px solid #667eea;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.credits-back-button:hover {
+  background: #667eea;
+  color: white;
+}
+
+@media (prefers-color-scheme: dark) {
+  .credits-content {
+    background: rgba(30, 30, 30, 0.95);
+  }
+
+  .credits-header {
+    border-bottom-color: #444;
+  }
+
+  .credits-title {
+    color: #fff;
+  }
+
+  .credits-body {
+    color: #ccc;
+  }
+
+  .credits-footer {
+    border-top-color: #444;
+  }
+}
+
+@media (max-width: 768px) {
+  .credits-container {
+    padding: 1rem;
+  }
+
+  .credits-content {
+    padding: 1.5rem;
+  }
+
+  .credits-title {
+    font-size: 1.5rem;
+  }
+}
