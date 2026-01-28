@@ -11,7 +11,7 @@ export default defineConfig({
     {
       name: 'rewrite-credits',
       configureServer(server) {
-        server.middlewares.use((req, res, next) => {
+        server.middlewares.use((req, _res, next) => {
           if (req.url === '/credits') {
             req.url = '/credits.html';
           }
