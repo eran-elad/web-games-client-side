@@ -231,9 +231,13 @@ interface GuessBoxProps {
   isLifeline?: boolean; // Indicates this is a lifeline entry
   catalogSize?: number; // Catalog size for lifeline entries
   catalogSizeAfterGuess?: number; // Catalog size after this guess (when lifeline active)
+  /** When true, show the artist clue for this guess (e.g. after near-match or once revealed in a previous guess) */
+  showArtistClue?: boolean;
+  /** Secret song artist name; shown when artist clue is revealed but guess was wrong */
+  solutionArtist?: string;
 }
 
-const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guessedArtistType, guessedGender, guessedYear, preferredDistanceUnit = null, isWinning = false, pulseDelay = 0, isLifeline = false, catalogSize, catalogSizeAfterGuess }: GuessBoxProps) => {
+const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guessedArtistType, guessedGender, guessedYear, preferredDistanceUnit = null, isWinning = false, pulseDelay = 0, isLifeline = false, catalogSize, catalogSizeAfterGuess, showArtistClue = false, solutionArtist }: GuessBoxProps) => {
   // Helper to determine clue status (correct/close/incorrect/neighboring) based on thresholds
   type ClueStatus = 'correct' | 'close' | 'incorrect' | 'neighboring' | 'unknown';
   
@@ -722,7 +726,8 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guess
         return mainText;
       }
       case 'artist': {
-        return 'You guessed the correct artist! This is a great clue to narrow down your search.';
+        // Handled inline with artist/solutionArtist for correct vs incorrect wording
+        return null;
       }
       case 'album': {
         // Try to get the album name from the clue object
@@ -1105,12 +1110,21 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guess
             </div>
           );
         })()}
-        {/* Artist clue - only show when correct */}
-        {artistObj && artistObj.status === 'correct' && (
-          <div className="clue-tag clue-status-correct">
+        {/* Artist clue - show when correct, or when showArtistClue (near-match or once revealed) */}
+        {((artistObj && artistObj.status === 'correct') || showArtistClue) && (
+          <div className={`clue-tag clue-status-${artistObj?.status === 'correct' ? 'correct' : 'incorrect'}`}>
             <span className="clue-label">ARTIST</span>
-            <span className="clue-value clue-value-checkmark">✓</span>
-            <ClueTooltip helpText={getHelpText('artist', artistObj)} clueType="artist" />
+            {artistObj?.status === 'correct' ? (
+              <>
+                <span className="clue-value clue-value-checkmark">✓</span>
+                <ClueTooltip helpText={<>The secret song&apos;s artist <strong>is</strong> {artist}.</>} clueType="artist" />
+              </>
+            ) : (
+              <>
+                {solutionArtist && <span className="clue-value">{solutionArtist}</span>}
+                <ClueTooltip helpText={<>The secret song&apos;s artist <strong>is not</strong> {artist}.</>} clueType="artist" />
+              </>
+            )}
           </div>
         )}
         {/* Album clue - only show when correct */}

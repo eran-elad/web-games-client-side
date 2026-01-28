@@ -7,6 +7,7 @@ import HamburgerMenu from '../HamburgerMenu/HamburgerMenu';
 import NewDailyPuzzleBanner from '../NewDailyPuzzleBanner/NewDailyPuzzleBanner';
 import { MUSIC_GAME_ID } from '../../config/gameConfig';
 import { getApiUrl } from '../../config/apiConfig';
+import { DEFAULT_CLUE_THRESHOLDS } from '../../config/clueThresholds';
 import { getPlayerId, setPlayerId, setSessionId, setGameId, clearSession, getPuzzleId, getLocalDate, getDistanceUnit, isViewingArchive, clearPuzzleId, clearLocalDate, clearViewingArchive, setPuzzleId, setLocalDate } from '../../utils/storage';
 import { initGame, submitGuess, giveUp, activateLifeline } from '../../services/gameApi';
 import type { GameInitResponse, ActivateLifelineResponse } from '../../services/gameApi';
@@ -194,6 +195,26 @@ interface ActiveGameProps {
   onShowPrivacy?: () => void;
   onShowCredits?: () => void;
   onGoToDailyPuzzle?: () => void;
+}
+
+/** Returns true when country, genre, artist_type, and gender are correct and year is exact or close (blue). Used to reveal artist clue so user sees they missed the artist. */
+function shouldShowArtistByNearMatch(clues: any): boolean {
+  const c = clues?.clues ?? clues ?? {};
+  const country = c.country;
+  const genre = c.genre;
+  const artistType = c.artist_type;
+  const gender = c.gender;
+  const year = c.year;
+  const countryCorrect = country && (country.status === 'correct' || country.status === true);
+  const genreCorrect = genre && (genre.status === 'correct' || genre.status === true);
+  const artistTypeCorrect = artistType && (artistType.status === 'correct' || artistType.status === true);
+  const genderCorrect = gender && (gender.status === 'correct' || gender.status === true);
+  let yearMatchOrClose = false;
+  if (year && typeof year === 'object' && year.diff !== undefined) {
+    const diff = Math.abs(Number(year.diff));
+    yearMatchOrClose = diff === 0 || diff <= DEFAULT_CLUE_THRESHOLDS.year.closeRange;
+  }
+  return !!(countryCorrect && genreCorrect && artistTypeCorrect && genderCorrect && yearMatchOrClose);
 }
 
 const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onShowArchive, onShowSettings, onShowPrivacy, onShowCredits, onGoToDailyPuzzle }: ActiveGameProps = {}) => {
@@ -1144,29 +1165,46 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
         {error && (
           <div className="error-message">{error}</div>
         )}
-        {guesses.length > 0 && (
-          <div className="guesses-container">
-            {guesses.slice().reverse().map((guess, index) => (
-              <GuessBox
-                key={`guess-${guesses.length - index}-${distanceUnitKey}`}
-                songTitle={guess.songTitle}
-                artist={guess.artist}
-                clues={guess.clues}
-                guessNumber={guesses.length - index}
-                guessedCountry={guess.guessedCountry}
-                guessedArtistType={guess.guessedArtistType}
-                guessedGender={guess.guessedGender}
-                guessedYear={guess.guessedYear}
-                preferredDistanceUnit={getDistanceUnit()}
-                isWinning={isWinning}
-                pulseDelay={index * 0.1}
-                isLifeline={guess.isLifeline}
-                catalogSize={guess.catalogSize ?? undefined}
-                catalogSizeAfterGuess={guess.catalogSizeAfterGuess}
-              />
-            ))}
-          </div>
-        )}
+        {guesses.length > 0 && (() => {
+          // Once artist clue is shown for any guess (correct or near-match), show it for all subsequent guesses
+          let artistRevealed = false;
+          const showArtistClueForGuess = guesses.map((guess) => {
+            const artistCorrect = (guess.clues?.clues?.artist?.status === 'correct') || (guess.clues?.artist?.status === 'correct');
+            const nearMatch = shouldShowArtistByNearMatch(guess.clues);
+            const show = artistCorrect || nearMatch || artistRevealed;
+            if (show) artistRevealed = true;
+            return show;
+          });
+          const solutionArtist = sessionState?.secret_song?.artist;
+          return (
+            <div className="guesses-container">
+              {guesses.slice().reverse().map((guess, index) => {
+                const originalIndex = guesses.length - 1 - index;
+                return (
+                  <GuessBox
+                    key={`guess-${guesses.length - index}-${distanceUnitKey}`}
+                    songTitle={guess.songTitle}
+                    artist={guess.artist}
+                    clues={guess.clues}
+                    guessNumber={guesses.length - index}
+                    guessedCountry={guess.guessedCountry}
+                    guessedArtistType={guess.guessedArtistType}
+                    guessedGender={guess.guessedGender}
+                    guessedYear={guess.guessedYear}
+                    preferredDistanceUnit={getDistanceUnit()}
+                    isWinning={isWinning}
+                    pulseDelay={index * 0.1}
+                    isLifeline={guess.isLifeline}
+                    catalogSize={guess.catalogSize ?? undefined}
+                    catalogSizeAfterGuess={guess.catalogSizeAfterGuess}
+                    showArtistClue={showArtistClueForGuess[originalIndex]}
+                    solutionArtist={solutionArtist}
+                  />
+                );
+              })}
+            </div>
+          );
+        })()}
         <WinConfetti isActive={isWinning} />
         <div className="puzzle-page-footer">
           <button type="button" className="puzzle-footer-link" onClick={onShowPrivacy}>
