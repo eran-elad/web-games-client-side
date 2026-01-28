@@ -106,6 +106,10 @@
   transition: opacity 0.2s;
 }
 
+a.puzzle-footer-link {
+  display: inline;
+}
+
 .puzzle-footer-link:hover {
   text-decoration: underline;
 }

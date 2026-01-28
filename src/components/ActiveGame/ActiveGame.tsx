@@ -193,7 +193,6 @@ interface ActiveGameProps {
   onShowArchive?: () => void;
   onShowSettings?: () => void;
   onShowPrivacy?: () => void;
-  onShowCredits?: () => void;
   onGoToDailyPuzzle?: () => void;
 }
 
@@ -217,7 +216,7 @@ function shouldShowArtistByNearMatch(clues: any): boolean {
   return !!(countryCorrect && genreCorrect && artistTypeCorrect && genderCorrect && yearMatchOrClose);
 }
 
-const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onShowArchive, onShowSettings, onShowPrivacy, onShowCredits, onGoToDailyPuzzle }: ActiveGameProps = {}) => {
+const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onShowArchive, onShowSettings, onShowPrivacy, onGoToDailyPuzzle }: ActiveGameProps = {}) => {
   const [selectedSongId, setSelectedSongId] = useState<string | null>(null);
   const [selectedSong, setSelectedSong] = useState<Song | null>(null);
   const [guesses, setGuesses] = useState<Guess[]>([]);
@@ -963,9 +962,7 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
               Privacy Policy
             </button>
             <span className="puzzle-footer-sep"> · </span>
-            <button type="button" className="puzzle-footer-link" onClick={onShowCredits}>
-              Credits
-            </button>
+            <a href="/credits" className="puzzle-footer-link">Credits</a>
           </div>
         </div>
       </div>
@@ -1211,9 +1208,7 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
             Privacy Policy
           </button>
           <span className="puzzle-footer-sep"> · </span>
-          <button type="button" className="puzzle-footer-link" onClick={onShowCredits}>
-            Credits
-          </button>
+          <a href="/credits" className="puzzle-footer-link">Credits</a>
         </div>
       </div>
     </div>

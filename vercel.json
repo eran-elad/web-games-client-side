@@ -5,6 +5,10 @@
       "destination": "http://64.225.0.27/api/:path*"
     },
     {
+      "source": "/credits",
+      "destination": "/credits.html"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

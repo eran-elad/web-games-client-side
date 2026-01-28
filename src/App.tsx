@@ -11,7 +11,6 @@ import HelpPage from './components/HelpPage/HelpPage'
 import ArchivePage from './components/ArchivePage/ArchivePage'
 import SettingsPage from './components/SettingsPage/SettingsPage'
 import PrivacyPolicy from './components/PrivacyPolicy/PrivacyPolicy'
-import CreditsPage from './components/CreditsPage/CreditsPage'
 import './App.css'
 
 type View = 'welcome' | 'game' | 'statistics' | 'help' | 'archive' | 'settings' | 'privacy' | 'credits'
@@ -92,18 +91,6 @@ function App() {
   }
 
   const handleClosePrivacy = () => {
-    window.history.pushState(null, '', '/')
-    setPathname('/')
-    setCurrentView(previousView)
-  }
-
-  const handleShowCredits = () => {
-    setPreviousView(currentView)
-    window.history.pushState(null, '', '/credits')
-    setPathname('/credits')
-  }
-
-  const handleCloseCredits = () => {
     window.history.pushState(null, '', '/')
     setPathname('/')
     setCurrentView(previousView)
@@ -194,14 +181,12 @@ function App() {
     setCurrentView('game')
   }
 
-  // URL-based routes: /credits and /privacy are directly accessible
+  // Don't render React app for /credits - it's served as static credits.html
   if (pathname === '/credits') {
-    return (
-      <div className="app">
-        <CreditsPage onClose={handleCloseCredits} />
-      </div>
-    )
+    return null
   }
+
+  // URL-based route: /privacy is directly accessible (credits is static credits.html)
   if (pathname === '/privacy') {
     return (
       <div className="app">
@@ -214,7 +199,7 @@ function App() {
   return (
     <div className="app">
       {currentView === 'welcome' && <WelcomePage onPlay={handlePlay} onShowStatistics={handleShowStatistics} onShowHelp={handleShowHelp} onShowArchive={handleShowArchive} onShowSettings={handleShowSettings} onShowPrivacy={handleShowPrivacy} />}
-      {currentView === 'game' && <ActiveGame key={gameKey} onShowStatistics={handleShowStatistics} userClosedStats={statsClosedRef.current} onShowHelp={handleShowHelp} onShowPrivacy={handleShowPrivacy} onShowCredits={handleShowCredits} onShowArchive={handleShowArchive} onShowSettings={handleShowSettings} onGoToDailyPuzzle={handleGoToDailyPuzzle} />}
+      {currentView === 'game' && <ActiveGame key={gameKey} onShowStatistics={handleShowStatistics} userClosedStats={statsClosedRef.current} onShowHelp={handleShowHelp} onShowPrivacy={handleShowPrivacy} onShowArchive={handleShowArchive} onShowSettings={handleShowSettings} onGoToDailyPuzzle={handleGoToDailyPuzzle} />}
       {currentView === 'statistics' && <StatisticsPage onClose={handleCloseStatistics} />}
       {currentView === 'help' && <HelpPage onClose={handleCloseHelp} />}
       {currentView === 'archive' && <ArchivePage onClose={handleCloseArchive} onPlayDate={handlePlayDate} />}

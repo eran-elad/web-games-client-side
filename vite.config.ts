@@ -1,11 +1,25 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { fileURLToPath, URL } from "node:url";
-import path from "node:path";
+import path from "path";
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    // Plugin to rewrite /credits to /credits.html in dev
+    {
+      name: 'rewrite-credits',
+      configureServer(server) {
+        server.middlewares.use((req, res, next) => {
+          if (req.url === '/credits') {
+            req.url = '/credits.html';
+          }
+          next();
+        });
+      },
+    },
+  ],
   root: path.resolve(process.cwd()),
   resolve: {
     alias: {
