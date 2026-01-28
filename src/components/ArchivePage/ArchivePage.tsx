@@ -138,6 +138,12 @@ const ArchivePage = ({ onClose, onPlayDate }: ArchivePageProps) => {
     }));
   };
 
+  // Today's date in YYYY-MM-DD (local) for comparison
+  const getTodayDateStr = () => {
+    const t = new Date();
+    return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`;
+  };
+
   // Create calendar grid for a month
   const createCalendarGrid = (
     monthPuzzles: Array<{ date: string; puzzle_id: string | null; player_status: string | null }>,
@@ -146,7 +152,8 @@ const ArchivePage = ({ onClose, onPlayDate }: ArchivePageProps) => {
     if (monthPuzzles.length === 0) return [];
 
     const firstDate = new Date(monthPuzzles[0].date + 'T00:00:00');
-    
+    const todayStr = getTodayDateStr();
+
     // Create a map of date -> puzzle for quick lookup
     const puzzleMap = new Map(monthPuzzles.map(p => [p.date, p]));
 
@@ -165,11 +172,12 @@ const ArchivePage = ({ onClose, onPlayDate }: ArchivePageProps) => {
       date: string | null; 
       puzzle: { date: string; puzzle_id: string | null; player_status: string | null } | null;
       isUnavailable: boolean;
+      isToday: boolean;
     }> = [];
 
     // Add empty cells for days before the first day of the month
     for (let i = 0; i < startDayOfWeek; i++) {
-      grid.push({ date: null, puzzle: null, isUnavailable: false });
+      grid.push({ date: null, puzzle: null, isUnavailable: false, isToday: false });
     }
 
     // Add cells for each day of the month
@@ -177,11 +185,14 @@ const ArchivePage = ({ onClose, onPlayDate }: ArchivePageProps) => {
       const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
       const puzzle = puzzleMap.get(dateStr) || null;
       const dateObj = new Date(dateStr + 'T00:00:00');
-      
-      // Check if this date is before the first puzzle date (puzzle doesn't exist)
-      const isUnavailable = firstPuzzleDateObj !== null && dateObj < firstPuzzleDateObj;
-      
-      grid.push({ date: dateStr, puzzle, isUnavailable });
+
+      // Unavailable: before first puzzle date OR after today
+      const beforeFirst = firstPuzzleDateObj !== null && dateObj < firstPuzzleDateObj;
+      const afterToday = dateStr > todayStr;
+      const isUnavailable = beforeFirst || afterToday;
+      const isToday = dateStr === todayStr;
+
+      grid.push({ date: dateStr, puzzle, isUnavailable, isToday });
     }
 
     return grid;
@@ -290,7 +301,7 @@ const ArchivePage = ({ onClose, onPlayDate }: ArchivePageProps) => {
                     return (
                       <div
                         key={cell.date}
-                        className={`calendar-day ${statusClass} ${isClickable ? 'clickable' : ''} ${cell.isUnavailable ? 'unavailable' : ''}`}
+                        className={`calendar-day ${statusClass} ${isClickable ? 'clickable' : ''} ${cell.isUnavailable ? 'unavailable' : ''} ${cell.isToday ? 'today' : ''}`}
                         onClick={() => puzzle && !cell.isUnavailable && handleDateClick(puzzle.date, puzzle.puzzle_id)}
                         title={cell.isUnavailable 
                           ? `${formatDate(cell.date)} - Unavailable` 
