@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { setViewingArchive, clearViewingArchive } from './utils/storage'
 import { clearSession } from './utils/storage'
 import { getDailyPuzzleStatus } from './services/gameApi'
@@ -16,12 +16,24 @@ import './App.css'
 
 type View = 'welcome' | 'game' | 'statistics' | 'help' | 'archive' | 'settings' | 'privacy' | 'credits'
 
+function getPathname() {
+  return typeof window !== 'undefined' ? window.location.pathname : '/'
+}
+
 function App() {
+  const [pathname, setPathname] = useState(getPathname)
   const [currentView, setCurrentView] = useState<View>('game')
   const [previousView, setPreviousView] = useState<View>('game')
   const statsClosedRef = useRef<boolean>(false)
   const cameFromArchiveRef = useRef<boolean>(false)
   const [gameKey, setGameKey] = useState<number>(0) // Key to force remount of ActiveGame
+
+  // Sync pathname when user uses browser back/forward
+  useEffect(() => {
+    const handlePopState = () => setPathname(getPathname())
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
+  }, [])
 
   const handlePlay = () => {
     // Clear any archive puzzle parameters when starting a new daily game
@@ -75,19 +87,25 @@ function App() {
 
   const handleShowPrivacy = () => {
     setPreviousView(currentView)
-    setCurrentView('privacy')
+    window.history.pushState(null, '', '/privacy')
+    setPathname('/privacy')
   }
 
   const handleClosePrivacy = () => {
+    window.history.pushState(null, '', '/')
+    setPathname('/')
     setCurrentView(previousView)
   }
 
   const handleShowCredits = () => {
     setPreviousView(currentView)
-    setCurrentView('credits')
+    window.history.pushState(null, '', '/credits')
+    setPathname('/credits')
   }
 
   const handleCloseCredits = () => {
+    window.history.pushState(null, '', '/')
+    setPathname('/')
     setCurrentView(previousView)
   }
 
@@ -176,6 +194,23 @@ function App() {
     setCurrentView('game')
   }
 
+  // URL-based routes: /credits and /privacy are directly accessible
+  if (pathname === '/credits') {
+    return (
+      <div className="app">
+        <CreditsPage onClose={handleCloseCredits} />
+      </div>
+    )
+  }
+  if (pathname === '/privacy') {
+    return (
+      <div className="app">
+        <PrivacyPolicy onClose={handleClosePrivacy} />
+      </div>
+    )
+  }
+
+  // Game and modals (state-based)
   return (
     <div className="app">
       {currentView === 'welcome' && <WelcomePage onPlay={handlePlay} onShowStatistics={handleShowStatistics} onShowHelp={handleShowHelp} onShowArchive={handleShowArchive} onShowSettings={handleShowSettings} onShowPrivacy={handleShowPrivacy} />}
@@ -184,8 +219,6 @@ function App() {
       {currentView === 'help' && <HelpPage onClose={handleCloseHelp} />}
       {currentView === 'archive' && <ArchivePage onClose={handleCloseArchive} onPlayDate={handlePlayDate} />}
       {currentView === 'settings' && <SettingsPage onClose={handleCloseSettings} />}
-      {currentView === 'privacy' && <PrivacyPolicy onClose={handleClosePrivacy} />}
-      {currentView === 'credits' && <CreditsPage onClose={handleCloseCredits} />}
     </div>
   )
 }
