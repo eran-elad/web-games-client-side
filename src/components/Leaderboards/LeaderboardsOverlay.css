@@ -7,12 +7,17 @@
   background: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(4px);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   z-index: 1000;
   padding: 1rem;
+  padding-top: max(1rem, env(safe-area-inset-top));
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  padding-left: max(1rem, env(safe-area-inset-left));
+  padding-right: max(1rem, env(safe-area-inset-right));
   overflow-y: auto;
   animation: leaderboards-fadeIn 0.2s ease-out;
+  -webkit-overflow-scrolling: touch;
 }
 
 @keyframes leaderboards-fadeIn {
@@ -34,6 +39,9 @@
   flex-direction: column;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
   animation: leaderboards-slideIn 0.3s ease-out;
+  flex-shrink: 0;
+  margin-top: 0;
+  -webkit-overflow-scrolling: touch;
 }
 
 @keyframes leaderboards-slideIn {
@@ -51,9 +59,13 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem 1.5rem;
+  padding: calc(1rem + env(safe-area-inset-top, 0px)) 1.5rem 1rem;
   border-bottom: 2px solid #e0e0e0;
   flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  background: white;
+  z-index: 1;
 }
 
 .leaderboards-overlay-title {
@@ -85,7 +97,10 @@
     max-height: 95vh;
   }
 
-  .leaderboards-overlay-header,
+  .leaderboards-overlay-header {
+    padding: calc(0.75rem + env(safe-area-inset-top, 0px)) 1rem 1rem;
+  }
+
   .leaderboards-overlay-body {
     padding: 1rem;
   }

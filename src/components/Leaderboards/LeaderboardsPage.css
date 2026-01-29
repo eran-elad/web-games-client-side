@@ -4,7 +4,13 @@
   justify-content: center;
   align-items: flex-start;
   padding: 2rem 1rem;
+  padding-top: max(2rem, env(safe-area-inset-top));
+  padding-bottom: max(2rem, env(safe-area-inset-bottom));
+  padding-left: max(1rem, env(safe-area-inset-left));
+  padding-right: max(1rem, env(safe-area-inset-right));
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .leaderboards-page-content {
@@ -24,6 +30,16 @@
   margin-bottom: 2rem;
   padding-bottom: 1rem;
   border-bottom: 2px solid #f0f0f0;
+  position: sticky;
+  top: 0;
+  background: white;
+  z-index: 1;
+  margin-top: -2rem;
+  padding-top: calc(1rem + env(safe-area-inset-top, 0px));
+  margin-left: -2rem;
+  margin-right: -2rem;
+  padding-left: 2rem;
+  padding-right: 2rem;
 }
 
 .leaderboards-page-title {
@@ -47,6 +63,8 @@
 @media (max-width: 768px) {
   .leaderboards-page-container {
     padding: 1rem 0.5rem;
+    padding-top: max(1rem, env(safe-area-inset-top));
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
   }
 
   .leaderboards-page-content {
@@ -54,8 +72,16 @@
     border-radius: 12px;
   }
 
+  .leaderboards-page-header {
+    margin-top: -1.5rem;
+    margin-left: -1.5rem;
+    margin-right: -1.5rem;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+    padding-top: calc(0.75rem + env(safe-area-inset-top, 0px));
+  }
+
   .leaderboards-page-title {
     font-size: 1.5rem;
   }
-
 }

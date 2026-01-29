@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { getPlayerId } from '../../utils/storage';
 import LeaderboardsContent from './LeaderboardsContent';
 import './LeaderboardsPage.css';
@@ -8,9 +9,14 @@ interface LeaderboardsPageProps {
 
 export default function LeaderboardsPage({ onClose }: LeaderboardsPageProps) {
   const playerId = getPlayerId();
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    containerRef.current?.scrollTo(0, 0);
+  }, []);
 
   return (
-    <div className="leaderboards-page-container">
+    <div ref={containerRef} className="leaderboards-page-container">
       <div className="leaderboards-page-content">
         <div className="leaderboards-page-header">
           <h1 className="leaderboards-page-title">

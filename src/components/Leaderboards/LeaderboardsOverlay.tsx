@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import LeaderboardsContent from './LeaderboardsContent';
 import './LeaderboardsOverlay.css';
 
@@ -8,6 +8,8 @@ interface LeaderboardsOverlayProps {
 }
 
 export default function LeaderboardsOverlay({ onClose, playerId }: LeaderboardsOverlayProps) {
+  const backdropRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -18,8 +20,13 @@ export default function LeaderboardsOverlay({ onClose, playerId }: LeaderboardsO
     return () => window.removeEventListener('keydown', handleEscape);
   }, [onClose]);
 
+  useEffect(() => {
+    backdropRef.current?.scrollTo(0, 0);
+  }, []);
+
   return (
     <div
+      ref={backdropRef}
       className="leaderboards-overlay-backdrop"
       onClick={onClose}
       role="dialog"
