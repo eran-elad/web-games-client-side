@@ -2,3 +2,43 @@
   width: 100%;
   min-height: 100vh;
 }
+
+/* Shared close button - minimal, clean */
+.app-close-button {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  background: rgba(0, 0, 0, 0.06);
+  color: #666;
+  font-size: 1.25rem;
+  font-weight: 300;
+  line-height: 1;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.app-close-button:hover {
+  background: rgba(0, 0, 0, 0.1);
+  color: #333;
+}
+
+.app-close-button:active {
+  background: rgba(0, 0, 0, 0.12);
+}
+
+@media (prefers-color-scheme: dark) {
+  .app-close-button {
+    background: rgba(255, 255, 255, 0.08);
+    color: #aaa;
+  }
+
+  .app-close-button:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+  }
+}

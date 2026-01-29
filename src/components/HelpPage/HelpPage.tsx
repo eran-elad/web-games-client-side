@@ -1,3 +1,4 @@
+import React, { useEffect } from 'react';
 import { HELP_CONTENT } from '../../config/helpContent';
 import './HelpPage.css';
 
@@ -6,16 +7,40 @@ interface HelpPageProps {
 }
 
 const HelpPage = ({ onClose }: HelpPageProps) => {
+  const containerRef = React.useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [onClose]);
+
+  useEffect(() => {
+    containerRef.current?.scrollTo(0, 0);
+  }, []);
+
   return (
-    <div className="help-page-container">
-      <div className="help-page-content">
+    <div
+      ref={containerRef}
+      className="help-page-container"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="help-page-title"
+    >
+      <div
+        className="help-page-content"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="help-page-header">
-          <h1 className="help-page-title">
+          <h1 id="help-page-title" className="help-page-title">
             <span className="help-icon">🎵</span>
             {HELP_CONTENT.title}
           </h1>
           <button 
-            className="help-close-button" 
+            className="app-close-button help-close-button" 
             onClick={onClose} 
             aria-label="Close help"
             title="Close"

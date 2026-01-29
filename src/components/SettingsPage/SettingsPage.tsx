@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { getDistanceUnit, setDistanceUnit } from '../../utils/storage';
+import { getDistanceUnit, setDistanceUnit, getDisplayName, setDisplayName, getPlayerId } from '../../utils/storage';
+import { updatePlayerDisplayName } from '../../services/gameApi';
 import { getCountryMeasurementSystem } from '../../config/countryCodes';
 import './SettingsPage.css';
 
@@ -53,6 +54,10 @@ const detectUserCountry = (): string | null => {
 
 const SettingsPage = ({ onClose }: SettingsPageProps) => {
   const [displayUnit, setDisplayUnit] = useState<'km' | 'miles'>('km');
+  const [displayName, setDisplayNameState] = useState(getDisplayName() ?? '');
+  const [displayNameSaving, setDisplayNameSaving] = useState(false);
+  const [displayNameError, setDisplayNameError] = useState<string | null>(null);
+  const [displayNameSuccess, setDisplayNameSuccess] = useState(false);
 
   useEffect(() => {
     // Load current preference on mount
@@ -76,6 +81,29 @@ const SettingsPage = ({ onClose }: SettingsPageProps) => {
     window.dispatchEvent(new CustomEvent('distanceUnitChanged', { detail: { unit } }));
   };
 
+  const handleDisplayNameSave = async () => {
+    const playerId = getPlayerId();
+    if (!playerId) {
+      setDisplayNameError('No player ID found');
+      return;
+    }
+    const trimmed = displayName.trim() || null;
+    try {
+      setDisplayNameSaving(true);
+      setDisplayNameError(null);
+      setDisplayNameSuccess(false);
+      const res = await updatePlayerDisplayName(playerId, trimmed);
+      setDisplayName(res.display_name);
+      setDisplayNameState(res.display_name ?? '');
+      setDisplayNameSuccess(true);
+      setTimeout(() => setDisplayNameSuccess(false), 2000);
+    } catch (err) {
+      setDisplayNameError(err instanceof Error ? err.message : 'Failed to update');
+    } finally {
+      setDisplayNameSaving(false);
+    }
+  };
+
   return (
     <div className="settings-page-container">
       <div className="settings-page-content">
@@ -85,7 +113,7 @@ const SettingsPage = ({ onClose }: SettingsPageProps) => {
             Settings
           </h1>
           <button 
-            className="settings-close-button" 
+            className="app-close-button settings-close-button" 
             onClick={onClose} 
             aria-label="Close settings"
             title="Close"
@@ -95,6 +123,29 @@ const SettingsPage = ({ onClose }: SettingsPageProps) => {
         </div>
         
         <div className="settings-sections">
+          <div className="settings-row settings-row-display-name">
+            <span className="settings-label">Display Name</span>
+            <div className="settings-display-name-controls">
+              <input
+                type="text"
+                className="settings-display-name-input"
+                value={displayName}
+                onChange={(e) => setDisplayNameState(e.target.value)}
+                maxLength={100}
+                placeholder="Your name on leaderboards"
+              />
+              <button
+                type="button"
+                className="settings-display-name-save"
+                onClick={handleDisplayNameSave}
+                disabled={displayNameSaving}
+              >
+                {displayNameSaving ? 'Saving…' : 'Save'}
+              </button>
+            </div>
+            {displayNameError && <span className="settings-display-name-error">{displayNameError}</span>}
+            {displayNameSuccess && <span className="settings-display-name-success">Saved!</span>}
+          </div>
           <div className="settings-row">
             <span className="settings-label">Distance Units</span>
             <div className="settings-options">

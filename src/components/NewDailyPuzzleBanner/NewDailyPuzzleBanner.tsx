@@ -24,7 +24,7 @@ const NewDailyPuzzleBanner = ({ onSwitchToDaily, onDismiss }: NewDailyPuzzleBann
         </button>
       </div>
       <button 
-        className="banner-close"
+        className="app-close-button banner-close"
         onClick={onDismiss}
         aria-label="Dismiss banner"
       >

@@ -12,7 +12,7 @@ const PrivacyPolicy = ({ onClose }: PrivacyPolicyProps) => {
         <div className="privacy-header">
           <h1 className="privacy-title">Privacy Policy</h1>
           <button 
-            className="privacy-close-button" 
+            className="app-close-button privacy-close-button" 
             onClick={onClose}
             aria-label="Close"
             title="Close"

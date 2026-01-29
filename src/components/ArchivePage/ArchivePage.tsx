@@ -203,7 +203,7 @@ const ArchivePage = ({ onClose, onPlayDate }: ArchivePageProps) => {
       <div className="archive-page">
         <div className="archive-header">
           <h1>📅 Puzzle Archive</h1>
-          <button className="close-button" onClick={onClose}>✕</button>
+          <button className="app-close-button close-button" onClick={onClose}>×</button>
         </div>
         <div className="archive-content">
           <p>Loading archive...</p>
@@ -217,7 +217,7 @@ const ArchivePage = ({ onClose, onPlayDate }: ArchivePageProps) => {
       <div className="archive-page">
         <div className="archive-header">
           <h1>📅 Puzzle Archive</h1>
-          <button className="close-button" onClick={onClose}>✕</button>
+          <button className="app-close-button close-button" onClick={onClose}>×</button>
         </div>
         <div className="archive-content">
           <p className="error-message">{error}</p>
@@ -231,7 +231,7 @@ const ArchivePage = ({ onClose, onPlayDate }: ArchivePageProps) => {
       <div className="archive-page">
         <div className="archive-header">
           <h1>📅 Puzzle Archive</h1>
-          <button className="close-button" onClick={onClose}>✕</button>
+          <button className="app-close-button close-button" onClick={onClose}>×</button>
         </div>
         <div className="archive-content">
           <p>No puzzles available yet.</p>
@@ -244,7 +244,7 @@ const ArchivePage = ({ onClose, onPlayDate }: ArchivePageProps) => {
     <div className="archive-page">
       <div className="archive-header">
         <h1>📅 Puzzle Archive</h1>
-        <button className="close-button" onClick={onClose}>✕</button>
+        <button className="app-close-button close-button" onClick={onClose}>×</button>
       </div>
       <div className="archive-content">
         <div className="archive-legend">

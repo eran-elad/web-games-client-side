@@ -35,18 +35,7 @@
 }
 
 .privacy-close-button {
-  background: none;
-  border: none;
-  font-size: 2rem;
-  color: #999;
-  cursor: pointer;
-  padding: 0;
-  line-height: 1;
-  transition: color 0.2s;
-}
-
-.privacy-close-button:hover {
-  color: #333;
+  /* Uses app-close-button base styles */
 }
 
 .privacy-body {

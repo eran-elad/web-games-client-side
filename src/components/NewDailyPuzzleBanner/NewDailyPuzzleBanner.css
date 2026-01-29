@@ -64,29 +64,18 @@
 }
 
 .banner-close {
-  background: none;
-  border: none;
+  background: rgba(255, 255, 255, 0.2);
   color: white;
-  font-size: 1.5rem;
-  cursor: pointer;
-  padding: 0;
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 4px;
-  transition: background-color 0.2s ease;
+  width: 28px;
+  height: 28px;
+  font-size: 1.1rem;
   margin-left: 0.5rem;
   flex-shrink: 0;
 }
 
 .banner-close:hover {
-  background: rgba(255, 255, 255, 0.2);
-}
-
-.banner-close:active {
   background: rgba(255, 255, 255, 0.3);
+  color: white;
 }
 
 /* Mobile responsiveness */

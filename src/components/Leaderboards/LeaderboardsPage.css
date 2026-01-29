@@ -1,0 +1,61 @@
+.leaderboards-page-container {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 2rem 1rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.leaderboards-page-content {
+  width: 100%;
+  max-width: 900px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  padding: 2rem;
+  position: relative;
+}
+
+.leaderboards-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #f0f0f0;
+}
+
+.leaderboards-page-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #333;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.leaderboards-icon {
+  font-size: 2rem;
+}
+
+.leaderboards-close-button {
+  /* Uses app-close-button base styles */
+}
+
+@media (max-width: 768px) {
+  .leaderboards-page-container {
+    padding: 1rem 0.5rem;
+  }
+
+  .leaderboards-page-content {
+    padding: 1.5rem;
+    border-radius: 12px;
+  }
+
+  .leaderboards-page-title {
+    font-size: 1.5rem;
+  }
+
+}

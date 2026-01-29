@@ -4,6 +4,7 @@ import './HamburgerMenu.css';
 interface HamburgerMenuProps {
   onShowStatistics?: () => void;
   onShowArchive?: () => void;
+  onShowLeaderboards?: () => void;
   onShowHelp?: () => void;
   onShowSettings?: () => void;
   onGoToDailyPuzzle?: () => void;
@@ -12,6 +13,7 @@ interface HamburgerMenuProps {
 const HamburgerMenu = ({ 
   onShowStatistics, 
   onShowArchive, 
+  onShowLeaderboards,
   onShowHelp, 
   onShowSettings,
   onGoToDailyPuzzle
@@ -83,6 +85,15 @@ const HamburgerMenu = ({
             >
               <span className="menu-item-icon">📊</span>
               Statistics
+            </button>
+          )}
+          {onShowLeaderboards && (
+            <button
+              className="hamburger-menu-item"
+              onClick={() => handleMenuClick(onShowLeaderboards)}
+            >
+              <span className="menu-item-icon">🏆</span>
+              Leaderboards
             </button>
           )}
           {onShowArchive && (

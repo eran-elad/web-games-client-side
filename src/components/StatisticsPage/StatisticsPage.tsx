@@ -61,8 +61,8 @@ const StatisticsPage = ({ onClose }: StatisticsPageProps) => {
       <div className="statistics-page-content">
         <div className="statistics-header">
           <h1 className="statistics-title">Your Statistics</h1>
-          <button className="close-button-top" onClick={onClose} aria-label="Close" title="Close">
-            ✕
+          <button className="app-close-button close-button-top" onClick={onClose} aria-label="Close" title="Close">
+            ×
           </button>
         </div>
 

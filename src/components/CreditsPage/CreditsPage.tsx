@@ -11,7 +11,7 @@ const CreditsPage = ({ onClose }: CreditsPageProps) => {
         <div className="credits-header">
           <h1 className="credits-title">Credits & Data Sources</h1>
           <button
-            className="credits-close-button"
+            className="app-close-button credits-close-button"
             onClick={onClose}
             aria-label="Close"
             title="Close"

@@ -4,6 +4,7 @@
 
 const STORAGE_KEYS = {
   PLAYER_ID: 'music_game_player_id',
+  DISPLAY_NAME: 'music_game_display_name',
   SESSION_ID: 'music_game_session_id',
   GAME_ID: 'music_game_game_id',
   PUZZLE_ID: 'music_game_puzzle_id',
@@ -24,6 +25,24 @@ export const getPlayerId = (): string | null => {
  */
 export const setPlayerId = (playerId: string): void => {
   localStorage.setItem(STORAGE_KEYS.PLAYER_ID, playerId);
+};
+
+/**
+ * Get the stored display name (cached after user updates)
+ */
+export const getDisplayName = (): string | null => {
+  return localStorage.getItem(STORAGE_KEYS.DISPLAY_NAME);
+};
+
+/**
+ * Store the display name (cache after API update)
+ */
+export const setDisplayName = (displayName: string | null): void => {
+  if (displayName === null) {
+    localStorage.removeItem(STORAGE_KEYS.DISPLAY_NAME);
+  } else {
+    localStorage.setItem(STORAGE_KEYS.DISPLAY_NAME, displayName);
+  }
 };
 
 /**
@@ -161,6 +180,7 @@ export const clearDistanceUnit = (): void => {
  */
 export const clearAll = (): void => {
   localStorage.removeItem(STORAGE_KEYS.PLAYER_ID);
+  localStorage.removeItem(STORAGE_KEYS.DISPLAY_NAME);
   localStorage.removeItem(STORAGE_KEYS.SESSION_ID);
   localStorage.removeItem(STORAGE_KEYS.GAME_ID);
   localStorage.removeItem(STORAGE_KEYS.PUZZLE_ID);

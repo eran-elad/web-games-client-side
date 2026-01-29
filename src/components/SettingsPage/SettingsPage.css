@@ -62,25 +62,7 @@
 }
 
 .settings-close-button {
-  background: none;
-  border: none;
-  font-size: 2rem;
-  color: #666;
-  cursor: pointer;
-  padding: 0;
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  transition: all 0.2s ease;
-}
-
-.settings-close-button:hover {
-  background: #f0f0f0;
-  color: #333;
-  transform: scale(1.1);
+  /* Uses app-close-button base styles */
 }
 
 .settings-sections {
@@ -102,6 +84,64 @@
 
 .settings-row:last-of-type {
   border-bottom: none;
+}
+
+.settings-row-display-name {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.5rem;
+}
+
+.settings-display-name-controls {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.settings-display-name-input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.95rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+}
+
+.settings-display-name-input:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.settings-display-name-save {
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.settings-display-name-save:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.settings-display-name-save:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.settings-display-name-error {
+  font-size: 0.85rem;
+  color: #ef4444;
+}
+
+.settings-display-name-success {
+  font-size: 0.85rem;
+  color: #22c55e;
 }
 
 .settings-label {
@@ -281,15 +321,6 @@
   .settings-option.selected:hover {
     background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
     border-color: #5a6fd8;
-  }
-  
-  .settings-close-button {
-    color: #aaa;
-  }
-  
-  .settings-close-button:hover {
-    background: #333;
-    color: #fff;
   }
   
   .settings-page-header {

@@ -1,0 +1,86 @@
+.game-top-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 52px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1rem;
+  z-index: 100;
+}
+
+.game-top-bar-icons {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.game-top-bar-icon {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 10px;
+  font-size: 1.25rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.game-top-bar-icon:hover {
+  background: rgba(255, 255, 255, 0.35);
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.game-top-bar-icon:active {
+  transform: translateY(0);
+}
+
+.game-top-bar-hamburger {
+  display: flex;
+  align-items: center;
+}
+
+.game-top-bar-hamburger .hamburger-menu-wrapper {
+  position: relative;
+  top: auto;
+  right: auto;
+}
+
+.game-top-bar-hamburger .hamburger-button {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.3);
+  color: white;
+}
+
+.game-top-bar-hamburger .hamburger-button:hover {
+  background: rgba(255, 255, 255, 0.35);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.game-top-bar-hamburger .hamburger-button.open {
+  background: rgba(255, 255, 255, 0.4);
+  color: white;
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+@media (max-width: 768px) {
+  .game-top-bar {
+    height: 48px;
+    padding: 0 0.75rem;
+  }
+
+  .game-top-bar-icon {
+    width: 36px;
+    height: 36px;
+    font-size: 1.1rem;
+  }
+}

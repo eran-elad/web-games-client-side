@@ -11,16 +11,16 @@ export interface HelpSection {
 
 export const HELP_CONTENT = {
   title: "How to Play",
-  subtitle: "Guess the secret song in 6 tries!",
+  subtitle: "Guess the secret song in 8 tries!",
   sections: [
     {
       title: "🎵 The Goal",
-      content: "Your mission is to guess the secret song of the day. You have 6 attempts to figure it out. Each guess gives you clues about how close you are to the answer.",
+      content: "Your mission is to guess the secret song of the day. You have 8 attempts to figure it out. Each guess gives you clues about how close you are to the answer.",
       icon: "🎯"
     },
     {
       title: "🔍 Making a Guess",
-      content: "Type the name of a song or artist in the search box. Select a song from the dropdown list and click 'Guess' or press Enter. You can search by song title, artist name and album.",
+      content: "Type the name of a song or artist in the search box. Your first guess will be completely random. Select a song from the dropdown list and click 'Guess' or press Enter. You can search by song title, artist name and album.",
       icon: "⌨️"
     },
     {
@@ -45,12 +45,12 @@ export const HELP_CONTENT = {
     },
     {
       title: "⏱️ Duration",
-      content: "Shows how close your guess is in terms of song length. Green for exact match, blue if you're close, red if you're far off.",
+      content: "Shows how close your guess is in terms of song length. This clue is normally hidden and only shows if there is a significant difference between the guess and the secret song.",
       icon: "⏱️"
     },
     {
       title: "🎤 Artist & 💿 Album",
-      content: "These bonus clues only appear when you guess correctly! If you get the right artist or album, you'll see a green box confirming it. If you're wrong, these clues won't show at all.",
+      content: "These bonus clues only appear when you guess correctly! These clues are normally hidden and only show if you get the right artist or album. The artist clue also appears if all other clues seemes correct or close.",
       icon: "🎤"
     },
     {
@@ -60,7 +60,7 @@ export const HELP_CONTENT = {
     },
     {
       title: "🏳️ Give Up",
-      content: "Stuck and want to see the answer? The Give Up button (🏳️) lets you surrender and reveal the secret song.\n• Available after 3 guesses\n• The button appears grayed out until available\n• Once you give up, the game ends and the answer is revealed",
+      content: "Stuck and want to see the answer? The Give Up button (🏳️) lets you surrender and reveal the secret song.\n• Available after 5 guesses\n• The button appears grayed out until available\n• Once you give up, the game ends and the answer is revealed",
       icon: "🏳️"
     },
     {
@@ -80,7 +80,7 @@ export const HELP_CONTENT = {
     },
     {
       title: "🏆 Winning",
-      content: "If you guess correctly, you win! If you use all 6 guesses, the game ends and the secret song is revealed. Check your statistics to track your progress and streaks!",
+      content: "If you guess correctly, you win! If you use all guesses, the game ends and the secret song is revealed. Check your statistics to track your progress and streaks!",
       icon: "🏆"
     }
   ],

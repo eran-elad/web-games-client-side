@@ -10,10 +10,11 @@ import StatisticsPage from './components/StatisticsPage/StatisticsPage'
 import HelpPage from './components/HelpPage/HelpPage'
 import ArchivePage from './components/ArchivePage/ArchivePage'
 import SettingsPage from './components/SettingsPage/SettingsPage'
+import LeaderboardsPage from './components/Leaderboards/LeaderboardsPage'
 import PrivacyPolicy from './components/PrivacyPolicy/PrivacyPolicy'
 import './App.css'
 
-type View = 'welcome' | 'game' | 'statistics' | 'help' | 'archive' | 'settings' | 'privacy' | 'credits'
+type View = 'welcome' | 'game' | 'statistics' | 'help' | 'archive' | 'settings' | 'leaderboards' | 'privacy' | 'credits'
 
 function getPathname() {
   return typeof window !== 'undefined' ? window.location.pathname : '/'
@@ -81,6 +82,15 @@ function App() {
   }
 
   const handleCloseSettings = () => {
+    setCurrentView(previousView) // Return to previous view
+  }
+
+  const handleShowLeaderboards = () => {
+    setPreviousView(currentView) // Remember where we came from
+    setCurrentView('leaderboards')
+  }
+
+  const handleCloseLeaderboards = () => {
     setCurrentView(previousView) // Return to previous view
   }
 
@@ -198,11 +208,12 @@ function App() {
   // Game and modals (state-based)
   return (
     <div className="app">
-      {currentView === 'welcome' && <WelcomePage onPlay={handlePlay} onShowStatistics={handleShowStatistics} onShowHelp={handleShowHelp} onShowArchive={handleShowArchive} onShowSettings={handleShowSettings} onShowPrivacy={handleShowPrivacy} />}
-      {currentView === 'game' && <ActiveGame key={gameKey} onShowStatistics={handleShowStatistics} userClosedStats={statsClosedRef.current} onShowHelp={handleShowHelp} onShowPrivacy={handleShowPrivacy} onShowArchive={handleShowArchive} onShowSettings={handleShowSettings} onGoToDailyPuzzle={handleGoToDailyPuzzle} />}
+      {currentView === 'welcome' && <WelcomePage onPlay={handlePlay} onShowStatistics={handleShowStatistics} onShowHelp={handleShowHelp} onShowArchive={handleShowArchive} onShowLeaderboards={handleShowLeaderboards} onShowSettings={handleShowSettings} onShowPrivacy={handleShowPrivacy} />}
+      {currentView === 'game' && <ActiveGame key={gameKey} onShowStatistics={handleShowStatistics} userClosedStats={statsClosedRef.current} onShowHelp={handleShowHelp} onShowPrivacy={handleShowPrivacy} onShowArchive={handleShowArchive} onShowLeaderboards={handleShowLeaderboards} onShowSettings={handleShowSettings} onGoToDailyPuzzle={handleGoToDailyPuzzle} />}
       {currentView === 'statistics' && <StatisticsPage onClose={handleCloseStatistics} />}
       {currentView === 'help' && <HelpPage onClose={handleCloseHelp} />}
       {currentView === 'archive' && <ArchivePage onClose={handleCloseArchive} onPlayDate={handlePlayDate} />}
+      {currentView === 'leaderboards' && <LeaderboardsPage onClose={handleCloseLeaderboards} />}
       {currentView === 'settings' && <SettingsPage onClose={handleCloseSettings} />}
     </div>
   )

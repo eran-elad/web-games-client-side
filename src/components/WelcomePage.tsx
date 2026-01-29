@@ -10,11 +10,12 @@ interface WelcomePageProps {
   onShowStatistics?: () => void;
   onShowHelp?: () => void;
   onShowArchive?: () => void;
+  onShowLeaderboards?: () => void;
   onShowSettings?: () => void;
   onShowPrivacy?: () => void;
 }
 
-const WelcomePage = ({ onPlay, onShowStatistics, onShowHelp, onShowArchive, onShowSettings, onShowPrivacy }: WelcomePageProps) => {
+const WelcomePage = ({ onPlay, onShowStatistics, onShowHelp, onShowArchive, onShowLeaderboards, onShowSettings, onShowPrivacy }: WelcomePageProps) => {
   const [dailyPuzzleStatus, setDailyPuzzleStatus] = useState<'in_progress' | 'won' | 'lost' | 'abandoned' | 'quit' | 'not_played' | null>(null);
   const [isLoadingStatus, setIsLoadingStatus] = useState(true);
 
@@ -93,6 +94,7 @@ const WelcomePage = ({ onPlay, onShowStatistics, onShowHelp, onShowArchive, onSh
           <HamburgerMenu
             onShowStatistics={onShowStatistics}
             onShowArchive={onShowArchive}
+            onShowLeaderboards={onShowLeaderboards}
             onShowHelp={onShowHelp}
             onShowSettings={onShowSettings}
           />

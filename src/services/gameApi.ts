@@ -483,3 +483,119 @@ export const getArchive = async (
 
   return await response.json();
 };
+
+/**
+ * Response structure from /api/leaderboards
+ */
+export type LeaderboardRow = {
+  rank: number;
+  player_id: string;
+  display_name: string;
+  client_label?: string | null;
+  won: number;
+  total_guesses_for_wins: number;
+  avg_guesses_per_win?: number | null;
+  attempted: number;
+};
+
+export type LeaderboardBoard = {
+  id: string;
+  name?: string;
+  display_name: string;
+  period_type?: string;
+  period_offset?: number;
+  time_range?: { start: string; end: string } | null;
+  top_n: number;
+  rows: LeaderboardRow[];
+};
+
+export type LeaderboardsResponse = {
+  generated_at_utc: string;
+  boards: LeaderboardBoard[];
+};
+
+/**
+ * Get leaderboards
+ */
+export const getLeaderboards = async (
+  playerId?: string | null
+): Promise<LeaderboardsResponse> => {
+  const params = new URLSearchParams();
+
+  if (playerId) {
+    params.append('player_id', playerId);
+  }
+
+  const endpoint = params.toString()
+    ? `/api/leaderboards?${params.toString()}`
+    : '/api/leaderboards';
+  const response = await fetch(getApiUrl(endpoint), {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    let errorMessage = `Server error (${response.status})`;
+    try {
+      const errorData = await response.json();
+      if (errorData.detail) {
+        errorMessage = errorData.detail;
+      }
+    } catch {
+      errorMessage = response.statusText || `Server error (${response.status})`;
+    }
+    throw new Error(errorMessage);
+  }
+
+  return await response.json();
+};
+
+/**
+ * Response structure from PATCH /api/game/players/{player_id}/display-name
+ */
+export type UpdateDisplayNameResponse = {
+  meta: {
+    schema_version: string;
+    request_id: string;
+    server_time_utc: string;
+  };
+  success: boolean;
+  player_id: string;
+  display_name: string | null;
+};
+
+/**
+ * Update player display name
+ */
+export const updatePlayerDisplayName = async (
+  playerId: string,
+  displayName: string | null
+): Promise<UpdateDisplayNameResponse> => {
+  const response = await fetch(
+    getApiUrl(`/api/game/players/${playerId}/display-name`),
+    {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ display_name: displayName }),
+    }
+  );
+
+  if (!response.ok) {
+    let errorMessage = `Server error (${response.status})`;
+    try {
+      const errorData = await response.json();
+      if (errorData.detail) {
+        errorMessage = errorData.detail;
+      }
+    } catch {
+      errorMessage = response.statusText || `Server error (${response.status})`;
+    }
+    throw new Error(errorMessage);
+  }
+
+  return await response.json();
+};

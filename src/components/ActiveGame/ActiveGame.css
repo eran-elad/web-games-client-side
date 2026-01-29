@@ -1,10 +1,15 @@
 .active-game-container {
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
   padding: 2rem;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.active-game-with-top-bar {
+  padding-top: calc(52px + 2rem);
 }
 
 .active-game-content {
@@ -49,13 +54,6 @@
   gap: 0.5rem;
   flex: 1 1 auto;
   min-width: 200px;
-}
-
-.header-buttons {
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
-  flex-shrink: 0;
 }
 
 .help-link-button,
@@ -594,6 +592,10 @@ a.puzzle-footer-link {
   .active-game-container {
     padding: 0.5rem;
   }
+
+  .active-game-with-top-bar {
+    padding-top: calc(48px + 0.5rem);
+  }
   
   .active-game-content {
     padding: 1.5rem;
@@ -614,12 +616,6 @@ a.puzzle-footer-link {
     font-size: 1.5rem;
   }
   
-  .header-buttons {
-    flex-direction: row;
-    gap: 0.3rem;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
   
   .help-link-button,
   .statistics-link-button,

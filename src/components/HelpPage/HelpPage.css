@@ -7,11 +7,17 @@
   background: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(4px);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   z-index: 1000;
   padding: 1rem;
+  padding-top: max(1rem, env(safe-area-inset-top));
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  padding-left: max(1rem, env(safe-area-inset-left));
+  padding-right: max(1rem, env(safe-area-inset-right));
   overflow-y: auto;
+  cursor: pointer;
+  -webkit-overflow-scrolling: touch;
 }
 
 .help-page-content {
@@ -24,7 +30,12 @@
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
   position: relative;
   padding: 2rem;
+  padding-top: max(2rem, env(safe-area-inset-top));
   animation: slideIn 0.3s ease-out;
+  cursor: default;
+  margin-top: 0;
+  flex-shrink: 0;
+  -webkit-overflow-scrolling: touch;
 }
 
 @keyframes slideIn {
@@ -44,7 +55,17 @@
   align-items: center;
   margin-bottom: 1rem;
   padding-bottom: 1rem;
+  padding-top: calc(1rem + env(safe-area-inset-top, 0px));
   border-bottom: 2px solid #e0e0e0;
+  position: sticky;
+  top: 0;
+  background: white;
+  z-index: 1;
+  margin-left: -2rem;
+  margin-right: -2rem;
+  margin-top: -2rem;
+  padding-left: 2rem;
+  padding-right: 2rem;
 }
 
 .help-page-title {
@@ -62,25 +83,8 @@
 }
 
 .help-close-button {
-  background: none;
-  border: none;
-  font-size: 2rem;
-  color: #666;
-  cursor: pointer;
-  padding: 0;
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  transition: all 0.2s ease;
-}
-
-.help-close-button:hover {
-  background: #f0f0f0;
-  color: #333;
-  transform: scale(1.1);
+  /* Uses app-close-button base styles */
+  flex-shrink: 0;
 }
 
 .help-subtitle {
@@ -187,6 +191,15 @@
     max-height: 95vh;
   }
   
+  .help-page-header {
+    margin-left: -1.5rem;
+    margin-right: -1.5rem;
+    margin-top: -1.5rem;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+    padding-top: calc(0.75rem + env(safe-area-inset-top, 0px));
+  }
+  
   .help-page-title {
     font-size: 1.5rem;
   }
@@ -241,17 +254,9 @@
     color: #ccc;
   }
   
-  .help-close-button {
-    color: #aaa;
-  }
-  
-  .help-close-button:hover {
-    background: #333;
-    color: #fff;
-  }
-  
   .help-page-header {
     border-bottom-color: #444;
+    background: #1a1a1a;
   }
   
   .help-footer {

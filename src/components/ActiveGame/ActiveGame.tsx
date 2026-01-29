@@ -3,7 +3,8 @@ import SongAutocomplete from '../SongAutocomplete/SongAutocomplete';
 import GuessBox from '../GuessBox/GuessBox';
 import WinConfetti from '../WinAnimation/WinConfetti';
 import ShareResult from '../ShareResult/ShareResult';
-import HamburgerMenu from '../HamburgerMenu/HamburgerMenu';
+import GameTopBar from '../GameTopBar/GameTopBar';
+import LeaderboardsOverlay from '../Leaderboards/LeaderboardsOverlay';
 import NewDailyPuzzleBanner from '../NewDailyPuzzleBanner/NewDailyPuzzleBanner';
 import { MUSIC_GAME_ID } from '../../config/gameConfig';
 import { getApiUrl } from '../../config/apiConfig';
@@ -191,6 +192,7 @@ interface ActiveGameProps {
   userClosedStats?: boolean; // True if user manually closed statistics
   onShowHelp?: () => void;
   onShowArchive?: () => void;
+  onShowLeaderboards?: () => void;
   onShowSettings?: () => void;
   onShowPrivacy?: () => void;
   onGoToDailyPuzzle?: () => void;
@@ -216,7 +218,7 @@ function shouldShowArtistByNearMatch(clues: any): boolean {
   return !!(countryCorrect && genreCorrect && artistTypeCorrect && genderCorrect && yearMatchOrClose);
 }
 
-const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onShowArchive, onShowSettings, onShowPrivacy, onGoToDailyPuzzle }: ActiveGameProps = {}) => {
+const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onShowArchive, onShowLeaderboards, onShowSettings, onShowPrivacy, onGoToDailyPuzzle }: ActiveGameProps = {}) => {
   const [selectedSongId, setSelectedSongId] = useState<string | null>(null);
   const [selectedSong, setSelectedSong] = useState<Song | null>(null);
   const [guesses, setGuesses] = useState<Guess[]>([]);
@@ -235,6 +237,7 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
   const [newDailyPuzzleAvailable, setNewDailyPuzzleAvailable] = useState<boolean>(false);
   const [puzzleType, setPuzzleType] = useState<string | null>(null); // Track puzzle type from API
   const [bannerDismissed, setBannerDismissed] = useState<boolean>(false); // Track dismissal state
+  const [showLeaderboardsOverlay, setShowLeaderboardsOverlay] = useState<boolean>(false);
   const initInProgressRef = useRef<boolean>(false);
 
   // Listen for distance unit changes from settings
@@ -950,7 +953,16 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
 
   if (initLoading) {
     return (
-      <div className="active-game-container">
+      <div className="active-game-container active-game-with-top-bar">
+        <GameTopBar
+          onShowArchive={onShowArchive}
+          onShowStatistics={onShowStatistics}
+          onShowLeaderboardsOverlay={() => setShowLeaderboardsOverlay(true)}
+          onShowLeaderboards={onShowLeaderboards}
+          onShowHelp={onShowHelp}
+          onShowSettings={onShowSettings}
+          onGoToDailyPuzzle={onGoToDailyPuzzle}
+        />
         <div className="active-game-content">
           <h1 className="daily-song-title">
             <span className="music-icon">♪</span>
@@ -970,7 +982,16 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
   }
 
   return (
-    <div className="active-game-container">
+    <div className="active-game-container active-game-with-top-bar">
+      <GameTopBar
+        onShowArchive={onShowArchive}
+        onShowStatistics={onShowStatistics}
+        onShowLeaderboardsOverlay={() => setShowLeaderboardsOverlay(true)}
+        onShowLeaderboards={onShowLeaderboards}
+        onShowHelp={onShowHelp}
+        onShowSettings={onShowSettings}
+        onGoToDailyPuzzle={onGoToDailyPuzzle}
+      />
       <div className="active-game-content">
         <div className="game-header">
           <h1 className="daily-song-title">
@@ -981,15 +1002,6 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
               `Archived Puzzle: ${new Date(puzzleDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
             )}
           </h1>
-          <div className="header-buttons">
-            <HamburgerMenu
-              onShowStatistics={onShowStatistics}
-              onShowArchive={onShowArchive}
-              onShowHelp={onShowHelp}
-              onShowSettings={onShowSettings}
-              onGoToDailyPuzzle={onGoToDailyPuzzle}
-            />
-          </div>
         </div>
         {/* Show banner at top during gameplay if playing non-daily puzzle */}
         {!isDailyPuzzle && !isGameOver && shouldShowBanner() && (
@@ -1211,6 +1223,12 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
           <a href="/credits" className="puzzle-footer-link">Credits</a>
         </div>
       </div>
+      {showLeaderboardsOverlay && (
+        <LeaderboardsOverlay
+          onClose={() => setShowLeaderboardsOverlay(false)}
+          playerId={getPlayerId()}
+        />
+      )}
     </div>
   );
 };
