@@ -1,3 +1,5 @@
+@import '../../config/clueTypography.css';
+
 .guess-box {
   background: #fff;
   border-radius: 12px;
@@ -75,7 +77,7 @@
   
   .clue-tag {
     padding: 0.35rem 0.25rem; /* Even more reduced padding */
-    font-size: 0.75rem; /* Increased from 0.7rem */
+    font-size: var(--clue-font-size-tag);
     gap: 0.15rem; /* Even more reduced gap */
     flex: 0 0 calc(50% - 0.2rem); /* 2 per row for all mobile screens */
     min-width: calc(50% - 0.2rem);
@@ -86,22 +88,13 @@
     box-sizing: border-box; /* Include padding in width */
   }
   
-  /* Country clues - use smaller font to fit in same width as other clues */
-  .clue-tag.country-clue .clue-value {
-    font-size: 0.7rem; /* Slightly smaller to fit longer text */
-  }
-  
-  .clue-tag.country-clue .clue-arrow {
-    font-size: 0.7rem; /* Match the smaller font */
-  }
-  
   .clue-label {
-    font-size: 0.8rem; /* Increased from 0.75rem */
+    font-size: var(--clue-font-size-label);
     white-space: nowrap;
   }
   
   .clue-value {
-    font-size: 0.75rem; /* Increased from 0.7rem */
+    font-size: var(--clue-font-size-value);
     white-space: nowrap;
     flex-shrink: 1; /* Allow shrinking */
     min-width: 0;
@@ -111,7 +104,7 @@
   }
   
   .clue-arrow {
-    font-size: 0.8rem; /* Increased from 0.75rem */
+    font-size: var(--clue-font-size-arrow);
     margin-left: 0.08rem;
   }
   
@@ -125,11 +118,6 @@
   }
   
   .duration-icon {
-    width: 12px;
-    height: 12px;
-  }
-  
-  .country-icon {
     width: 12px;
     height: 12px;
   }
@@ -162,7 +150,7 @@
   padding: 0.4rem 0.4rem; /* Even more reduced horizontal padding */
   background: #f0f0f0;
   border-radius: 20px;
-  font-size: 0.8rem;
+  font-size: var(--clue-font-size-tag);
   transition: all 0.2s ease;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   border: 1px solid rgba(0, 0, 0, 0.1);
@@ -208,19 +196,20 @@
 }
 
 .clue-label {
-  font-weight: 600;
+  font-weight: var(--clue-font-weight-label);
   color: #666;
-  font-size: 0.85rem; /* Increased from 0.75rem */
+  font-size: var(--clue-font-size-label);
   text-transform: uppercase;
   display: inline-flex;
   align-items: center;
   flex-shrink: 0;
 }
 
+
 .clue-value {
   color: #333;
-  font-weight: 500;
-  font-size: 0.8rem; /* Increased from 0.7rem */
+  font-weight: var(--clue-font-weight-value);
+  font-size: var(--clue-font-size-value);
   display: inline-flex;
   align-items: center;
   white-space: nowrap;
@@ -247,8 +236,8 @@
 .clue-arrow {
   margin-left: 0.08rem; /* Even more reduced margin */
   margin-right: 0; /* No right margin to keep within bounds */
-  font-size: 0.8rem; /* Even smaller */
-  font-weight: bold;
+  font-size: var(--clue-font-size-arrow);
+  font-weight: var(--clue-font-weight-arrow);
   line-height: 1;
   flex-shrink: 0; /* Prevent arrow from shrinking */
   white-space: nowrap; /* Prevent wrapping */
@@ -269,11 +258,12 @@
 }
 
 
-.genre-icon-wrapper {
+.genre-icon-wrapper,
+.country-flag-wrapper {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.9rem;
+  font-size: 1em;
   flex-shrink: 0;
   line-height: 1;
 }
@@ -281,7 +271,10 @@
 .year-icon-wrapper,
 .duration-icon-wrapper,
 .country-icon-wrapper,
-.gender-icon-wrapper {
+.country-flag-wrapper,
+.gender-icon-wrapper,
+.artist-icon-wrapper,
+.album-icon-wrapper {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -293,9 +286,15 @@
 .country-icon {
   width: 14px;
   height: 14px;
-  color: #666;
+  color: inherit;
   vertical-align: middle;
   flex-shrink: 0;
+}
+
+/* Artist/Album use emoji + text (same as share) - no uppercase */
+.artist-icon-wrapper,
+.album-icon-wrapper {
+  text-transform: none;
 }
 
 .gender-icon {
@@ -389,6 +388,12 @@
   left: 0;
   opacity: 0; /* Invisible but still measurable */
   visibility: hidden; /* Hidden until positioned */
+  /* iOS Safari fixes */
+  -webkit-transform: translateZ(0); /* Create new stacking context for iOS */
+  transform: translate3d(0, 0, 0); /* Force hardware acceleration */
+  will-change: transform; /* Optimize for transforms */
+  touch-action: none; /* Prevent scrolling interference on iOS */
+  cursor: default; /* Explicit cursor to prevent Chrome's touch circle */
 }
 
 .clue-tooltip strong {
@@ -396,13 +401,6 @@
   font-size: 0.9rem;
   color: #fff;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-}
-  /* iOS Safari fixes */
-  -webkit-transform: translateZ(0); /* Create new stacking context for iOS */
-  transform: translate3d(0, 0, 0); /* Force hardware acceleration */
-  will-change: transform; /* Optimize for transforms */
-  touch-action: none; /* Prevent scrolling interference on iOS */
-  cursor: default; /* Explicit cursor to prevent Chrome's touch circle */
 }
 
 /* Arrow indicator pointing to the button */
@@ -451,12 +449,10 @@
     background: rgba(60, 60, 60, 0.8);
   }
   
-  .clue-label {
-    color: #aaa;
-  }
-  
-  .clue-value {
-    color: #fff;
+  /* Clue tags: dark text for good contrast on all backgrounds (green, red, yellow, blue) */
+  .clue-tag .clue-label,
+  .clue-tag .clue-value {
+    color: #14532d;
   }
 }
 

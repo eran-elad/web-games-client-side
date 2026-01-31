@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import './GuessBox.css';
-import { getCountryName, normalizeCountryCode } from '../../config/countryCodes';
+import { getCountryName, getCountryFlag, normalizeCountryCode } from '../../config/countryCodes';
 import { DEFAULT_CLUE_THRESHOLDS } from '../../config/clueThresholds';
+import { CLUE_DEFINITIONS } from '../../config/clueConfig';
 import { formatDistance, getDefaultDistanceUnit } from '../../utils/distanceUtils';
 
 interface ClueTooltipProps {
@@ -899,17 +900,13 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guess
           const countryStatus = country.status === 'neighboring' ? 'neighboring' :
                                country.status === 'correct' ? 'correct' :
                                getCountryStatus(countryObj);
+          const countryFlag = getCountryFlag(country.countryCode) || country.countryCode || '';
           return (
             <div className={`clue-tag clue-status-${countryStatus} country-clue`}>
-              <span className="clue-label country-icon-wrapper">
-                <svg className="country-icon" viewBox="0 0 24 24" fill="currentColor" width="14" height="14">
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
-                </svg>
-              </span>
+              <span className="clue-label country-flag-wrapper">{countryFlag}</span>
               {country.status === 'neighboring' ? (
-                // Neighboring country: show country code, +/- 0 with correct unit, and arrow
+                // Neighboring country: flag + +/- 0 with correct unit, and arrow
                 <>
-                  {country.countryCode && <span className="clue-value">{country.countryCode}</span>}
                   <span className="clue-value neighboring">
                     {(() => {
                       const unit = preferredDistanceUnit || getDefaultDistanceUnit();
@@ -920,9 +917,8 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guess
                   <ClueTooltip helpText={getHelpText('country', countryObj, preferredDistanceUnit)} clueType="country" />
                 </>
               ) : (
-                // Regular country: show country code, distance with arrow
+                // Regular country: flag + distance with arrow
                 <>
-                  {country.countryCode && <span className="clue-value">{country.countryCode}</span>}
                   {country.distance && <span className="clue-value">{country.distance}</span>}
                   {country.arrow && <span className="clue-arrow">{country.arrow}</span>}
                   <ClueTooltip helpText={getHelpText('country', countryObj, preferredDistanceUnit)} clueType="country" />
@@ -1113,12 +1109,9 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guess
         {/* Artist clue - show when correct, or when showArtistClue (near-match or once revealed) */}
         {((artistObj && artistObj.status === 'correct') || showArtistClue) && (
           <div className={`clue-tag clue-status-${artistObj?.status === 'correct' ? 'correct' : 'incorrect'}`}>
-            <span className="clue-label">ARTIST</span>
+            <span className="clue-label artist-icon-wrapper">{CLUE_DEFINITIONS.artist.shareEmoji} Artist</span>
             {artistObj?.status === 'correct' ? (
-              <>
-                <span className="clue-value clue-value-checkmark">✓</span>
-                <ClueTooltip helpText={<>The secret song&apos;s artist <strong>is</strong> {artist}.</>} clueType="artist" />
-              </>
+              <ClueTooltip helpText={<>The secret song&apos;s artist <strong>is</strong> {artist}.</>} clueType="artist" />
             ) : (
               <>
                 {solutionArtist && <span className="clue-value">{solutionArtist}</span>}
@@ -1130,8 +1123,7 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guess
         {/* Album clue - only show when correct */}
         {albumObj && albumObj.status === 'correct' && (
           <div className="clue-tag clue-status-correct">
-            <span className="clue-label">ALBUM</span>
-            <span className="clue-value clue-value-checkmark">✓</span>
+            <span className="clue-label album-icon-wrapper">{CLUE_DEFINITIONS.album.shareEmoji} Album</span>
             <ClueTooltip helpText={getHelpText('album', albumObj)} clueType="album" />
           </div>
         )}

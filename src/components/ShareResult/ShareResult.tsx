@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import './ShareResult.css';
 import { GAME_NAME, GAME_URL } from '../../config/gameConfig';
+import { CLUE_DEFINITIONS } from '../../config/clueConfig';
 
 interface ShareResultProps {
   guesses: Array<{
@@ -102,17 +103,18 @@ const ShareResult = ({ guesses, guessCount, maxGuesses, isWon, puzzleDate }: Sha
       
       let line = `${yearEmoji}${countryEmoji}${genreEmoji}${genderEmoji}`;
       
-      // Add artist/album icons if matched
-      if (artistMatch) line += ' 🎤';
-      if (albumMatch) line += ' 💿';
+      // Add artist/album icons if matched (from central config)
+      if (artistMatch) line += ` ${CLUE_DEFINITIONS.artist.shareEmoji}`;
+      if (albumMatch) line += ` ${CLUE_DEFINITIONS.album.shareEmoji}`;
       
       shareText += `${line}\n`;
     });
     
     // Add empty guesses if game was lost (4 boxes: year, country, genre, gender)
+    // Lifelines count as a slot too, so use total items in guesses array
     if (!isWon) {
-      const guessesUsed = guesses.filter(g => !g.isLifeline).length;
-      for (let i = guessesUsed; i < maxGuesses; i++) {
+      const totalSlotsUsed = guesses.length;
+      for (let i = totalSlotsUsed; i < maxGuesses; i++) {
         shareText += `⬜⬜⬜⬜\n`;
       }
     }

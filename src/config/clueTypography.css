@@ -1,0 +1,26 @@
+/**
+ * Central clue typography - font sizes and weights for all clues.
+ * Import this in GuessBox.css and use var(--clue-*) for consistency.
+ * Tweak these values in one place for easy adjustments.
+ */
+:root {
+  /* Font sizes - ~15-20% increase from base for readability */
+  --clue-font-size-label: 0.98rem;
+  --clue-font-size-value: 0.92rem;
+  --clue-font-size-tag: 0.92rem;
+  --clue-font-size-arrow: 0.92rem;
+  
+  /* Font weights - slightly heavier for readability */
+  --clue-font-weight-label: 600;
+  --clue-font-weight-value: 600;
+  --clue-font-weight-arrow: 700;
+}
+
+@media (max-width: 768px) {
+  :root {
+    --clue-font-size-label: 0.9rem;
+    --clue-font-size-value: 0.85rem;
+    --clue-font-size-tag: 0.85rem;
+    --clue-font-size-arrow: 0.85rem;
+  }
+}

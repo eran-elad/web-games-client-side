@@ -203,8 +203,18 @@ export default function LeaderboardsContent({ playerId, onRefresh }: Leaderboard
             <tr>
               <th className="leaderboards-col-rank">#</th>
               <th className="leaderboards-col-player">Player</th>
-              <th className="leaderboards-col-won" title="Wins">W</th>
-              <th className="leaderboards-col-avg" title="Guesses/Wins">AvgG</th>
+              <th className="leaderboards-col-won">
+                <span className="leaderboards-col-label-full" title="Wins">Wins</span>
+                <span className="leaderboards-col-label-short" title="Wins">W</span>
+              </th>
+              <th className="leaderboards-col-avg">
+                <span className="leaderboards-col-label-full" title="Guesses per win">Avg Guesses</span>
+                <span className="leaderboards-col-label-short" title="Guesses per win">AvgG</span>
+              </th>
+              <th className="leaderboards-col-attempted">
+                <span className="leaderboards-col-label-full" title="Puzzles attempted">Attempts</span>
+                <span className="leaderboards-col-label-short" title="Puzzles attempted">A</span>
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -220,7 +230,7 @@ export default function LeaderboardsContent({ playerId, onRefresh }: Leaderboard
             {showGapRow && (
               <>
                 <tr className="leaderboards-gap-row">
-                  <td colSpan={4}>…</td>
+                  <td colSpan={5}>…</td>
                 </tr>
                 {playerRow && (
                   <LeaderboardRow
@@ -236,6 +246,18 @@ export default function LeaderboardsContent({ playerId, onRefresh }: Leaderboard
           </tbody>
         </table>
       </div>
+
+      <p className="leaderboards-rotate-hint" aria-hidden="true">
+        <span className="leaderboards-rotate-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 2v6h-6" />
+            <path d="M3 12a9 9 0 0 1 15-6.7L21 8" />
+            <path d="M3 22v-6h6" />
+            <path d="M21 12a9 9 0 0 1-15 6.7L3 16" />
+          </svg>
+        </span>
+        Rotate your device to see a detailed list
+      </p>
     </div>
   );
 }
@@ -346,6 +368,7 @@ function LeaderboardRow({
       </td>
       <td className="leaderboards-col-won">{row.won}</td>
       <td className="leaderboards-col-avg">{avgDisplay}</td>
+      <td className="leaderboards-col-attempted">{row.attempted}</td>
     </tr>
   );
 }

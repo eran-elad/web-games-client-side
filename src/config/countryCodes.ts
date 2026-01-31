@@ -270,6 +270,21 @@ export const COUNTRY_MEASUREMENT_SYSTEM: Record<string, 'km' | 'miles'> = {
 };
 
 /**
+ * Get country flag emoji from 2-letter ISO code
+ * Uses regional indicator symbols (e.g. US -> 🇺🇸)
+ * @param code - 2-letter country code (case-insensitive)
+ * @returns Flag emoji or empty string if invalid
+ */
+export const getCountryFlag = (code: string | null | undefined): string => {
+  if (!code || code.length !== 2) return '';
+  const upper = code.toUpperCase();
+  const c1 = upper.charCodeAt(0);
+  const c2 = upper.charCodeAt(1);
+  if (c1 < 65 || c1 > 90 || c2 < 65 || c2 > 90) return '';
+  return String.fromCodePoint(0x1F1E6 + c1 - 65, 0x1F1E6 + c2 - 65);
+};
+
+/**
  * Get country name from 2-letter ISO code
  * @param code - 2-letter country code (case-insensitive)
  * @returns Full country name or the code itself if not found
