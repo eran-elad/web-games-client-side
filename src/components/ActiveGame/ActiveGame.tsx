@@ -968,7 +968,7 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
             <span className="music-icon">♪</span>
             Daily Puzzle
           </h1>
-          <p>Loading game...</p>
+          <p className="puzzle-loading-text">Loading game...</p>
           <div className="puzzle-page-footer">
             <button type="button" className="puzzle-footer-link" onClick={onShowPrivacy}>
               Privacy Policy

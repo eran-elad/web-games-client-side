@@ -86,6 +86,13 @@
   transform: translateY(0);
 }
 
+.puzzle-loading-text {
+  margin-top: 1.5rem;
+  margin-bottom: 0;
+  color: #555;
+  font-size: 1rem;
+}
+
 .puzzle-page-footer {
   margin-top: 2rem;
   padding-top: 1rem;
@@ -557,8 +564,17 @@ a.puzzle-footer-link {
     color: #fff;
   }
   
+  .puzzle-loading-text {
+    color: #fff;
+  }
+  
   .guess-counter {
     color: #ccc;
+  }
+  
+  .instruction-text {
+    color: #fff;
+    background: rgba(102, 126, 234, 0.15);
   }
   
   .search-input {
