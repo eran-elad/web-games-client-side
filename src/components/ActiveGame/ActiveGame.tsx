@@ -31,6 +31,8 @@ interface Guess {
   guessedArtistType?: string; // Artist type from guess.artist_type
   guessedGender?: string; // Gender from guess.gender
   guessedYear?: number; // Year from guess.year
+  guessedBpm?: number | null; // BPM from guess.bpm
+  guessedBpmDetails?: string | null; // BPM details for tempo-shifting songs (guess.bpm_details)
   songId?: string; // Store song ID for duplicate checking
   isLifeline?: boolean; // Indicates this is a lifeline entry
   catalogSize?: number; // Catalog size for lifeline entries
@@ -66,10 +68,18 @@ interface SessionState {
     country: string;
     genre: string;
     duration_sec: number;
+    bpm?: number | null;
+    bpm_details?: string | null;
     artist_type?: string;
     gender?: string;
   };
 }
+
+// Helper to get today's date in local timezone (YYYY-MM-DD) - matches server's local_date
+const getTodayLocalDateStr = (): string => {
+  const t = new Date();
+  return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`;
+};
 
 // Helper function to format duration
 const formatDuration = (seconds: number): string => {
@@ -170,6 +180,12 @@ const SecretSongDetails = ({ secretSong }: { secretSong: NonNullable<SessionStat
           <span className="secret-song-label">Duration:</span>
           <span className="secret-song-value">{formatDuration(secretSong.duration_sec)}</span>
         </div>
+        {secretSong.bpm != null && secretSong.bpm !== undefined && (
+          <div className="secret-song-info-item">
+            <span className="secret-song-label">BPM:</span>
+            <span className="secret-song-value">{secretSong.bpm}</span>
+          </div>
+        )}
         {secretSong.artist_type && (
           <div className="secret-song-info-item">
             <span className="secret-song-label">Type:</span>
@@ -287,9 +303,16 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
         
         const storedPuzzleId = getPuzzleId();
         const storedLocalDate = getLocalDate();
-        const todayDateStr = new Date().toISOString().split('T')[0];
+        const todayDateStr = getTodayLocalDateStr();
         
-        if (isViewingArchive()) {
+        // Prefer today's daily puzzle first - ensures correct puzzle when returning from statistics
+        // (avoids UTC vs local date mismatch and stale viewing_archive from previous sessions)
+        if (storedPuzzleId && storedLocalDate === todayDateStr) {
+          // We have a puzzle_id for today's date (from daily-puzzle-status) - use it
+          puzzleId = storedPuzzleId;
+          console.log('Using daily puzzle_id from daily-puzzle-status:', { puzzleId, localDate: storedLocalDate });
+          clearSession(); // Clear session to force server to load the daily puzzle
+        } else if (isViewingArchive()) {
           // User explicitly navigated from archive - use stored puzzle parameters
           puzzleId = storedPuzzleId || undefined;
           localDate = storedLocalDate || undefined;
@@ -297,11 +320,6 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
             console.log('Loading historical puzzle from archive:', { puzzleId, localDate });
             clearSession(); // Clear session to force server to load the correct puzzle
           }
-        } else if (storedPuzzleId && storedLocalDate === todayDateStr) {
-          // We have a puzzle_id for today's date (from daily-puzzle-status) - use it
-          puzzleId = storedPuzzleId;
-          console.log('Using daily puzzle_id from daily-puzzle-status:', { puzzleId, localDate: storedLocalDate });
-          clearSession(); // Clear session to force server to load the daily puzzle
         } else {
           // Not viewing archive and no valid daily puzzle_id - clear old puzzle parameters
           if (storedPuzzleId || storedLocalDate) {
@@ -500,6 +518,8 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
               guessedArtistType: (guess.guess as any).artist_type,
               guessedGender: (guess.guess as any).gender,
               guessedYear: guess.guess.year,
+              guessedBpm: (guess.guess as any).bpm,
+              guessedBpmDetails: (guess.guess as any).bpm_details,
               songId: guess.guess.entity_id,
               catalogSizeAfterGuess,
             };
@@ -662,6 +682,8 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
           guessedArtistType: artistTypeFromGuess, // Extract artist_type from the guess object
           guessedGender: genderFromGuess, // Extract gender from the guess object
           guessedYear: latestGuess.guess.year, // Extract year from the guess
+          guessedBpm: (latestGuess.guess as any).bpm,
+          guessedBpmDetails: (latestGuess.guess as any).bpm_details,
           songId: latestGuess.guess.entity_id, // Store song ID for duplicate checking
           catalogSizeAfterGuess: response.lifeline_active ? (response.catalog_size ?? undefined) : undefined,
         };
@@ -858,7 +880,7 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
   };
 
   // Check if this is today's daily puzzle
-  const todayDate = new Date().toISOString().split('T')[0];
+  const todayDate = getTodayLocalDateStr();
   const isDailyPuzzle = puzzleType === 'daily' && (puzzleDate === todayDate || puzzleDate === null);
   
   // Check if banner is dismissed for today
@@ -876,7 +898,7 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
   
   // Handler to dismiss banner
   const handleDismissBanner = () => {
-    const todayDateStr = new Date().toISOString().split('T')[0];
+    const todayDateStr = getTodayLocalDateStr();
     const dismissedKey = `daily_puzzle_banner_dismissed_${todayDateStr}`;
     localStorage.setItem(dismissedKey, 'true');
     // Update state to force re-render
@@ -1200,6 +1222,8 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
                     guessedArtistType={guess.guessedArtistType}
                     guessedGender={guess.guessedGender}
                     guessedYear={guess.guessedYear}
+                    guessedBpm={guess.guessedBpm}
+                    guessedBpmDetails={guess.guessedBpmDetails}
                     preferredDistanceUnit={getDistanceUnit()}
                     isWinning={isWinning}
                     pulseDelay={index * 0.1}

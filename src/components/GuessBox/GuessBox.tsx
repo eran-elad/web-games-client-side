@@ -20,6 +20,19 @@ const ClueTooltip = ({ helpText }: ClueTooltipProps) => {
   });
   const tooltipRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const clearCloseTimeout = () => {
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current);
+      closeTimeoutRef.current = null;
+    }
+  };
+
+  const scheduleClose = () => {
+    clearCloseTimeout();
+    closeTimeoutRef.current = setTimeout(() => setIsVisible(false), 150);
+  };
 
   // Handle click outside to close tooltip
   useEffect(() => {
@@ -159,6 +172,11 @@ const ClueTooltip = ({ helpText }: ClueTooltipProps) => {
     };
   }, [isVisible]);
 
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => clearCloseTimeout();
+  }, []);
+
   // Always render tooltip in portal, but control visibility via style
   const tooltipElement = (
     <div
@@ -167,6 +185,11 @@ const ClueTooltip = ({ helpText }: ClueTooltipProps) => {
       style={tooltipStyle}
       onClick={(e) => e.stopPropagation()}
       onTouchStart={(e) => e.stopPropagation()}
+      onMouseEnter={() => {
+        clearCloseTimeout();
+        setIsVisible(true);
+      }}
+      onMouseLeave={() => setIsVisible(false)}
     >
       {helpText}
     </div>
@@ -180,6 +203,7 @@ const ClueTooltip = ({ helpText }: ClueTooltipProps) => {
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
+          clearCloseTimeout();
           setIsVisible(prev => !prev);
         }}
         onTouchEnd={(e) => {
@@ -188,8 +212,11 @@ const ClueTooltip = ({ helpText }: ClueTooltipProps) => {
           e.stopPropagation();
           setIsVisible(prev => !prev);
         }}
-        onMouseEnter={() => setIsVisible(true)}
-        onMouseLeave={() => setIsVisible(false)}
+        onMouseEnter={() => {
+          clearCloseTimeout();
+          setIsVisible(true);
+        }}
+        onMouseLeave={scheduleClose}
         aria-label="Show clue help"
         type="button"
       >
@@ -225,6 +252,8 @@ interface GuessBoxProps {
   guessedArtistType?: string; // Artist type from the guess object (guess.artist_type)
   guessedGender?: string; // Gender from the guess object (guess.gender)
   guessedYear?: number; // Year from the guess object (guess.year)
+  guessedBpm?: number | null; // BPM from the guess object (guess.bpm)
+  guessedBpmDetails?: string | null; // BPM details for tempo-shifting songs (guess.bpm_details)
   preferredDistanceUnit?: 'km' | 'miles' | null; // User's preferred distance unit (null = use country default)
   isWinning?: boolean; // Whether to show win animation
   pulseDelay?: number; // Delay in seconds for staggered pulse effect
@@ -238,7 +267,7 @@ interface GuessBoxProps {
   solutionArtist?: string;
 }
 
-const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guessedArtistType, guessedGender, guessedYear, preferredDistanceUnit = null, isWinning = false, pulseDelay = 0, isLifeline = false, catalogSize, catalogSizeAfterGuess, showArtistClue = false, solutionArtist }: GuessBoxProps) => {
+const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guessedArtistType, guessedGender, guessedYear, guessedBpm, guessedBpmDetails, preferredDistanceUnit = null, isWinning = false, pulseDelay = 0, isLifeline = false, catalogSize, catalogSizeAfterGuess, showArtistClue = false, solutionArtist }: GuessBoxProps) => {
   // Helper to determine clue status (correct/close/incorrect/neighboring) based on thresholds
   type ClueStatus = 'correct' | 'close' | 'incorrect' | 'neighboring' | 'unknown';
   
@@ -293,6 +322,16 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guess
     if (absDiff === 0) return 'correct';
     if (absDiff <= DEFAULT_CLUE_THRESHOLDS.duration.closeRangeSeconds) return 'close';
     return 'incorrect';
+  };
+
+  const getTempoStatus = (clueObj: any): ClueStatus => {
+    if (!clueObj || typeof clueObj !== 'object') return 'unknown';
+    if (clueObj.status === 'unknown') return 'unknown';
+    const desc = clueObj.diff_descriptive;
+    if (desc === 'similar') return 'correct';
+    if (desc === 'faster' || desc === 'slower') return 'close';
+    if (desc === 'much_faster' || desc === 'much_slower') return 'incorrect';
+    return 'unknown';
   };
   
   // Helper to format year clue: {"diff": 21} -> "+21y"
@@ -478,6 +517,22 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guess
     
     return extractClueValue(clueObj);
   };
+
+  // Helper to format tempo clue: returns "Much faster" | "Faster" | "Similar" | "Slower" | "Much slower"
+  const formatTempoClue = (clueObj: any): string => {
+    if (clueObj === null || clueObj === undefined) return '';
+    if (typeof clueObj !== 'object') return extractClueValue(clueObj);
+    if (clueObj.status === 'unknown') return 'Unknown';
+    const desc = clueObj.diff_descriptive;
+    const map: Record<string, string> = {
+      much_faster: '↑↑ Faster',
+      faster: '↑ Faster',
+      similar: 'Similar',
+      slower: '↓ Slower',
+      much_slower: '↓↓ Slower',
+    };
+    return map[desc] ?? 'Unknown';
+  };
   
   // Helper to format duration in seconds to "+2m10s" format
   const formatDuration = (seconds: number): string => {
@@ -550,6 +605,7 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guess
   const countryObj = getClueObject('country');
   const genreObj = getClueObject('genre');
   const durationObj = getClueObject('time', 'duration');
+  const tempoObj = getClueObject('tempo');
   const artistObj = getClueObject('artist');
   const albumObj = getClueObject('album');
   const artistTypeObj = getClueObject('artist_type');
@@ -570,6 +626,7 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guess
   const country = formatCountryClue(countryObj);
   const genre = formatGenreClue(genreObj);
   const duration = formatTimeClue(durationObj);
+  const tempo = formatTempoClue(tempoObj);
   
   // Helper to format gender value for display
   const formatGenderValue = (gender: string): string => {
@@ -632,7 +689,7 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guess
   };
   
   // Helper to get help text for clues
-  const getHelpText = (clueType: 'year' | 'country' | 'genre' | 'duration' | 'artist' | 'album' | 'artist_type' | 'gender', clueObj: any, preferredUnit?: 'km' | 'miles' | null): string | React.ReactNode => {
+  const getHelpText = (clueType: 'year' | 'country' | 'genre' | 'duration' | 'tempo' | 'artist' | 'album' | 'artist_type' | 'gender', clueObj: any, preferredUnit?: 'km' | 'miles' | null): string | React.ReactNode => {
     if (!clueObj || typeof clueObj !== 'object') return '';
     
     switch (clueType) {
@@ -725,6 +782,29 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guess
           return `${mainText} The Duration clue starts showing up only after a guess with a duration difference larger than ${threshold} seconds is made.`;
         }
         return mainText;
+      }
+      case 'tempo': {
+        if (clueObj.status === 'unknown') {
+          return 'BPM data is unavailable for either the secret or guessed song. Tempo comparison cannot be made.';
+        }
+        const descMap: Record<string, { bold: string; suffix: string }> = {
+          much_slower: { bold: 'much slower', suffix: ' than' },
+          slower: { bold: 'slower', suffix: ' than' },
+          similar: { bold: 'similar', suffix: ' to' },
+          faster: { bold: 'faster', suffix: '' },
+          much_faster: { bold: 'much faster', suffix: ' than' },
+        };
+        const { bold, suffix } = descMap[clueObj.diff_descriptive] ?? { bold: 'similar', suffix: ' to' };
+        const guessHasBpmDetails = guessedBpmDetails != null && guessedBpmDetails !== undefined && guessedBpmDetails !== 'null' && String(guessedBpmDetails).trim() !== '';
+        const secretHasBpmDetails = clueObj.secret_has_bpm_details === true;
+        return (
+          <>
+            {guessedBpm != null && guessedBpm !== undefined && !isNaN(guessedBpm) && <>Your guess: {guessedBpm} BPM (estimate). </>}
+            The secret song&apos;s tempo is <strong>{bold}</strong>{suffix} the guessed song&apos;s tempo. The tempo is measured by BPM (Beats Per Minute).
+            {guessHasBpmDetails && <> The <strong>guessed</strong> song has a significant tempo change. Comparison uses the average/primary BPM.</>}
+            {secretHasBpmDetails && <> The <strong>secret</strong> song has a significant tempo change. Comparison uses the average/primary BPM.</>}
+          </>
+        );
       }
       case 'artist': {
         // Handled inline with artist/solutionArtist for correct vs incorrect wording
@@ -993,6 +1073,21 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guess
               </span>
               <span className="clue-value">{duration}</span>
               <ClueTooltip helpText={getHelpText('duration', durationObj)} clueType="duration" />
+            </div>
+          );
+        })()}
+        {tempoObj && (() => {
+          const tempoStatus = getTempoStatus(tempoObj);
+          const tempoDisplay = tempo || '?';
+          return (
+            <div className={`clue-tag clue-status-${tempoStatus} tempo-clue`}>
+              <span className="clue-label tempo-icon-wrapper">
+                <svg className="tempo-icon" viewBox={CLUE_DEFINITIONS.tempo.svgViewBox ?? '0 0 24 24'} fill="currentColor" width="18" height="18">
+                  <path d={CLUE_DEFINITIONS.tempo.svgPath} />
+                </svg>
+              </span>
+              <span className="clue-value">{tempoDisplay}</span>
+              <ClueTooltip helpText={getHelpText('tempo', tempoObj)} clueType="tempo" />
             </div>
           );
         })()}

@@ -33,7 +33,7 @@ const ShareResult = ({ guesses, guessCount, maxGuesses, isWon, puzzleDate }: Sha
   // Show "Share" if we have the API OR if it's a mobile device (will try API on click anyway)
   const canUseNativeShare = hasWebShareAPI || isMobileDevice;
 
-  const getClueEmoji = (clueObj: any, clueType: 'year' | 'country' | 'genre' | 'gender'): string => {
+  const getClueEmoji = (clueObj: any, clueType: 'year' | 'country' | 'genre' | 'tempo' | 'gender'): string => {
     if (!clueObj || typeof clueObj !== 'object') return '⬜';
     
     // Year clue
@@ -55,6 +55,16 @@ const ShareResult = ({ guesses, guessCount, maxGuesses, isWon, puzzleDate }: Sha
     if (clueType === 'genre') {
       if (clueObj.status === 'correct') return '🟩';
       return '🟥';
+    }
+    
+    // Tempo clue
+    if (clueType === 'tempo') {
+      if (clueObj.status === 'unknown') return '⬜';
+      const desc = clueObj.diff_descriptive;
+      if (desc === 'similar') return '🟩';
+      if (desc === 'faster' || desc === 'slower') return '🟨';
+      if (desc === 'much_faster' || desc === 'much_slower') return '🟥';
+      return '⬜';
     }
     
     // Gender clue
@@ -84,7 +94,7 @@ const ShareResult = ({ guesses, guessCount, maxGuesses, isWon, puzzleDate }: Sha
     let shareText = `${gameTitle}\n${resultLine}\n\n`;
     
     // Add guess results with emoji grid
-    // Y = Year | C = Country | G = Genre | X = Gender
+    // Y = Year | C = Country | G = Genre | T = Tempo | X = Gender
     guesses.forEach((guess) => {
       // Check if this is a lifeline entry
       if (guess.isLifeline) {
@@ -92,16 +102,18 @@ const ShareResult = ({ guesses, guessCount, maxGuesses, isWon, puzzleDate }: Sha
         return;
       }
       
-      const yearEmoji = getClueEmoji(guess.clues.year, 'year');
-      const countryEmoji = getClueEmoji(guess.clues.country, 'country');
-      const genreEmoji = getClueEmoji(guess.clues.genre, 'genre');
-      const genderEmoji = getClueEmoji(guess.clues.gender, 'gender');
+      const cluesData = guess.clues?.clues ?? guess.clues ?? {};
+      const yearEmoji = getClueEmoji(cluesData.year, 'year');
+      const countryEmoji = getClueEmoji(cluesData.country, 'country');
+      const genreEmoji = getClueEmoji(cluesData.genre, 'genre');
+      const tempoEmoji = getClueEmoji(cluesData.tempo, 'tempo');
+      const genderEmoji = getClueEmoji(cluesData.gender, 'gender');
       
       // Check for artist and album matches
-      const artistMatch = guess.clues.artist?.status === 'correct';
-      const albumMatch = guess.clues.album?.status === 'correct';
+      const artistMatch = cluesData.artist?.status === 'correct';
+      const albumMatch = cluesData.album?.status === 'correct';
       
-      let line = `${yearEmoji}${countryEmoji}${genreEmoji}${genderEmoji}`;
+      let line = `${yearEmoji}${countryEmoji}${genreEmoji}${tempoEmoji}${genderEmoji}`;
       
       // Add artist/album icons if matched (from central config)
       if (artistMatch) line += ` ${CLUE_DEFINITIONS.artist.shareEmoji}`;
@@ -110,12 +122,12 @@ const ShareResult = ({ guesses, guessCount, maxGuesses, isWon, puzzleDate }: Sha
       shareText += `${line}\n`;
     });
     
-    // Add empty guesses if game was lost (4 boxes: year, country, genre, gender)
+    // Add empty guesses if game was lost (5 boxes: year, country, genre, tempo, gender)
     // Lifelines count as a slot too, so use total items in guesses array
     if (!isWon) {
       const totalSlotsUsed = guesses.length;
       for (let i = totalSlotsUsed; i < maxGuesses; i++) {
-        shareText += `⬜⬜⬜⬜\n`;
+        shareText += `⬜⬜⬜⬜⬜\n`;
       }
     }
     

@@ -209,7 +209,8 @@ function App() {
   return (
     <div className="app">
       {currentView === 'welcome' && <WelcomePage onPlay={handlePlay} onShowStatistics={handleShowStatistics} onShowHelp={handleShowHelp} onShowArchive={handleShowArchive} onShowLeaderboards={handleShowLeaderboards} onShowSettings={handleShowSettings} onShowPrivacy={handleShowPrivacy} />}
-      {currentView === 'game' && <ActiveGame key={gameKey} onShowStatistics={handleShowStatistics} userClosedStats={statsClosedRef.current} onShowHelp={handleShowHelp} onShowPrivacy={handleShowPrivacy} onShowArchive={handleShowArchive} onShowLeaderboards={handleShowLeaderboards} onShowSettings={handleShowSettings} onGoToDailyPuzzle={handleGoToDailyPuzzle} />}
+      {/* Keep ActiveGame mounted when statistics is open so closing stats returns to same puzzle */}
+      {(currentView === 'game' || currentView === 'statistics') && <ActiveGame key={gameKey} onShowStatistics={handleShowStatistics} userClosedStats={statsClosedRef.current} onShowHelp={handleShowHelp} onShowPrivacy={handleShowPrivacy} onShowArchive={handleShowArchive} onShowLeaderboards={handleShowLeaderboards} onShowSettings={handleShowSettings} onGoToDailyPuzzle={handleGoToDailyPuzzle} />}
       {currentView === 'statistics' && <StatisticsPage onClose={handleCloseStatistics} />}
       {currentView === 'help' && <HelpPage onClose={handleCloseHelp} />}
       {currentView === 'archive' && <ArchivePage onClose={handleCloseArchive} onPlayDate={handlePlayDate} />}

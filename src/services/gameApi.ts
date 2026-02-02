@@ -61,6 +61,8 @@ export type GameInitResponse = {
           country: string;
           genre: string;
           duration_sec: number;
+          bpm?: number | null;
+          bpm_details?: string | null;
         };
         result?: {
           is_correct: boolean;
@@ -84,6 +86,12 @@ export type GameInitResponse = {
               diff_sec: number;
               direction?: string;
             };
+            tempo?: {
+              status: 'correct' | 'wrong' | 'unknown';
+              diff_bpm?: number;
+              diff_descriptive?: 'much_faster' | 'faster' | 'similar' | 'slower' | 'much_slower';
+              secret_has_bpm_details?: boolean;
+            };
           };
         };
       }>;
@@ -103,6 +111,8 @@ export type GameInitResponse = {
       country: string;
       genre: string;
       duration_sec: number;
+      bpm?: number | null;
+      bpm_details?: string | null;
       artist_type?: string;
       gender?: string;
     };

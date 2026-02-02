@@ -37,6 +37,9 @@ const CreditsPage = ({ onClose }: CreditsPageProps) => {
           <p>
             Additional metadata may be sourced from other public music databases and APIs.
           </p>
+          <p>
+            “Metronome” icon by Simon Child, from The Noun Project (CC BY 3.0) — <a href="https://thenounproject.com/icon/metronome-1376/" target="_blank" rel="noopener noreferrer">thenounproject.com/icon/metronome-1376/</a>
+          </p>
         </div>
 
         <div className="credits-footer">

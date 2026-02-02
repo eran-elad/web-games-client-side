@@ -49,6 +49,11 @@ export const HELP_CONTENT = {
       icon: "⏱️"
     },
     {
+      title: "🎵 Tempo",
+      content: "Compares the BPM (beats per minute) of your guess to the secret song. Green means similar tempo, yellow means faster or slower, red means much faster or much slower. Grey means BPM data is unavailable for comparison.",
+      icon: "🎵"
+    },
+    {
       title: "🎤 Artist & 💿 Album",
       content: "These bonus clues only appear when you guess correctly! These clues are normally hidden and only show if you get the right artist or album. The artist clue also appears if all other clues seemes correct or close.",
       icon: "🎤"

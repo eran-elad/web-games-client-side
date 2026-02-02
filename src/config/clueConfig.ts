@@ -3,15 +3,17 @@
  * Used by GuessBox, ShareResult, and HelpPage for consistency.
  */
 
-export type ClueType = 'year' | 'country' | 'genre' | 'duration' | 'artist_type' | 'gender' | 'artist' | 'album';
+export type ClueType = 'year' | 'country' | 'genre' | 'duration' | 'tempo' | 'artist_type' | 'gender' | 'artist' | 'album';
 
 export interface ClueDefinition {
   label: string;
   icon: 'emoji' | 'svg';
   /** Emoji character (e.g. '🎵') when icon is 'emoji' */
   emoji?: string;
-  /** SVG path for viewBox="0 0 24 24" when icon is 'svg' */
+  /** SVG path for viewBox="0 0 24 24" when icon is 'svg' (or use svgViewBox if different) */
   svgPath?: string;
+  /** Custom viewBox when path uses non-standard dimensions (e.g. "0 0 64 122") */
+  svgViewBox?: string;
   /** Emoji for share/copy text (e.g. '🎤' for artist) */
   shareEmoji?: string;
 }
@@ -36,6 +38,13 @@ export const CLUE_DEFINITIONS: Record<ClueType, ClueDefinition> = {
     label: 'Duration',
     icon: 'svg',
     svgPath: 'M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z',
+  },
+  tempo: {
+    label: 'Tempo',
+    icon: 'svg',
+    svgPath: 'M16.482,44.784l-4.404,1.87l1.941-7.674L16.482,44.784L16.482,44.784z M0,94.402l12.073-47.728l5.267,5.998l-2.545,10.063h9.307h1.325l-3.76-8.86l-1.2,0.51l-6.375-7.26l3.989-1.694L4.517,13.475c-0.312-0.736,0.792-1.205,1.104-0.469l13.564,31.956l3.991-1.693l0.794,9.629l-1.2,0.51l3.96,9.328h1.325h0.567V14.71h7.064v2.149h-3.178v1.198h3.178v4.796h-3.178v1.199h3.178v4.795h-3.178v1.2h3.178v4.795h-3.178v1.199h3.178v4.797h-3.178v1.198h3.178v4.796h-3.178v1.199h3.178v4.794h-3.178v1.201h3.178v8.708h13.83L37.101,13.638h-9.887l-7.468,29.523l-4.25-10.015L22.46,5.617L32.087,0l9.627,5.617l22.46,88.785h-4.95v1.225c0,1.104-0.896,1.998-1.998,1.998h-0.361c-1.104,0-1.997-0.895-1.997-1.998v-1.225H9.309v1.225c0,1.104-0.894,1.998-1.999,1.998H6.949c-1.103,0-1.999-0.895-1.999-1.998v-1.225H0L0,94.402z',
+    svgViewBox: '0 0 64.174 122.03125',
+    shareEmoji: '🎵',
   },
   artist_type: {
     label: 'Artist Type',
