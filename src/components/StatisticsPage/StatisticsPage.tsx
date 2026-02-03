@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import PageMeta from '../PageMeta/PageMeta';
 import { getPlayerStats } from '../../services/gameApi';
 import type { PlayerStatsResponse } from '../../services/gameApi';
 import { getPlayerId, getGameId } from '../../utils/storage';
@@ -57,7 +58,13 @@ const StatisticsPage = ({ onClose }: StatisticsPageProps) => {
   };
 
   return (
-    <div className="statistics-page-container">
+    <>
+      <PageMeta
+        title="Your Statistics – Hitfinder"
+        description="View your Hitfinder game statistics, streaks, and performance. Track your wins, guess distribution, and game history."
+        path="/statistics"
+      />
+      <div className="statistics-page-container">
       <div className="statistics-page-content">
         <div className="statistics-header">
           <h1 className="statistics-title">Your Statistics</h1>
@@ -190,6 +197,7 @@ const StatisticsPage = ({ onClose }: StatisticsPageProps) => {
         )}
       </div>
     </div>
+    </>
   );
 };
 

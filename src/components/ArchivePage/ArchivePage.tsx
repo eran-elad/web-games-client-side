@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import PageMeta from '../PageMeta/PageMeta';
 import { getArchive, type ArchiveResponse } from '../../services/gameApi';
 import { getPlayerId } from '../../utils/storage';
 import { MUSIC_GAME_ID } from '../../config/gameConfig';
@@ -200,6 +201,12 @@ const ArchivePage = ({ onClose, onPlayDate }: ArchivePageProps) => {
 
   if (loading) {
     return (
+      <>
+        <PageMeta
+          title="Puzzle Archive – Hitfinder"
+          description="Play past Hitfinder daily puzzles. Browse the archive and replay previous music guessing challenges."
+          path="/archive"
+        />
       <div className="archive-page">
         <div className="archive-header">
           <h1>📅 Puzzle Archive</h1>
@@ -209,11 +216,18 @@ const ArchivePage = ({ onClose, onPlayDate }: ArchivePageProps) => {
           <p>Loading archive...</p>
         </div>
       </div>
+      </>
     );
   }
 
   if (error) {
     return (
+      <>
+        <PageMeta
+          title="Puzzle Archive – Hitfinder"
+          description="Play past Hitfinder daily puzzles. Browse the archive and replay previous music guessing challenges."
+          path="/archive"
+        />
       <div className="archive-page">
         <div className="archive-header">
           <h1>📅 Puzzle Archive</h1>
@@ -223,24 +237,38 @@ const ArchivePage = ({ onClose, onPlayDate }: ArchivePageProps) => {
           <p className="error-message">{error}</p>
         </div>
       </div>
+      </>
     );
   }
 
   if (!archive || !archive.puzzles || archive.puzzles.length === 0) {
     return (
-      <div className="archive-page">
-        <div className="archive-header">
-          <h1>📅 Puzzle Archive</h1>
-          <button className="app-close-button close-button" onClick={onClose}>×</button>
+      <>
+        <PageMeta
+          title="Puzzle Archive – Hitfinder"
+          description="Play past Hitfinder daily puzzles. Browse the archive and replay previous music guessing challenges."
+          path="/archive"
+        />
+        <div className="archive-page">
+          <div className="archive-header">
+            <h1>📅 Puzzle Archive</h1>
+            <button className="app-close-button close-button" onClick={onClose}>×</button>
+          </div>
+          <div className="archive-content">
+            <p>No puzzles available yet.</p>
+          </div>
         </div>
-        <div className="archive-content">
-          <p>No puzzles available yet.</p>
-        </div>
-      </div>
+      </>
     );
   }
 
   return (
+    <>
+      <PageMeta
+        title="Puzzle Archive – Hitfinder"
+        description="Play past Hitfinder daily puzzles. Browse the archive and replay previous music guessing challenges."
+        path="/archive"
+      />
     <div className="archive-page">
       <div className="archive-header">
         <h1>📅 Puzzle Archive</h1>
@@ -321,6 +349,7 @@ const ArchivePage = ({ onClose, onPlayDate }: ArchivePageProps) => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

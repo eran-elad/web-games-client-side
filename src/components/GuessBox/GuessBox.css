@@ -202,6 +202,13 @@
   box-shadow: 0 3px 6px rgba(245, 158, 11, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
+.tempo-arrow {
+  font-size: 1.1em;
+  line-height: 1;
+  display: inline-block;
+  vertical-align: -0.2em;
+}
+
 .clue-label {
   font-weight: var(--clue-font-weight-label);
   color: #666;
@@ -444,6 +451,12 @@
   .clue-help-button {
     width: 14px;
     height: 14px;
+  }
+
+  /* Tempo arrows: bigger on mobile for readability, nudge up to align bottom with text */
+  .tempo-arrow {
+    font-size: 1.35em;
+    vertical-align: -0.25em;
   }
 }
 

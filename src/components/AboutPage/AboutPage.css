@@ -1,0 +1,165 @@
+.about-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 2rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.about-content {
+  max-width: 700px;
+  width: 100%;
+  padding: 2rem;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.about-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #eee;
+}
+
+.about-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #333;
+  margin: 0;
+}
+
+.about-body {
+  color: #444;
+  font-size: 0.95rem;
+  line-height: 1.7;
+}
+
+.about-body section {
+  margin-bottom: 1.5rem;
+}
+
+.about-body h2 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 0.5rem 0;
+}
+
+.about-body p {
+  margin: 0 0 0.75rem 0;
+}
+
+.about-body ul {
+  margin: 0.5rem 0;
+  padding-left: 1.5rem;
+}
+
+.about-body li {
+  margin-bottom: 0.5rem;
+}
+
+.about-footer {
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid #eee;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.about-play-button {
+  display: inline-block;
+  padding: 0.75rem 2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: white;
+  background: #667eea;
+  border-radius: 20px;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.about-play-button:hover {
+  background: #5568d3;
+}
+
+.about-links {
+  font-size: 0.9rem;
+}
+
+.about-links a {
+  color: #667eea;
+  text-decoration: none;
+}
+
+.about-links a:hover {
+  text-decoration: underline;
+}
+
+.about-sep {
+  color: #999;
+}
+
+.about-back-button {
+  padding: 0.6rem 1.5rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #667eea;
+  background: white;
+  border: 2px solid #667eea;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.about-back-button:hover {
+  background: #667eea;
+  color: white;
+}
+
+@media (prefers-color-scheme: dark) {
+  .about-content {
+    background: rgba(30, 30, 30, 0.95);
+  }
+
+  .about-header {
+    border-bottom-color: #444;
+  }
+
+  .about-title {
+    color: #fff;
+  }
+
+  .about-body {
+    color: #ccc;
+  }
+
+  .about-body h2 {
+    color: #fff;
+  }
+
+  .about-footer {
+    border-top-color: #444;
+  }
+}
+
+@media (max-width: 768px) {
+  .about-container {
+    padding: 1rem;
+  }
+
+  .about-content {
+    padding: 1.5rem;
+  }
+
+  .about-title {
+    font-size: 1.5rem;
+  }
+}

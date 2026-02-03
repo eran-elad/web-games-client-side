@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import './HamburgerMenu.css';
 
 interface HamburgerMenuProps {
@@ -123,6 +124,22 @@ const HamburgerMenu = ({
               Settings
             </button>
           )}
+          <Link
+            to="/about"
+            className="hamburger-menu-item"
+            onClick={() => handleMenuClick()}
+          >
+            <span className="menu-item-icon">ℹ️</span>
+            About
+          </Link>
+          <Link
+            to="/faq"
+            className="hamburger-menu-item"
+            onClick={() => handleMenuClick()}
+          >
+            <span className="menu-item-icon">❔</span>
+            FAQ
+          </Link>
         </div>
       )}
     </div>

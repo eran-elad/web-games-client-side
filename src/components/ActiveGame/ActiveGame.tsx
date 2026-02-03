@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import PageMeta from '../PageMeta/PageMeta';
 import SongAutocomplete from '../SongAutocomplete/SongAutocomplete';
 import GuessBox from '../GuessBox/GuessBox';
 import WinConfetti from '../WinAnimation/WinConfetti';
@@ -210,7 +212,6 @@ interface ActiveGameProps {
   onShowArchive?: () => void;
   onShowLeaderboards?: () => void;
   onShowSettings?: () => void;
-  onShowPrivacy?: () => void;
   onGoToDailyPuzzle?: () => void;
 }
 
@@ -234,7 +235,8 @@ function shouldShowArtistByNearMatch(clues: any): boolean {
   return !!(countryCorrect && genreCorrect && artistTypeCorrect && genderCorrect && yearMatchOrClose);
 }
 
-const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onShowArchive, onShowLeaderboards, onShowSettings, onShowPrivacy, onGoToDailyPuzzle }: ActiveGameProps = {}) => {
+const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onShowArchive, onShowLeaderboards, onShowSettings, onGoToDailyPuzzle }: ActiveGameProps = {}) => {
+  const { pathname } = useLocation();
   const [selectedSongId, setSelectedSongId] = useState<string | null>(null);
   const [selectedSong, setSelectedSong] = useState<Song | null>(null);
   const [guesses, setGuesses] = useState<Guess[]>([]);
@@ -254,6 +256,7 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
   const [puzzleType, setPuzzleType] = useState<string | null>(null); // Track puzzle type from API
   const [bannerDismissed, setBannerDismissed] = useState<boolean>(false); // Track dismissal state
   const [showLeaderboardsOverlay, setShowLeaderboardsOverlay] = useState<boolean>(false);
+  const [seoIntroExpanded, setSeoIntroExpanded] = useState<boolean>(false);
   const initInProgressRef = useRef<boolean>(false);
 
   // Listen for distance unit changes from settings
@@ -975,6 +978,12 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
 
   if (initLoading) {
     return (
+      <>
+        <PageMeta
+          title="Play Hitfinder – Daily Music Guessing Game"
+          description="Guess the secret hit song using clues like genre, BPM, year, and artist. New puzzle every day."
+          path={pathname}
+        />
       <div className="active-game-container active-game-with-top-bar">
         <GameTopBar
           onShowArchive={onShowArchive}
@@ -992,18 +1001,27 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
           </h1>
           <p className="puzzle-loading-text">Loading game...</p>
           <div className="puzzle-page-footer">
-            <button type="button" className="puzzle-footer-link" onClick={onShowPrivacy}>
-              Privacy Policy
-            </button>
+            <Link to="/privacy" className="puzzle-footer-link">Privacy Policy</Link>
+            <span className="puzzle-footer-sep"> · </span>
+            <Link to="/about" className="puzzle-footer-link">About</Link>
+            <span className="puzzle-footer-sep"> · </span>
+            <Link to="/faq" className="puzzle-footer-link">FAQ</Link>
             <span className="puzzle-footer-sep"> · </span>
             <a href="/credits" className="puzzle-footer-link">Credits</a>
           </div>
         </div>
       </div>
+      </>
     );
   }
 
   return (
+    <>
+      <PageMeta
+        title="Play Hitfinder – Daily Music Guessing Game"
+        description="Guess the secret hit song using clues like genre, BPM, year, and artist. New puzzle every day."
+        path={pathname}
+      />
     <div className="active-game-container active-game-with-top-bar">
       <GameTopBar
         onShowArchive={onShowArchive}
@@ -1240,12 +1258,33 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
         })()}
         <WinConfetti isActive={isWinning} />
         <div className="puzzle-page-footer">
-          <button type="button" className="puzzle-footer-link" onClick={onShowPrivacy}>
-            Privacy Policy
-          </button>
+          <Link to="/privacy" className="puzzle-footer-link">Privacy Policy</Link>
+          <span className="puzzle-footer-sep"> · </span>
+          <Link to="/about" className="puzzle-footer-link">About</Link>
+          <span className="puzzle-footer-sep"> · </span>
+          <Link to="/faq" className="puzzle-footer-link">FAQ</Link>
           <span className="puzzle-footer-sep"> · </span>
           <a href="/credits" className="puzzle-footer-link">Credits</a>
         </div>
+        <section className="seo-intro">
+          <button
+            type="button"
+            className="seo-intro-toggle"
+            onClick={() => setSeoIntroExpanded((v) => !v)}
+            aria-expanded={seoIntroExpanded}
+          >
+            What is Hitfinder?
+            <span className="seo-intro-chevron">{seoIntroExpanded ? '▼' : '▶'}</span>
+          </button>
+          <div className={`seo-intro-content ${seoIntroExpanded ? 'expanded' : ''}`}>
+            <h1 className="seo-intro-title">Hitfinder – Daily Music Guessing Game</h1>
+            <p className="seo-intro-text">
+              Hitfinder is a free daily music guessing game where players try to guess
+              the secret hit song using clues like genre, BPM, release year, and artist.
+              A new puzzle is available every day.
+            </p>
+          </div>
+        </section>
       </div>
       {showLeaderboardsOverlay && (
         <LeaderboardsOverlay
@@ -1254,6 +1293,7 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
         />
       )}
     </div>
+    </>
   );
 };
 

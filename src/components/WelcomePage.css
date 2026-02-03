@@ -343,11 +343,25 @@
   }
 }
 
-.privacy-link {
+.welcome-footer-links {
   position: absolute;
   bottom: 1rem;
   left: 50%;
   transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  font-size: 0.7rem;
+}
+
+.welcome-footer-sep {
+  color: #999;
+  opacity: 0.6;
+}
+
+.privacy-link {
   font-size: 0.7rem;
   color: #999;
   background: none;
@@ -356,6 +370,11 @@
   opacity: 0.6;
   transition: opacity 0.2s;
   padding: 0;
+  text-decoration: none;
+}
+
+a.privacy-link {
+  border: none;
 }
 
 .privacy-link:hover {

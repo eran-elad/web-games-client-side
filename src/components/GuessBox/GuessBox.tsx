@@ -519,17 +519,17 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guess
   };
 
   // Helper to format tempo clue: returns "Much faster" | "Faster" | "Similar" | "Slower" | "Much slower"
-  const formatTempoClue = (clueObj: any): string => {
+  const formatTempoClue = (clueObj: any): string | React.ReactNode => {
     if (clueObj === null || clueObj === undefined) return '';
     if (typeof clueObj !== 'object') return extractClueValue(clueObj);
     if (clueObj.status === 'unknown') return 'Unknown';
     const desc = clueObj.diff_descriptive;
-    const map: Record<string, string> = {
-      much_faster: '↑↑ Faster',
-      faster: '↑ Faster',
+    const map: Record<string, string | React.ReactNode> = {
+      much_faster: <><span className="tempo-arrow">↑↑</span> Faster</>,
+      faster: <><span className="tempo-arrow">↑</span> Faster</>,
       similar: 'Similar',
-      slower: '↓ Slower',
-      much_slower: '↓↓ Slower',
+      slower: <><span className="tempo-arrow">↓</span> Slower</>,
+      much_slower: <><span className="tempo-arrow">↓↓</span> Slower</>,
     };
     return map[desc] ?? 'Unknown';
   };

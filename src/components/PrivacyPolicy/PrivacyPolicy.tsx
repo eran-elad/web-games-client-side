@@ -1,3 +1,4 @@
+import PageMeta from '../PageMeta/PageMeta';
 import './PrivacyPolicy.css';
 import { GAME_NAME } from '../../config/gameConfig';
 
@@ -7,6 +8,12 @@ interface PrivacyPolicyProps {
 
 const PrivacyPolicy = ({ onClose }: PrivacyPolicyProps) => {
   return (
+    <>
+      <PageMeta
+        title="Privacy Policy – Hitfinder"
+        description={`Privacy policy for ${GAME_NAME} - the daily music guessing game. Learn how we handle your data.`}
+        path="/privacy"
+      />
     <div className="privacy-container">
       <div className="privacy-content">
         <div className="privacy-header">
@@ -79,6 +86,7 @@ const PrivacyPolicy = ({ onClose }: PrivacyPolicyProps) => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

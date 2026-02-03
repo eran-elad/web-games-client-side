@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import PageMeta from '../PageMeta/PageMeta';
 import { getDistanceUnit, setDistanceUnit, getDisplayName, setDisplayName, getPlayerId } from '../../utils/storage';
-import { updatePlayerDisplayName } from '../../services/gameApi';
+import { updatePlayerDisplayName, getLeaderboards } from '../../services/gameApi';
 import { getCountryMeasurementSystem } from '../../config/countryCodes';
 import './SettingsPage.css';
 
@@ -58,6 +59,9 @@ const SettingsPage = ({ onClose }: SettingsPageProps) => {
   const [displayNameSaving, setDisplayNameSaving] = useState(false);
   const [displayNameError, setDisplayNameError] = useState<string | null>(null);
   const [displayNameSuccess, setDisplayNameSuccess] = useState(false);
+  const [showDisplayNameTooltip, setShowDisplayNameTooltip] = useState(false);
+  const displayNameTooltipRef = useRef<HTMLDivElement>(null);
+  const displayNameIconRef = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
     // Load current preference on mount
@@ -73,6 +77,41 @@ const SettingsPage = ({ onClose }: SettingsPageProps) => {
       setDisplayUnit(defaultUnit); // Show what would be used by default
     }
   }, []);
+
+  // Fetch display name from server if we have a player but no cached name (e.g. "Player 12b4")
+  useEffect(() => {
+    const playerId = getPlayerId();
+    const cached = getDisplayName();
+    if (playerId && !cached) {
+      getLeaderboards(playerId)
+        .then((res) => {
+          const ourRow = res.boards[0]?.rows?.find((r) => r.player_id === playerId);
+          if (ourRow?.display_name) {
+            setDisplayNameState(ourRow.display_name);
+            setDisplayName(ourRow.display_name);
+          }
+        })
+        .catch(() => { /* ignore - user can still type a new name */ });
+    }
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        showDisplayNameTooltip &&
+        displayNameTooltipRef.current &&
+        displayNameIconRef.current &&
+        !displayNameTooltipRef.current.contains(event.target as Node) &&
+        !displayNameIconRef.current.contains(event.target as Node)
+      ) {
+        setShowDisplayNameTooltip(false);
+      }
+    };
+    if (showDisplayNameTooltip) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showDisplayNameTooltip]);
 
   const handleUnitChange = (unit: 'km' | 'miles') => {
     setDisplayUnit(unit);
@@ -105,6 +144,12 @@ const SettingsPage = ({ onClose }: SettingsPageProps) => {
   };
 
   return (
+    <>
+      <PageMeta
+        title="Settings – Hitfinder"
+        description="Configure your Hitfinder preferences: distance units (km or miles) and display name for leaderboards."
+        path="/settings"
+      />
     <div className="settings-page-container">
       <div className="settings-page-content">
         <div className="settings-page-header">
@@ -124,7 +169,42 @@ const SettingsPage = ({ onClose }: SettingsPageProps) => {
         
         <div className="settings-sections">
           <div className="settings-row settings-row-display-name">
-            <span className="settings-label">Display Name</span>
+            <span className="settings-label settings-display-name-label">
+              Display Name
+              <span className="settings-display-name-info-wrapper">
+                <span
+                  ref={displayNameIconRef}
+                  className="settings-display-name-info-icon"
+                  role="button"
+                  tabIndex={0}
+                  title="How you will be displayed publicly (e.g. on leaderboards)"
+                  aria-label="How you will be displayed publicly (e.g. on leaderboards)"
+                  onMouseEnter={() => setShowDisplayNameTooltip(true)}
+                  onMouseLeave={() => setShowDisplayNameTooltip(false)}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setShowDisplayNameTooltip((v) => !v);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      setShowDisplayNameTooltip((v) => !v);
+                    }
+                  }}
+                >
+                  ℹ
+                </span>
+                {showDisplayNameTooltip && (
+                  <div
+                    ref={displayNameTooltipRef}
+                    className="settings-display-name-tooltip"
+                    role="tooltip"
+                  >
+                    How you will be displayed publicly (e.g. on leaderboards)
+                  </div>
+                )}
+              </span>
+            </span>
             <div className="settings-display-name-controls">
               <input
                 type="text"
@@ -168,6 +248,7 @@ const SettingsPage = ({ onClose }: SettingsPageProps) => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

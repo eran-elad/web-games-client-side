@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import PageMeta from './PageMeta/PageMeta';
 import HamburgerMenu from './HamburgerMenu/HamburgerMenu';
 import { initGame } from '../services/gameApi';
 import { getPlayerId } from '../utils/storage';
@@ -72,7 +74,12 @@ const WelcomePage = ({ onPlay, onShowStatistics, onShowHelp, onShowArchive, onSh
   };
 
   return (
-    <div className="welcome-container">
+    <>
+      <PageMeta
+        title="Hitfinder – Daily Music Guessing Game | Guess the Hit Song"
+        description="Hitfinder is a free daily music guessing game. Guess the secret hit song using clues like genre, BPM, year, and artist. New puzzle every day."
+      />
+      <div className="welcome-container">
       {/* Floating musical notes background */}
       <div className="musical-notes">
         <span className="note note-1">♪</span>
@@ -107,11 +114,18 @@ const WelcomePage = ({ onPlay, onShowStatistics, onShowHelp, onShowArchive, onSh
             <span className="play-icon">▶</span> {getPlayButtonText()}
           </button>
         </div>
-        <button className="privacy-link" onClick={onShowPrivacy}>
-          Privacy Policy
-        </button>
+        <div className="welcome-footer-links">
+          <button className="privacy-link" onClick={onShowPrivacy}>
+            Privacy Policy
+          </button>
+          <span className="welcome-footer-sep"> · </span>
+          <Link to="/about" className="privacy-link">About</Link>
+          <span className="welcome-footer-sep"> · </span>
+          <Link to="/faq" className="privacy-link">FAQ</Link>
+        </div>
       </div>
     </div>
+    </>
   );
 };
 

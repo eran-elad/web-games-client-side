@@ -92,6 +92,66 @@
   gap: 0.5rem;
 }
 
+.settings-display-name-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.settings-display-name-info-wrapper {
+  position: relative;
+  display: inline-flex;
+}
+
+.settings-display-name-tooltip {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.5rem 0.75rem;
+  background: #333;
+  color: white;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  max-width: 280px;
+  z-index: 10001;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  pointer-events: auto;
+  white-space: normal;
+}
+
+.settings-display-name-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: #333;
+}
+
+.settings-display-name-info-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: rgba(102, 126, 234, 0.15);
+  color: #667eea;
+  font-size: 0.65rem;
+  font-weight: 600;
+  cursor: help;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.settings-display-name-info-icon:hover {
+  background: rgba(102, 126, 234, 0.25);
+}
+
 .settings-display-name-controls {
   display: flex;
   gap: 0.5rem;
@@ -151,6 +211,10 @@
   letter-spacing: 0.01em;
   flex-shrink: 0;
   min-width: 140px;
+}
+
+.settings-display-name-label.settings-label {
+  min-width: 0;
 }
 
 .settings-options {
@@ -260,6 +324,11 @@
     padding: 0.75rem 0;
   }
   
+  .settings-row-display-name {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
   .settings-label {
     font-size: 0.9rem;
     min-width: 100px;
@@ -298,6 +367,24 @@
   
   .settings-label {
     color: #ccc;
+  }
+  
+  .settings-display-name-info-icon {
+    background: rgba(102, 126, 234, 0.25);
+    color: #a5b4fc;
+  }
+  
+  .settings-display-name-info-icon:hover {
+    background: rgba(102, 126, 234, 0.35);
+  }
+  
+  .settings-display-name-tooltip {
+    background: #2a2a2a;
+    color: #e0e0e0;
+  }
+  
+  .settings-display-name-tooltip::after {
+    border-top-color: #2a2a2a;
   }
   
   .settings-option {

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import PageMeta from '../PageMeta/PageMeta';
 import { getPlayerId } from '../../utils/storage';
 import LeaderboardsContent from './LeaderboardsContent';
 import './LeaderboardsPage.css';
@@ -16,7 +17,13 @@ export default function LeaderboardsPage({ onClose }: LeaderboardsPageProps) {
   }, []);
 
   return (
-    <div ref={containerRef} className="leaderboards-page-container">
+    <>
+      <PageMeta
+        title="Leaderboards – Hitfinder"
+        description="Compete on the Hitfinder global leaderboards. See top players, your rank, wins, and average guesses."
+        path="/leaderboards"
+      />
+      <div ref={containerRef} className="leaderboards-page-container">
       <div className="leaderboards-page-content">
         <div className="leaderboards-page-header">
           <h1 className="leaderboards-page-title">
@@ -36,5 +43,6 @@ export default function LeaderboardsPage({ onClose }: LeaderboardsPageProps) {
         <LeaderboardsContent playerId={playerId} />
       </div>
     </div>
+    </>
   );
 }

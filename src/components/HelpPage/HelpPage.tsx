@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import PageMeta from '../PageMeta/PageMeta';
 import { HELP_CONTENT } from '../../config/helpContent';
 import './HelpPage.css';
 
@@ -22,7 +23,13 @@ const HelpPage = ({ onClose }: HelpPageProps) => {
   }, []);
 
   return (
-    <div
+    <>
+      <PageMeta
+        title="How to Play Hitfinder | Help & Rules"
+        description="Learn how to play Hitfinder - the daily music guessing game. Master clues like BPM, genre, year, and country to guess the secret song."
+        path="/help"
+      />
+      <div
       ref={containerRef}
       className="help-page-container"
       onClick={onClose}
@@ -75,11 +82,12 @@ const HelpPage = ({ onClose }: HelpPageProps) => {
         
         <div className="help-actions">
           <button className="help-back-button" onClick={onClose}>
-            ← Back to Game
+            ← Back
           </button>
         </div>
       </div>
     </div>
+    </>
   );
 };
 
