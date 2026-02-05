@@ -162,7 +162,7 @@ function AppContent() {
       <FeedbackModal
         isOpen={showFeedbackModal}
         onClose={() => setShowFeedbackModal(false)}
-        onSuccess={() => showToast('Thanks! Feedback sent.')}
+        onSuccess={() => showToast('Thank you! We appreciate your feedback and will attend to it as soon as possible.')}
       />
     </div>
   )

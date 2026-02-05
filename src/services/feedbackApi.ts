@@ -4,6 +4,7 @@
  */
 
 import { getApiUrl } from '../config/apiConfig';
+import { MAX_SCREENSHOT_SIZE_BYTES, MAX_SCREENSHOT_SIZE_MB } from '../config/feedbackConfig';
 
 export type FeedbackType =
   | 'bug'
@@ -29,7 +30,6 @@ export interface SubmitFeedbackResult {
 
 const MAX_MESSAGE_LENGTH = 4000;
 const MIN_MESSAGE_LENGTH = 3;
-const MAX_SCREENSHOT_SIZE_BYTES = 4 * 1024 * 1024; // 4MB
 const ALLOWED_MIME_TYPES = ['image/png', 'image/jpeg', 'image/webp'];
 
 /**
@@ -51,7 +51,7 @@ export function validateMessage(message: string): string | null {
  */
 export function validateScreenshot(file: File): string | null {
   if (file.size > MAX_SCREENSHOT_SIZE_BYTES) {
-    return 'Screenshot must be under 4MB';
+    return `Screenshot must be under ${MAX_SCREENSHOT_SIZE_MB}MB`;
   }
   if (!ALLOWED_MIME_TYPES.includes(file.type)) {
     return 'Screenshot must be PNG, JPEG, or WebP';
