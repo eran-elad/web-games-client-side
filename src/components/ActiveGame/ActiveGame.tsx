@@ -364,23 +364,18 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
         // before the init response arrives, but the component is still mounted and we must
         // show the loaded game (setInitLoading(false) is always called in finally).
         
-        // When we had sent a puzzle_id (viewing archive or daily-puzzle-status) but the server
-        // returned a different puzzle (e.g. daily due to idle), sync localStorage to the response
-        // so any re-init or later logic uses what the server actually gave us.
+        // Always sync localStorage to the puzzle we actually received from the server.
+        // This ensures correct puzzle when returning from statistics, handles server idle
+        // redirects (e.g. archive requested but daily returned), and fixes multi-tab sync.
         const responsePuzzleId = response.session.puzzle.puzzle_id;
         const responseLocalDate = response.session.puzzle.local_date;
+        setPuzzleId(responsePuzzleId);
+        setLocalDate(responseLocalDate);
         if (
-          (puzzleId !== undefined || localDate !== undefined) &&
-          (responsePuzzleId !== puzzleId || responseLocalDate !== (localDate ?? ''))
+          response.session.puzzle.type === 'daily' ||
+          responseLocalDate === todayDateStr
         ) {
-          setPuzzleId(responsePuzzleId);
-          setLocalDate(responseLocalDate);
-          if (
-            response.session.puzzle.type === 'daily' ||
-            responseLocalDate === todayDateStr
-          ) {
-            clearViewingArchive();
-          }
+          clearViewingArchive();
         }
         
         // Store player and session data in localStorage
@@ -656,6 +651,19 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
         setNewDailyPuzzleAvailable(response.new_daily_puzzle_available);
       }
       
+      // When game ends, sync puzzle to localStorage so closing statistics returns to correct puzzle
+      if (newSessionState.is_over) {
+        setPuzzleId(response.session.puzzle.puzzle_id);
+        setLocalDate(response.session.puzzle.local_date);
+        const todayStr = getTodayLocalDateStr();
+        if (
+          response.session.puzzle.type === 'daily' ||
+          response.session.puzzle.local_date === todayStr
+        ) {
+          clearViewingArchive();
+        }
+      }
+      
       // Handle lifeline catalog updates
       if (response.lifeline_active && response.narrowed_catalog) {
         setNarrowedCatalog(response.narrowed_catalog);
@@ -860,6 +868,19 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
       // Capture new_daily_puzzle_available from response
       if (response.new_daily_puzzle_available !== undefined) {
         setNewDailyPuzzleAvailable(response.new_daily_puzzle_available);
+      }
+      
+      // When game ends, sync puzzle to localStorage so closing statistics returns to correct puzzle
+      if (newSessionState.is_over) {
+        setPuzzleId(response.session.puzzle.puzzle_id);
+        setLocalDate(response.session.puzzle.local_date);
+        const todayStr = getTodayLocalDateStr();
+        if (
+          response.session.puzzle.type === 'daily' ||
+          response.session.puzzle.local_date === todayStr
+        ) {
+          clearViewingArchive();
+        }
       }
       
       // If game is over, show statistics after a short delay
