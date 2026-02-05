@@ -14,6 +14,8 @@ import LeaderboardsPage from './components/Leaderboards/LeaderboardsPage'
 import PrivacyPolicy from './components/PrivacyPolicy/PrivacyPolicy'
 import AboutPage from './components/AboutPage/AboutPage'
 import FaqPage from './components/FaqPage/FaqPage'
+import FeedbackModal from './components/FeedbackModal/FeedbackModal'
+import { ToastContainer, useToastState, showToast } from './components/Toast/Toast'
 import './App.css'
 
 function AppContent() {
@@ -21,6 +23,8 @@ function AppContent() {
   const statsClosedRef = useRef<boolean>(false)
   const cameFromArchiveRef = useRef<boolean>(false)
   const [gameKey, setGameKey] = useState<number>(0)
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false)
+  const { toasts, dismiss } = useToastState()
 
   const handleCloseStatistics = () => {
     statsClosedRef.current = true
@@ -107,6 +111,7 @@ function AppContent() {
               onShowArchive={() => navigate('/archive')}
               onShowLeaderboards={() => navigate('/leaderboards')}
               onShowSettings={() => navigate('/settings')}
+              onShowFeedback={() => setShowFeedbackModal(true)}
               onGoToDailyPuzzle={handleGoToDailyPuzzle}
             />
           }
@@ -122,6 +127,7 @@ function AppContent() {
               onShowArchive={() => navigate('/archive')}
               onShowLeaderboards={() => navigate('/leaderboards')}
               onShowSettings={() => navigate('/settings')}
+              onShowFeedback={() => setShowFeedbackModal(true)}
               onGoToDailyPuzzle={handleGoToDailyPuzzle}
             />
           }
@@ -152,6 +158,12 @@ function AppContent() {
         <Route path="/about" element={<AboutPage />} />
         <Route path="/faq" element={<FaqPage />} />
       </Routes>
+      <ToastContainer toasts={toasts} onDismiss={dismiss} />
+      <FeedbackModal
+        isOpen={showFeedbackModal}
+        onClose={() => setShowFeedbackModal(false)}
+        onSuccess={() => showToast('Thanks! Feedback sent.')}
+      />
     </div>
   )
 }

@@ -8,6 +8,7 @@ interface GameTopBarProps {
   onShowLeaderboardsOverlay?: () => void;
   onShowHelp?: () => void;
   onShowSettings?: () => void;
+  onShowFeedback?: () => void;
   onGoToDailyPuzzle?: () => void;
 }
 
@@ -18,6 +19,7 @@ export default function GameTopBar({
   onShowLeaderboardsOverlay,
   onShowHelp,
   onShowSettings,
+  onShowFeedback,
   onGoToDailyPuzzle,
 }: GameTopBarProps) {
   return (
@@ -67,6 +69,17 @@ export default function GameTopBar({
             ❓
           </button>
         )}
+        {onShowFeedback && (
+          <button
+            className="game-top-bar-icon"
+            onClick={onShowFeedback}
+            aria-label="Feedback"
+            title="Feedback"
+            type="button"
+          >
+            💬
+          </button>
+        )}
       </div>
       <div className="game-top-bar-hamburger">
         <HamburgerMenu
@@ -75,6 +88,7 @@ export default function GameTopBar({
           onShowLeaderboards={onShowLeaderboards}
           onShowHelp={onShowHelp}
           onShowSettings={onShowSettings}
+          onShowFeedback={onShowFeedback}
           onGoToDailyPuzzle={onGoToDailyPuzzle}
         />
       </div>

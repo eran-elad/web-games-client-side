@@ -212,6 +212,7 @@ interface ActiveGameProps {
   onShowArchive?: () => void;
   onShowLeaderboards?: () => void;
   onShowSettings?: () => void;
+  onShowFeedback?: () => void;
   onGoToDailyPuzzle?: () => void;
 }
 
@@ -235,7 +236,7 @@ function shouldShowArtistByNearMatch(clues: any): boolean {
   return !!(countryCorrect && genreCorrect && artistTypeCorrect && genderCorrect && yearMatchOrClose);
 }
 
-const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onShowArchive, onShowLeaderboards, onShowSettings, onGoToDailyPuzzle }: ActiveGameProps = {}) => {
+const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onShowArchive, onShowLeaderboards, onShowSettings, onShowFeedback, onGoToDailyPuzzle }: ActiveGameProps = {}) => {
   const { pathname } = useLocation();
   const [selectedSongId, setSelectedSongId] = useState<string | null>(null);
   const [selectedSong, setSelectedSong] = useState<Song | null>(null);
@@ -1013,6 +1014,7 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
           onShowLeaderboards={onShowLeaderboards}
           onShowHelp={onShowHelp}
           onShowSettings={onShowSettings}
+          onShowFeedback={onShowFeedback}
           onGoToDailyPuzzle={onGoToDailyPuzzle}
         />
         <div className="active-game-content">
@@ -1051,6 +1053,7 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
         onShowLeaderboards={onShowLeaderboards}
         onShowHelp={onShowHelp}
         onShowSettings={onShowSettings}
+        onShowFeedback={onShowFeedback}
         onGoToDailyPuzzle={onGoToDailyPuzzle}
       />
       <div className="active-game-content">
@@ -1087,13 +1090,24 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
                         `${sessionState.secret_song.title || ''} - ${sessionState.secret_song.artist || ''}`.trim() || 
                         'Unknown'}</strong>
                     </div>
-                    <ShareResult 
-                      guesses={guesses}
-                      guessCount={guessedCount}
-                      maxGuesses={maxGuesses}
-                      isWon={true}
-                      puzzleDate={puzzleDate || undefined}
-                    />
+                    <div className="game-over-actions">
+                      <ShareResult 
+                        guesses={guesses}
+                        guessCount={guessedCount}
+                        maxGuesses={maxGuesses}
+                        isWon={true}
+                        puzzleDate={puzzleDate || undefined}
+                      />
+                      {onShowFeedback && (
+                        <button
+                          type="button"
+                          className="feedback-result-button"
+                          onClick={onShowFeedback}
+                        >
+                          💬 Send Feedback
+                        </button>
+                      )}
+                    </div>
                     {/* Show banner after puzzle ends if new daily puzzle is available */}
                     {shouldShowBanner() && (
                       <NewDailyPuzzleBanner
@@ -1115,13 +1129,24 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
                         `${sessionState.secret_song.title || ''} - ${sessionState.secret_song.artist || ''}`.trim() || 
                         'Unknown'}</strong>
                     </div>
-                    <ShareResult 
-                      guesses={guesses}
-                      guessCount={guessedCount}
-                      maxGuesses={maxGuesses}
-                      isWon={false}
-                      puzzleDate={puzzleDate || undefined}
-                    />
+                    <div className="game-over-actions">
+                      <ShareResult 
+                        guesses={guesses}
+                        guessCount={guessedCount}
+                        maxGuesses={maxGuesses}
+                        isWon={false}
+                        puzzleDate={puzzleDate || undefined}
+                      />
+                      {onShowFeedback && (
+                        <button
+                          type="button"
+                          className="feedback-result-button"
+                          onClick={onShowFeedback}
+                        >
+                          💬 Send Feedback
+                        </button>
+                      )}
+                    </div>
                     {/* Show banner after puzzle ends if new daily puzzle is available */}
                     {shouldShowBanner() && (
                       <NewDailyPuzzleBanner
@@ -1143,13 +1168,24 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
                         `${sessionState.secret_song.title || ''} - ${sessionState.secret_song.artist || ''}`.trim() || 
                         'Unknown'}</strong>
                     </div>
-                    <ShareResult 
-                      guesses={guesses}
-                      guessCount={guessedCount}
-                      maxGuesses={maxGuesses}
-                      isWon={false}
-                      puzzleDate={puzzleDate || undefined}
-                    />
+                    <div className="game-over-actions">
+                      <ShareResult 
+                        guesses={guesses}
+                        guessCount={guessedCount}
+                        maxGuesses={maxGuesses}
+                        isWon={false}
+                        puzzleDate={puzzleDate || undefined}
+                      />
+                      {onShowFeedback && (
+                        <button
+                          type="button"
+                          className="feedback-result-button"
+                          onClick={onShowFeedback}
+                        >
+                          💬 Send Feedback
+                        </button>
+                      )}
+                    </div>
                     {/* Show banner after puzzle ends if new daily puzzle is available */}
                     {shouldShowBanner() && (
                       <NewDailyPuzzleBanner

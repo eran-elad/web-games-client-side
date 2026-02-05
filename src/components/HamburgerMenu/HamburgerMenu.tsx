@@ -8,6 +8,7 @@ interface HamburgerMenuProps {
   onShowLeaderboards?: () => void;
   onShowHelp?: () => void;
   onShowSettings?: () => void;
+  onShowFeedback?: () => void;
   onGoToDailyPuzzle?: () => void;
 }
 
@@ -17,6 +18,7 @@ const HamburgerMenu = ({
   onShowLeaderboards,
   onShowHelp, 
   onShowSettings,
+  onShowFeedback,
   onGoToDailyPuzzle
 }: HamburgerMenuProps) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -122,6 +124,15 @@ const HamburgerMenu = ({
             >
               <span className="menu-item-icon">⚙️</span>
               Settings
+            </button>
+          )}
+          {onShowFeedback && (
+            <button
+              className="hamburger-menu-item"
+              onClick={() => handleMenuClick(onShowFeedback)}
+            >
+              <span className="menu-item-icon">💬</span>
+              Send Feedback
             </button>
           )}
           <Link
