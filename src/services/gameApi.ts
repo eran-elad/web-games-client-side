@@ -319,21 +319,30 @@ export type PlayerStatsResponse = {
   player_id: string;
   game_id: string | null;
   stats: {
-    total_games_played: number;
+    total_games_attempted: number;
+    total_in_progress: number;
+    total_games_completed: number;
     total_wins: number;
     total_losses: number;
-    total_abandoned: number;
-    win_percentage: number;
+    total_quit: number;
+    win_percentage: number | null;
     wins_by_guess_count: {
       [key: string]: number;
     };
-    average_guesses_for_win: number;
+    average_guesses_for_win: number | null;
+    lifelines_used_on_wins: number;
+    pct_wins_with_lifeline: number | null;
+    current_streak: number;
+    best_streak: number;
+    best_streak_start: string | null;
+    best_streak_end: string | null;
     current_win_streak: number;
-    max_win_streak: number;
-    average_guesses_per_game: number;
-    total_guesses: number;
-    first_game_date: string | null;
-    last_game_date: string | null;
+    best_win_streak: number;
+    best_win_streak_start: string | null;
+    best_win_streak_end: string | null;
+    first_completed_puzzle_date: string | null;
+    last_completed_puzzle_date: string | null;
+    player?: string;
   };
 };
 

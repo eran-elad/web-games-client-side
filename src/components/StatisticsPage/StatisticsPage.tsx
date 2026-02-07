@@ -26,7 +26,11 @@ const StatisticsPage = ({ onClose }: StatisticsPageProps) => {
         if (!playerId) {
           throw new Error('No player ID found');
         }
-        
+
+        if (!gameId) {
+          throw new Error('Game not configured');
+        }
+
         const response = await getPlayerStats(playerId, gameId);
         setStats(response);
       } catch (err) {
@@ -43,8 +47,8 @@ const StatisticsPage = ({ onClose }: StatisticsPageProps) => {
     fetchStats();
   }, []);
 
-  const formatPercentage = (value: number): string => {
-    return `${value.toFixed(1)}%`;
+  const formatPercentage = (value: number | null): string => {
+    return value != null ? `${value.toFixed(1)}%` : 'N/A';
   };
 
   const formatDate = (dateString: string | null): string => {
@@ -91,20 +95,32 @@ const StatisticsPage = ({ onClose }: StatisticsPageProps) => {
               <h2 className="section-title">Overview</h2>
               <div className="stats-grid">
                 <div className="stat-card">
-                  <div className="stat-value">{stats.stats.total_games_played}</div>
-                  <div className="stat-label">Games Played</div>
+                  <div className="stat-value">{stats.stats.total_games_attempted}</div>
+                  <div className="stat-label">Attempted</div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-value">{stats.stats.total_games_completed}</div>
+                  <div className="stat-label">Completed</div>
                 </div>
                 <div className="stat-card">
                   <div className="stat-value">{stats.stats.total_wins}</div>
                   <div className="stat-label">Wins</div>
                 </div>
                 <div className="stat-card">
-                  <div className="stat-value">{stats.stats.total_losses}</div>
-                  <div className="stat-label">Losses</div>
+                  <div className="stat-value">{stats.stats.lifelines_used_on_wins}</div>
+                  <div className="stat-label">Wins with Lifeline</div>
                 </div>
                 <div className="stat-card">
                   <div className="stat-value">{formatPercentage(stats.stats.win_percentage)}</div>
                   <div className="stat-label">Win Rate</div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-value">
+                    {stats.stats.average_guesses_for_win != null
+                      ? stats.stats.average_guesses_for_win.toFixed(1)
+                      : 'N/A'}
+                  </div>
+                  <div className="stat-label">Avg Guesses for wins</div>
                 </div>
               </div>
             </section>
@@ -114,31 +130,20 @@ const StatisticsPage = ({ onClose }: StatisticsPageProps) => {
               <h2 className="section-title">Streaks</h2>
               <div className="stats-grid">
                 <div className="stat-card">
+                  <div className="stat-value">{stats.stats.current_streak}</div>
+                  <div className="stat-label">Current streak</div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-value">{stats.stats.best_streak}</div>
+                  <div className="stat-label">Best streak</div>
+                </div>
+                <div className="stat-card">
                   <div className="stat-value">{stats.stats.current_win_streak}</div>
-                  <div className="stat-label">Current Win Streak</div>
+                  <div className="stat-label">Current win streak</div>
                 </div>
                 <div className="stat-card">
-                  <div className="stat-value">{stats.stats.max_win_streak}</div>
-                  <div className="stat-label">Best Win Streak</div>
-                </div>
-              </div>
-            </section>
-
-            {/* Performance Section */}
-            <section className="statistics-section">
-              <h2 className="section-title">Performance</h2>
-              <div className="stats-grid">
-                <div className="stat-card">
-                  <div className="stat-value">{stats.stats.average_guesses_for_win.toFixed(1)}</div>
-                  <div className="stat-label">Avg Guesses (Wins)</div>
-                </div>
-                <div className="stat-card">
-                  <div className="stat-value">{stats.stats.average_guesses_per_game.toFixed(1)}</div>
-                  <div className="stat-label">Avg Guesses (All)</div>
-                </div>
-                <div className="stat-card">
-                  <div className="stat-value">{stats.stats.total_guesses}</div>
-                  <div className="stat-label">Total Guesses</div>
+                  <div className="stat-value">{stats.stats.best_win_streak}</div>
+                  <div className="stat-label">Best win streak</div>
                 </div>
               </div>
             </section>
@@ -154,10 +159,10 @@ const StatisticsPage = ({ onClose }: StatisticsPageProps) => {
                       <div key={guessCount} className="distribution-item">
                         <div className="distribution-label">{guessCount} guess{wins !== 1 ? 'es' : ''}</div>
                         <div className="distribution-bar-container">
-                          <div 
+                          <div
                             className="distribution-bar"
-                            style={{ 
-                              width: `${(wins / stats.stats.total_wins) * 100}%`,
+                            style={{
+                              width: `${stats.stats.total_wins > 0 ? (wins / stats.stats.total_wins) * 100 : 0}%`,
                               maxWidth: '100%'
                             }}
                           />
@@ -169,24 +174,18 @@ const StatisticsPage = ({ onClose }: StatisticsPageProps) => {
               </section>
             )}
 
-            {/* Game History */}
+            {/* History */}
             <section className="statistics-section">
-              <h2 className="section-title">Game History</h2>
+              <h2 className="section-title">History</h2>
               <div className="history-info">
                 <div className="history-item">
-                  <span className="history-label">First Game:</span>
-                  <span className="history-value">{formatDate(stats.stats.first_game_date)}</span>
+                  <span className="history-label">First Completed Puzzle:</span>
+                  <span className="history-value">{formatDate(stats.stats.first_completed_puzzle_date)}</span>
                 </div>
                 <div className="history-item">
-                  <span className="history-label">Last Game:</span>
-                  <span className="history-value">{formatDate(stats.stats.last_game_date)}</span>
+                  <span className="history-label">Last Completed Puzzle:</span>
+                  <span className="history-value">{formatDate(stats.stats.last_completed_puzzle_date)}</span>
                 </div>
-                {stats.stats.total_abandoned > 0 && (
-                  <div className="history-item">
-                    <span className="history-label">Abandoned:</span>
-                    <span className="history-value">{stats.stats.total_abandoned}</span>
-                  </div>
-                )}
               </div>
             </section>
 
