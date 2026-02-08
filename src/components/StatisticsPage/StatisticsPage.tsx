@@ -1,9 +1,91 @@
 import { useState, useEffect } from 'react';
 import PageMeta from '../PageMeta/PageMeta';
-import { getPlayerStats } from '../../services/gameApi';
-import type { PlayerStatsResponse } from '../../services/gameApi';
+import { getPlayerStats, getPlayerBadges } from '../../services/gameApi';
+import type { PlayerStatsResponse, Badge } from '../../services/gameApi';
 import { getPlayerId, getGameId } from '../../utils/storage';
 import './StatisticsPage.css';
+
+const GENERIC_BADGE_URL = '/badges/generic_badge.svg';
+
+function getBadgeIconPath(iconKeySmall: string): string {
+  const filename = iconKeySmall.includes('/')
+    ? iconKeySmall.split('/').pop() ?? iconKeySmall
+    : iconKeySmall;
+  return `/badges/${filename}.png`;
+}
+
+interface BadgeCardProps {
+  badge: Badge;
+}
+
+const BadgeCard = ({ badge }: BadgeCardProps) => {
+  const [useFallback, setUseFallback] = useState(false);
+  const [showMobileTooltip, setShowMobileTooltip] = useState(false);
+  const iconPath = useFallback ? GENERIC_BADGE_URL : getBadgeIconPath(badge.icon_key_small);
+
+  const isMaxTier = badge.next_tier_threshold == null;
+  const nextThreshold = badge.next_tier_threshold ?? 1;
+  const progressPercent = isMaxTier
+    ? 100
+    : Math.min(100, (badge.current_progress / nextThreshold) * 100);
+
+  const progressLeftLabel = isMaxTier
+    ? 'Max tier'
+    : `${badge.current_progress} / ${nextThreshold}`;
+  const progressRightLabel = isMaxTier ? '' : 'Next';
+
+  return (
+    <div className="badge-card">
+      <div
+        className="badge-card-inner"
+        title={badge.tooltip}
+      >
+        <div className="badge-medallion">
+          <div className="badge-medallion-ring">
+            <div className="badge-icon-wrapper">
+              <img
+                src={iconPath}
+                alt={badge.short_name}
+                className="badge-icon"
+                onError={() => setUseFallback(true)}
+              />
+            </div>
+          </div>
+        </div>
+        <div className="badge-short-name">{badge.short_name}</div>
+        <div className="badge-tier-pill">
+          Tier {badge.current_tier_threshold}
+        </div>
+        <div className="badge-progress-section">
+          <div className="badge-progress-bar">
+            <div
+              className="badge-progress-fill"
+              style={{ width: `${progressPercent}%` }}
+            />
+          </div>
+          <div className="badge-progress-labels">
+            <span className="badge-progress-left">{progressLeftLabel}</span>
+            {progressRightLabel && (
+              <span className="badge-progress-right">{progressRightLabel}</span>
+            )}
+          </div>
+        </div>
+        <button
+          type="button"
+          className="badge-info-icon"
+          aria-label="More info"
+          onClick={() => setShowMobileTooltip(!showMobileTooltip)}
+          onBlur={() => setShowMobileTooltip(false)}
+        >
+          i
+        </button>
+        {showMobileTooltip && (
+          <div className="badge-mobile-tooltip">{badge.tooltip}</div>
+        )}
+      </div>
+    </div>
+  );
+};
 
 interface StatisticsPageProps {
   onClose: () => void;
@@ -13,38 +95,52 @@ const StatisticsPage = ({ onClose }: StatisticsPageProps) => {
   const [stats, setStats] = useState<PlayerStatsResponse | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [badges, setBadges] = useState<Badge[] | null>(null);
+  const [badgesLoading, setBadgesLoading] = useState<boolean>(true);
+  const [badgesError, setBadgesError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        
-        const playerId = getPlayerId();
-        const gameId = getGameId();
-        
-        if (!playerId) {
-          throw new Error('No player ID found');
-        }
+    const playerId = getPlayerId();
+    const gameId = getGameId();
 
-        if (!gameId) {
-          throw new Error('Game not configured');
-        }
+    if (!playerId || !gameId) {
+      setLoading(false);
+      setBadgesLoading(false);
+      if (!playerId) setError('No player ID found');
+      else if (!gameId) setError('Game not configured');
+      return;
+    }
 
-        const response = await getPlayerStats(playerId, gameId);
+    setLoading(true);
+    setError(null);
+    setBadgesLoading(true);
+    setBadgesError(null);
+
+    getPlayerStats(playerId, gameId)
+      .then((response) => {
         setStats(response);
-      } catch (err) {
-        const errorMessage = err instanceof Error 
-          ? err.message 
-          : 'Failed to fetch statistics';
+      })
+      .catch((err) => {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to fetch statistics';
         setError(errorMessage);
         console.error('Error fetching statistics:', err);
-      } finally {
+      })
+      .finally(() => {
         setLoading(false);
-      }
-    };
+      });
 
-    fetchStats();
+    getPlayerBadges(playerId, gameId)
+      .then((response) => {
+        setBadges(response.badges);
+      })
+      .catch((err) => {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to fetch badges';
+        setBadgesError(errorMessage);
+        console.error('Error fetching badges:', err);
+      })
+      .finally(() => {
+        setBadgesLoading(false);
+      });
   }, []);
 
   const formatPercentage = (value: number | null): string => {
@@ -187,6 +283,29 @@ const StatisticsPage = ({ onClose }: StatisticsPageProps) => {
                   <span className="history-value">{formatDate(stats.stats.last_completed_puzzle_date)}</span>
                 </div>
               </div>
+            </section>
+
+            {/* Badges */}
+            <section className="statistics-section badges-section">
+              <h2 className="section-title">Badges</h2>
+              {badgesLoading && (
+                <div className="badges-loading">Loading badges...</div>
+              )}
+              {badgesError && (
+                <div className="badges-error">Could not load badges: {badgesError}</div>
+              )}
+              {!badgesLoading && !badgesError && badges && (
+                <div className="badges-grid">
+                  {badges
+                    .filter((b) => b.badge_id != null)
+                    .map((badge) => (
+                      <BadgeCard key={badge.family_code} badge={badge} />
+                    ))}
+                  {badges.filter((b) => b.badge_id != null).length === 0 && (
+                    <div className="badges-empty">No badges earned yet.</div>
+                  )}
+                </div>
+              )}
             </section>
 
             <div className="statistics-footer">

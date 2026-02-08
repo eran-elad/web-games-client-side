@@ -1,0 +1,5 @@
+#!/bin/sh
+# Auto-stage new badge images when committing
+git add src/assets/badges/ 2>/dev/null || true
+git add public/badges/ 2>/dev/null || true
+exit 0

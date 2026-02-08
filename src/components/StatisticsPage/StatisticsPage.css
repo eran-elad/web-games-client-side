@@ -172,6 +172,206 @@
   color: #333;
 }
 
+/* Badges section */
+.badges-section {
+  margin-top: 0;
+}
+
+.badges-loading,
+.badges-error,
+.badges-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 1.5rem;
+  color: #666;
+}
+
+.badges-error {
+  color: #ef4444;
+}
+
+.badges-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 1.5rem;
+}
+
+.badge-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.badge-card-inner {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  background: #fff;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 180px;
+  min-width: 160px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+.badge-medallion {
+  width: 76px;
+  height: 76px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.15));
+}
+
+.badge-medallion-ring {
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  padding: 4px;
+  background: linear-gradient(135deg, #c9a227 0%, #e6c84a 50%, #c9a227 100%);
+  box-shadow:
+    inset 0 0 0 2px rgba(102, 126, 234, 0.3),
+    0 0 0 3px #c9a227;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.badge-icon-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  overflow: hidden;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.badge-icon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 88%;
+  height: 88%;
+  object-fit: contain;
+  object-position: center center;
+}
+
+.badge-short-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #333;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  line-height: 1.3;
+}
+
+.badge-tier-pill {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #555;
+  background: #f0f0f0;
+  border-radius: 999px;
+}
+
+.badge-progress-section {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.badge-progress-bar {
+  height: 8px;
+  background: #e8e8e8;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.badge-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.badge-progress-labels {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.75rem;
+}
+
+.badge-progress-left {
+  font-weight: 500;
+  color: #333;
+}
+
+.badge-progress-right {
+  color: #777;
+}
+
+.badge-info-icon {
+  display: none;
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1px solid #ccc;
+  background: #fff;
+  color: #666;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  font-style: italic;
+}
+
+.badge-mobile-tooltip {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: #333;
+  color: #fff;
+  font-size: 0.85rem;
+  border-radius: 8px;
+  max-width: 280px;
+  z-index: 10;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+@media (hover: none) {
+  .badge-info-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+@media (hover: hover) {
+  .badge-info-icon {
+    display: none;
+  }
+}
+
 .statistics-footer {
   margin-top: 1rem;
   padding-top: 1.5rem;
@@ -243,6 +443,22 @@
     min-width: 30px;
     font-size: 0.9rem;
   }
+
+  .badges-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+
+  .badge-card-inner {
+    padding: 0.75rem;
+    min-width: 140px;
+  }
+
+  .badge-medallion,
+  .badge-medallion-ring {
+    width: 64px;
+    height: 64px;
+  }
 }
 
 @media (prefers-color-scheme: dark) {
@@ -279,6 +495,48 @@
   }
 
   .history-value {
+    color: #fff;
+  }
+
+  .badges-loading,
+  .badges-empty {
+    color: #aaa;
+  }
+
+  .badge-card-inner {
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+  }
+
+  .badge-short-name {
+    color: #fff;
+  }
+
+  .badge-tier-pill {
+    color: #ccc;
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  .badge-progress-bar {
+    background: rgba(255, 255, 255, 0.15);
+  }
+
+  .badge-progress-left {
+    color: #fff;
+  }
+
+  .badge-progress-right {
+    color: #999;
+  }
+
+  .badge-info-icon {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: #ccc;
+  }
+
+  .badge-mobile-tooltip {
+    background: #444;
     color: #fff;
   }
 

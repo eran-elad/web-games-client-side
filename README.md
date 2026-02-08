@@ -49,6 +49,14 @@ npm run dev
 
 The application will be available at `http://localhost:5173` (or the port shown in the terminal).
 
+## Badge Images
+
+Badge images go in `src/assets/badges/` or `public/badges/`. A git pre-commit hook auto-stages new files in these folders. To enable it (runs automatically on `npm install`):
+
+```bash
+git config core.hooksPath .githooks
+```
+
 ## Available Scripts
 
 - `npm run dev` - Start the development server with hot module replacement

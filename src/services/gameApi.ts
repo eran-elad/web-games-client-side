@@ -384,6 +384,77 @@ export const getPlayerStats = async (
 };
 
 /**
+ * Badge structure from /api/game/badges/{player_id}
+ */
+export type Badge = {
+  family_code: string;
+  family_name: string;
+  family_description: string;
+  badge_id: string | null;
+  code: string;
+  short_name: string;
+  long_name: string;
+  tooltip: string;
+  description_long: string;
+  icon_key_small: string;
+  icon_key_large: string;
+  current_tier_threshold: number;
+  current_progress: number;
+  next_tier_threshold: number | null;
+  awarded_at: string | null;
+};
+
+/**
+ * Response structure from /api/game/badges/{player_id}
+ */
+export type PlayerBadgesResponse = {
+  meta: {
+    schema_version: string;
+    request_id: string;
+    server_time_utc: string;
+  };
+  player_id: string;
+  game_id: string;
+  badges: Badge[];
+};
+
+/**
+ * Get player badges
+ */
+export const getPlayerBadges = async (
+  playerId: string,
+  gameId: string
+): Promise<PlayerBadgesResponse> => {
+  const params = new URLSearchParams();
+  params.append('game_id', gameId);
+
+  const response = await fetch(
+    getApiUrl(`/api/game/badges/${playerId}?${params.toString()}`),
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    }
+  );
+
+  if (!response.ok) {
+    let errorMessage = `Server error (${response.status})`;
+    try {
+      const errorData = await response.json();
+      if (errorData.detail) {
+        errorMessage = errorData.detail;
+      }
+    } catch {
+      errorMessage = response.statusText || `Server error (${response.status})`;
+    }
+    throw new Error(errorMessage);
+  }
+
+  return await response.json();
+};
+
+/**
  * Response structure from /api/game/daily-puzzle-status
  */
 export type DailyPuzzleStatusResponse = {
