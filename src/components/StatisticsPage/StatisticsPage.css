@@ -221,7 +221,7 @@
     gap: 0.5rem;
   
     width: 100%;
-    --badgeSize: 700px;
+    --badgeSize: 450px;
     --iconScale: 0.30;
     min-width: 220px;
     max-width: max-content;
@@ -373,10 +373,9 @@
 
 .badge-mobile-tooltip {
   position: absolute;
-  top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  margin-top: 0.5rem;
+  top: calc(0.5rem + 28px + 0.25rem);
+  right: 0.5rem;
+  left: 0.5rem;
   padding: 0.75rem 1rem;
   background: #333;
   color: #fff;
@@ -387,15 +386,19 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
-@media (hover: none) {
+/* Show "i" icon on mobile (viewport-based, more reliable than hover: none) */
+@media (max-width: 768px) {
   .badge-info-icon {
     display: flex;
     align-items: center;
     justify-content: center;
+    width: 28px;
+    height: 28px;
   }
 }
 
-@media (hover: hover) {
+/* Hide "i" icon on desktop (tooltip via title attribute) */
+@media (min-width: 769px) {
   .badge-info-icon {
     display: none;
   }

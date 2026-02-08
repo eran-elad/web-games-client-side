@@ -248,6 +248,29 @@ const StatisticsPage = ({ onClose }: StatisticsPageProps) => {
               </div>
             </section>
 
+            {/* Badges */}
+            <section className="statistics-section badges-section">
+              <h2 className="section-title">Badges</h2>
+              {badgesLoading && (
+                <div className="badges-loading">Loading badges...</div>
+              )}
+              {badgesError && (
+                <div className="badges-error">Could not load badges: {badgesError}</div>
+              )}
+              {!badgesLoading && !badgesError && badges && (
+                <div className="badges-grid">
+                  {badges
+                    .filter((b) => b.badge_id != null)
+                    .map((badge) => (
+                      <BadgeCard key={badge.family_code} badge={badge} />
+                    ))}
+                  {badges.filter((b) => b.badge_id != null).length === 0 && (
+                    <div className="badges-empty">No badges earned yet.</div>
+                  )}
+                </div>
+              )}
+            </section>
+
             {/* Wins by Guess Count */}
             {Object.keys(stats.stats.wins_by_guess_count).length > 0 && (
               <section className="statistics-section">
@@ -287,29 +310,6 @@ const StatisticsPage = ({ onClose }: StatisticsPageProps) => {
                   <span className="history-value">{formatDate(stats.stats.last_completed_puzzle_date)}</span>
                 </div>
               </div>
-            </section>
-
-            {/* Badges */}
-            <section className="statistics-section badges-section">
-              <h2 className="section-title">Badges</h2>
-              {badgesLoading && (
-                <div className="badges-loading">Loading badges...</div>
-              )}
-              {badgesError && (
-                <div className="badges-error">Could not load badges: {badgesError}</div>
-              )}
-              {!badgesLoading && !badgesError && badges && (
-                <div className="badges-grid">
-                  {badges
-                    .filter((b) => b.badge_id != null)
-                    .map((badge) => (
-                      <BadgeCard key={badge.family_code} badge={badge} />
-                    ))}
-                  {badges.filter((b) => b.badge_id != null).length === 0 && (
-                    <div className="badges-empty">No badges earned yet.</div>
-                  )}
-                </div>
-              )}
             </section>
 
             <div className="statistics-footer">
