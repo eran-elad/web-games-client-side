@@ -40,16 +40,20 @@ const BadgeCard = ({ badge }: BadgeCardProps) => {
         className="badge-card-inner"
         title={badge.tooltip}
       >
-        <div className="badge-medallion">
-          <div className="badge-medallion-ring">
-            <div className="badge-icon-wrapper">
-              <img
-                src={iconPath}
-                alt={badge.short_name}
-                className="badge-icon"
-                onError={() => setUseFallback(true)}
-              />
-            </div>
+        <div className="badge-frame-container">
+          <img
+            src="/badges/badge_frame.png"
+            className="badge-frame"
+            alt=""
+            aria-hidden="true"
+          />
+          <div className="badge-icon-wrapper">
+            <img
+              src={iconPath}
+              alt={badge.short_name}
+              className="badge-icon"
+              onError={() => setUseFallback(true)}
+            />
           </div>
         </div>
         <div className="badge-short-name">{badge.short_name}</div>
