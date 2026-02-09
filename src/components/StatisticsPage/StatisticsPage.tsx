@@ -38,7 +38,7 @@ const BadgeCard = ({ badge }: BadgeCardProps) => {
     <div className="badge-card">
       <div
         className="badge-card-inner"
-        title={badge.tooltip}
+        title={badge.description_long || badge.tooltip}
       >
         <div className="badge-frame-container">
           <img
@@ -85,7 +85,7 @@ const BadgeCard = ({ badge }: BadgeCardProps) => {
           i
         </button>
         {showMobileTooltip && (
-          <div className="badge-mobile-tooltip">{badge.tooltip}</div>
+          <div className="badge-mobile-tooltip">{badge.description_long || badge.tooltip}</div>
         )}
       </div>
     </div>
