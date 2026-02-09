@@ -55,11 +55,12 @@ const BadgeCard = ({ badge }: BadgeCardProps) => {
               onError={() => setUseFallback(true)}
             />
           </div>
+          <div className="badge-tier-number">{badge.current_tier_threshold}</div>
         </div>
         <div className="badge-short-name">{badge.short_name}</div>
-        <div className="badge-tier-pill">
+        {/* <div className="badge-tier-pill">
           Tier {badge.current_tier_threshold}
-        </div>
+        </div> */}
         <div className="badge-progress-section">
           <div className="badge-progress-bar">
             <div
