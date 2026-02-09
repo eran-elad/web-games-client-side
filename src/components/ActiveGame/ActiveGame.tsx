@@ -1373,16 +1373,50 @@ const LifelineButton = ({
   loading 
 }: LifelineButtonProps) => {
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const hasShownBubbleRef = useRef(false);
+  const [showBubble, setShowBubble] = useState(false);
+  const [pulseActive, setPulseActive] = useState(false);
 
   const isEnabled = !lifelineActivated && 
                     guessCount >= minGuessesRequired && 
                     guessesRemaining > 1;
 
+  // When lifeline is available: pulse for 3 seconds (re-triggers each guess while available)
+  // Bubble shows only when lifeline first becomes available (exactly at threshold)
+  useEffect(() => {
+    if (!isEnabled) {
+      setPulseActive(false);
+      return;
+    }
+
+    // Start pulse animation for 3 seconds (runs each time guessCount changes while available)
+    setPulseActive(true);
+    const pulseTimer = setTimeout(() => setPulseActive(false), 3000);
+
+    // Show bubble only when lifeline first becomes available (exactly at threshold)
+    if (guessCount === minGuessesRequired && !hasShownBubbleRef.current) {
+      hasShownBubbleRef.current = true;
+      setShowBubble(true);
+      const bubbleTimer = setTimeout(() => setShowBubble(false), 3000);
+      return () => {
+        clearTimeout(pulseTimer);
+        clearTimeout(bubbleTimer);
+      };
+    }
+
+    return () => clearTimeout(pulseTimer);
+  }, [isEnabled, guessCount, minGuessesRequired]);
+
   return (
     <div className="lifeline-button-wrapper">
+      {showBubble && (
+        <div className="lifeline-available-bubble">
+          Lifeline is now available
+        </div>
+      )}
       <button
         ref={buttonRef}
-        className={`lifeline-button ${lifelineActivated ? 'activated' : ''} ${isEnabled ? 'enabled' : ''}`}
+        className={`lifeline-button ${lifelineActivated ? 'activated' : ''} ${isEnabled ? 'enabled' : ''} ${pulseActive ? 'lifeline-pulse' : ''}`}
         onClick={() => {
           if (lifelineActivated) {
             // Show message if already activated

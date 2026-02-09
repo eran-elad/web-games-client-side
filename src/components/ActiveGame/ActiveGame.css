@@ -380,6 +380,55 @@ a.puzzle-footer-link {
   display: inline-block;
 }
 
+/* Pulse animation when lifeline becomes available (3 seconds) */
+.lifeline-button.lifeline-pulse .lifeline-icon {
+  animation: lifeline-pulse 3s ease-in-out 1;
+}
+
+@keyframes lifeline-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  15% { transform: scale(1.25); opacity: 1; }
+  30% { transform: scale(1); opacity: 1; }
+  45% { transform: scale(1.25); opacity: 1; }
+  60% { transform: scale(1); opacity: 1; }
+  75% { transform: scale(1.2); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Bubble: "Lifeline is now available" - fades and disappears after 3 seconds */
+.lifeline-available-bubble {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.5rem 0.75rem;
+  background: #333;
+  color: white;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  pointer-events: none;
+  animation: lifeline-bubble-fade 3s ease-out forwards;
+}
+
+.lifeline-available-bubble::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: #333;
+}
+
+@keyframes lifeline-bubble-fade {
+  0%, 60% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
 .help-buttons-info-wrapper {
   position: relative;
   display: inline-flex;
