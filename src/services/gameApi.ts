@@ -4,6 +4,8 @@
 
 import { getApiUrl } from '../config/apiConfig';
 
+export type ExternalLink = { platform_id: string; url: string };
+
 /**
  * Response structure from /api/game/init and /api/game/guess
  */
@@ -115,6 +117,10 @@ export type GameInitResponse = {
       bpm_details?: string | null;
       artist_type?: string;
       gender?: string;
+      /** Aggregated artist type for multi-artist support (e.g. Person, Group, Collaboration, Person (feat.), Group (feat.)) */
+      artist_type_aggr?: string;
+      /** Aggregated artist gender for multi-artist support (e.g. male, female, non_binary, all_males, all_females, all_non_binary, mixed) */
+      artist_gender_aggr?: string;
     };
   };
   lifeline_active?: boolean;
@@ -128,6 +134,8 @@ export type GameInitResponse = {
   }>;
   catalog_size?: number;
   new_daily_puzzle_available?: boolean;
+  /** When puzzle is completed (won/lost/quit), array of platform links for the secret song */
+  external_links?: ExternalLink[];
 };
 
 /**

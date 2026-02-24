@@ -1,0 +1,86 @@
+.external-platform-links {
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 10px;
+}
+
+.external-platform-links-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem 0.85rem;
+  align-items: center;
+  justify-content: center;
+}
+
+.external-platform-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  text-decoration: none;
+  color: inherit;
+  font-size: 0.95rem;
+  transition: background-color 0.15s ease, opacity 0.15s ease;
+}
+
+.external-platform-link:hover {
+  text-decoration: none;
+  opacity: 0.9;
+}
+
+.external-platform-link--known {
+  padding: 0.55rem 0.65rem;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.external-platform-link--known:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.external-platform-link--generic {
+  background: rgba(255, 255, 255, 0.06);
+  font-size: 0.875rem;
+}
+
+.external-platform-link--generic:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.external-platform-link-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.external-platform-link--known .external-platform-link-icon {
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.external-platform-link--generic .external-platform-link-icon {
+  color: rgba(255, 255, 255, 0.7);
+  opacity: 0.9;
+}
+
+.external-platform-link-label {
+  white-space: nowrap;
+}
+
+/* Platform-specific accent colors (optional, subtle) */
+.external-platform-link[title="Spotify"] .external-platform-link-icon {
+  color: #1db954;
+}
+
+.external-platform-link[title="Apple Music"] .external-platform-link-icon {
+  color: #fa243c;
+}
+
+.external-platform-link[title="YouTube"] .external-platform-link-icon {
+  color: #ff0000;
+}
+
+.external-platform-link[title="Wiki"] .external-platform-link-icon {
+  color: rgba(255, 255, 255, 0.9);
+}

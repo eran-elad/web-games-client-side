@@ -649,6 +649,10 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guess
       case 'all_females':
       case 'all females':
         return 'All Female';
+      case 'all_non_binary':
+      case 'all non binary':
+      case 'all non-binary':
+        return 'All Non-Binary';
       case 'mixed':
         return 'Mixed';
       default:
@@ -819,66 +823,108 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guess
         return 'You guessed the correct album! This helps confirm you\'re on the right track.';
       }
       case 'artist_type': {
-        // Get the guessed type - use helper fields passed from rendering logic, or extract from clueObj
-        const guessedType = clueObj._guessedType || clueObj.given || clueObj.type || clueObj.value || clueObj.artist_type || '';
-        const guessedTypeLower = guessedType ? guessedType.toLowerCase() : '';
-        
-        // Use helper fields if available, otherwise determine from guessedType
-        // Note: API sends "Person" but we display it as "Solo" for better UX
-        const isPerson = clueObj._isPerson !== undefined ? clueObj._isPerson : 
-                        (guessedTypeLower === 'person' || guessedTypeLower === 'solo');
-        const isGroup = clueObj._isGroup !== undefined ? clueObj._isGroup : 
-                       (guessedTypeLower === 'group' || guessedTypeLower === 'band' || guessedTypeLower === 'duo');
-        
-        console.log('getHelpText artist_type:', {
-          guessedType,
-          guessedTypeLower,
-          isPerson,
-          isGroup,
-          status: clueObj.status,
-          _guessedType: clueObj._guessedType,
-          _isPerson: clueObj._isPerson,
-          _isGroup: clueObj._isGroup
-        });
-        
-        // Format display name - convert "Person" to "Solo" for better UX
-        const displayName = guessedTypeLower === 'person' ? 'Solo' : 
-                           guessedTypeLower === 'group' ? 'Group' :
-                           guessedType ? guessedType.charAt(0).toUpperCase() + guessedType.slice(1).toLowerCase() : '';
-        
-        if (clueObj.status === 'correct' || clueObj.status === true) {
-          // When correct, the guessed type matches the secret type
-          if (isPerson) {
-            return 'The Artist Type is a Solo Artist.';
-          } else if (isGroup) {
-            return 'The Artist Type is a Group (e.g. band).';
-          } else if (displayName) {
-            return `The Artist Type is ${displayName}.`;
-          } else {
-            return 'The Artist Type matches.';
+        // Use aggregated artist type from the server wherever possible.
+        // Fallback to guessed type only when aggregated value is unavailable.
+        const rawAggr = (clueObj.artist_type_aggr || clueObj.value || clueObj.type || clueObj.artist_type || '').toString();
+        const artistTypeAggr = rawAggr.trim();
+
+        const statusIsCorrect = clueObj.status === 'correct' || clueObj.status === true;
+
+        if (artistTypeAggr) {
+          const typeLower = artistTypeAggr.toLowerCase();
+
+          if (typeLower === 'person') {
+            return statusIsCorrect
+              ? <>The secret artist <strong>is</strong> a solo performer.</>
+              : <>The secret artist <strong>is not</strong> a solo performer.</>;
           }
-        } else {
-          // When wrong, the guessed type doesn't match
-          if (isPerson) {
-            return 'The Artist Type isn\'t a Solo Artist.';
-          } else if (isGroup) {
-            return 'The Artist Type isn\'t a Group (e.g. band).';
-          } else if (displayName) {
-            return `The Artist Type isn't ${displayName}.`;
-          } else {
-            return 'The Artist Type doesn\'t match.';
+
+          if (typeLower === 'group') {
+            return statusIsCorrect
+              ? <>The secret artist <strong>is</strong> a Group (e.g. band).</>
+              : <>The secret artist <strong>is not</strong> a Group (e.g. band).</>;
+          }
+
+          if (typeLower === 'collaboration') {
+            return statusIsCorrect
+              ? <>The secret song <strong>is</strong> performed by multiple main artists (not counting featured artists).</>
+              : <>The secret song <strong>is not</strong> performed by multiple main artists (not counting featured artists).</>;
+          }
+
+          if (typeLower === 'person (feat.)') {
+            return statusIsCorrect
+              ? <>The secret song <strong>is</strong> by a solo performer featuring another artist(s).</>
+              : <>The secret song <strong>is not</strong> by a solo performer featuring another artist(s).</>;
+          }
+
+          if (typeLower === 'group (feat.)') {
+            return statusIsCorrect
+              ? <>The secret song <strong>is</strong> by a group featuring another artist(s).</>
+              : <>The secret song <strong>is not</strong> by a group featuring another artist(s).</>;
           }
         }
+
+        // Fallback: use previous guessed-type based messaging for robustness when aggregated value is missing.
+        const guessedType = clueObj._guessedType || clueObj.given || clueObj.type || clueObj.value || clueObj.artist_type || '';
+        const guessedTypeLower = guessedType ? guessedType.toLowerCase() : '';
+        const isPerson = guessedTypeLower === 'person' || guessedTypeLower === 'solo';
+        const isGroup = guessedTypeLower === 'group' || guessedTypeLower === 'band' || guessedTypeLower === 'duo';
+        const displayName = guessedType
+          ? guessedType.charAt(0).toUpperCase() + guessedType.slice(1).toLowerCase()
+          : '';
+
+        if (statusIsCorrect) {
+          if (isPerson) return 'The Artist Type is a Solo Artist.';
+          if (isGroup) return 'The Artist Type is a Group (e.g. band).';
+          if (displayName) return `The Artist Type is ${displayName}.`;
+          return 'The Artist Type matches.';
+        }
+
+        if (isPerson) return "The Artist Type isn't a Solo Artist.";
+        if (isGroup) return "The Artist Type isn't a Group (e.g. band).";
+        if (displayName) return `The Artist Type isn't ${displayName}.`;
+        return "The Artist Type doesn't match.";
       }
       case 'gender': {
-        const guessedGenderValue = clueObj._guessedGender || clueObj.given || clueObj.value || clueObj.gender || guessedGender || '';
+        // Prefer aggregated gender/type from the server; fall back to legacy behavior when absent.
+        const artistTypeAggrRaw = (clueObj.artist_type_aggr || '').toString().trim();
+        const artistTypeAggrLower = artistTypeAggrRaw.toLowerCase();
+        const genderAggrRaw = (clueObj.artist_gender_aggr || '').toString().trim();
+        const genderAggrLower = genderAggrRaw.toLowerCase();
+
+        // Multi-artist cases: Collaboration or any feat. – ignore guessed gender, use aggregated gender only.
+        const isMultiArtist =
+          artistTypeAggrLower === 'collaboration' ||
+          artistTypeAggrLower === 'person (feat.)'.toLowerCase() ||
+          artistTypeAggrLower === 'group (feat.)'.toLowerCase();
+
+        if (isMultiArtist && genderAggrLower) {
+          switch (genderAggrLower) {
+            case 'all_males':
+              return 'All credited artists are male.';
+            case 'all_females':
+              return 'All credited artists are female.';
+            case 'all_non_binary':
+              return 'All credited artists are non-binary.';
+            case 'mixed':
+              return 'The credited artists include different genders.';
+            default:
+              return 'The credited artists have a mix of genders.';
+          }
+        }
+
+        // Single-artist or no aggregated metadata: use existing logic based on guessed gender and status.
+        const guessedGenderValue =
+          clueObj._guessedGender || clueObj.given || clueObj.value || clueObj.gender || guessedGender || '';
         const genderLower = guessedGenderValue.toLowerCase();
-        
-        // Determine if this is a solo artist (male/female) or a group (all_male, all_female, mixed)
-        const isSoloArtist = genderLower === 'male' || genderLower === 'female' || genderLower === 'non_binary' || genderLower === 'non-binary';
-        
+
+        const isSoloArtist =
+          genderLower === 'male' ||
+          genderLower === 'female' ||
+          genderLower === 'non_binary' ||
+          genderLower === 'non-binary';
+
         if (isSoloArtist) {
-          // For solo artists: "The secret artist is/isn't male/female"
           const genderDisplay = formatGenderForTooltip(guessedGenderValue);
           if (clueObj.status === 'correct') {
             return (
@@ -892,22 +938,21 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guess
               The secret artist <strong>isn't</strong> {genderDisplay}
             </>
           );
-        } else {
-          // For groups: "The secret artist is/isn't an all-male/all-female/mixed-gender group"
-          const genderForTooltip = formatGenderForTooltip(guessedGenderValue);
-          if (clueObj.status === 'correct') {
-            return (
-              <>
-                The secret artist <strong>is</strong> an {genderForTooltip} group
-              </>
-            );
-          }
+        }
+
+        const genderForTooltip = formatGenderForTooltip(guessedGenderValue);
+        if (clueObj.status === 'correct') {
           return (
             <>
-              The secret artist <strong>isn't</strong> an {genderForTooltip} group
+              The secret artist <strong>is</strong> an {genderForTooltip} group
             </>
           );
         }
+        return (
+          <>
+            The secret artist <strong>isn't</strong> an {genderForTooltip} group
+          </>
+        );
       }
       default:
         return '';
@@ -1185,10 +1230,12 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guess
           // Gender icon - using ⚧ symbol
           const genderIcon = <span className="gender-icon">⚧</span>;
           
-          // Pass the guessed gender to help text function
+          // Pass the guessed gender and aggregated artist type/gender (when present) to help text function
           const helpText = getHelpText('gender', { 
-            ...genderObj, 
-            _guessedGender: guessedGenderValue
+            ...genderObj,
+            _guessedGender: guessedGenderValue,
+            artist_type_aggr: artistTypeObj?.artist_type_aggr ?? genderObj.artist_type_aggr,
+            artist_gender_aggr: genderObj.artist_gender_aggr
           });
           
           return (

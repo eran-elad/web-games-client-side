@@ -8,12 +8,13 @@ import ShareResult from '../ShareResult/ShareResult';
 import GameTopBar from '../GameTopBar/GameTopBar';
 import LeaderboardsOverlay from '../Leaderboards/LeaderboardsOverlay';
 import NewDailyPuzzleBanner from '../NewDailyPuzzleBanner/NewDailyPuzzleBanner';
+import ExternalPlatformLinks from '../ExternalPlatformLinks/ExternalPlatformLinks';
 import { MUSIC_GAME_ID } from '../../config/gameConfig';
 import { getApiUrl } from '../../config/apiConfig';
 import { DEFAULT_CLUE_THRESHOLDS } from '../../config/clueThresholds';
 import { getPlayerId, setPlayerId, setSessionId, setGameId, clearSession, getPuzzleId, getLocalDate, getDistanceUnit, isViewingArchive, clearPuzzleId, clearLocalDate, clearViewingArchive, setPuzzleId, setLocalDate } from '../../utils/storage';
 import { initGame, submitGuess, giveUp, activateLifeline } from '../../services/gameApi';
-import type { GameInitResponse, ActivateLifelineResponse } from '../../services/gameApi';
+import type { GameInitResponse, ActivateLifelineResponse, ExternalLink } from '../../services/gameApi';
 import './ActiveGame.css';
 
 interface Song {
@@ -74,6 +75,10 @@ interface SessionState {
     bpm_details?: string | null;
     artist_type?: string;
     gender?: string;
+    /** Aggregated artist type for multi-artist support (e.g. Person, Group, Collaboration, Person (feat.), Group (feat.)) */
+    artist_type_aggr?: string;
+    /** Aggregated artist gender for multi-artist support (e.g. male, female, non_binary, all_males, all_females, all_non_binary, mixed) */
+    artist_gender_aggr?: string;
   };
 }
 
@@ -141,6 +146,7 @@ const formatGenderValue = (gender?: string): string => {
     'all_males': 'All Male',
     'all_female': 'All Female',
     'all_females': 'All Female',
+    'all_non_binary': 'All Non-Binary',
     'mixed': 'Mixed',
   };
   return genderMap[gender.toLowerCase()] || gender;
@@ -258,6 +264,7 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
   const [bannerDismissed, setBannerDismissed] = useState<boolean>(false); // Track dismissal state
   const [showLeaderboardsOverlay, setShowLeaderboardsOverlay] = useState<boolean>(false);
   const [seoIntroExpanded, setSeoIntroExpanded] = useState<boolean>(false);
+  const [externalLinks, setExternalLinks] = useState<ExternalLink[] | null>(null);
   const initInProgressRef = useRef<boolean>(false);
 
   // Listen for distance unit changes from settings
@@ -401,6 +408,11 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
           },
           secret_song: response.session.secret_song,
         });
+        if (response.session.state.is_over && response.external_links?.length) {
+          setExternalLinks(response.external_links);
+        } else {
+          setExternalLinks(null);
+        }
         
         // Check if lifeline is already activated
         // The server may not return lifeline_active in init response, so check history
@@ -646,6 +658,11 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
         secret_song: response.session.secret_song,
       };
       setSessionState(newSessionState);
+      if (newSessionState.is_over && response.external_links?.length) {
+        setExternalLinks(response.external_links);
+      } else if (newSessionState.is_over) {
+        setExternalLinks(null);
+      }
       
       // Capture new_daily_puzzle_available from response
       if (response.new_daily_puzzle_available !== undefined) {
@@ -865,6 +882,11 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
         secret_song: response.session.secret_song,
       };
       setSessionState(newSessionState);
+      if (newSessionState.is_over && response.external_links?.length) {
+        setExternalLinks(response.external_links);
+      } else if (newSessionState.is_over) {
+        setExternalLinks(null);
+      }
       
       // Capture new_daily_puzzle_available from response
       if (response.new_daily_puzzle_available !== undefined) {
@@ -1098,6 +1120,9 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
                         isWon={true}
                         puzzleDate={puzzleDate || undefined}
                       />
+                      {externalLinks && externalLinks.length > 0 && (
+                        <ExternalPlatformLinks links={externalLinks} sessionId={sessionId ?? undefined} />
+                      )}
                       {onShowFeedback && (
                         <button
                           type="button"
@@ -1137,6 +1162,9 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
                         isWon={false}
                         puzzleDate={puzzleDate || undefined}
                       />
+                      {externalLinks && externalLinks.length > 0 && (
+                        <ExternalPlatformLinks links={externalLinks} sessionId={sessionId ?? undefined} />
+                      )}
                       {onShowFeedback && (
                         <button
                           type="button"
@@ -1176,6 +1204,9 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
                         isWon={false}
                         puzzleDate={puzzleDate || undefined}
                       />
+                      {externalLinks && externalLinks.length > 0 && (
+                        <ExternalPlatformLinks links={externalLinks} sessionId={sessionId ?? undefined} />
+                      )}
                       {onShowFeedback && (
                         <button
                           type="button"

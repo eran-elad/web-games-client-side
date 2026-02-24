@@ -55,7 +55,7 @@ export const HELP_CONTENT = {
     },
     {
       title: "🎤 Artist & 💿 Album",
-      content: "These bonus clues only appear when you guess correctly! These clues are normally hidden and only show if you get the right artist or album. The artist clue also appears if all other clues seemes correct or close.",
+      content: "These bonus clues only appear when you guess correctly! These clues are normally hidden and only show if you get the right artist or album. The artist clue also appears if all other clues seemes correct or close. For songs with multiple credited artists or featured artists, the game uses combined artist and gender information directly from the server, and the tooltips explain whether it is a solo performer, group, collaboration, or a \"feat.\" combination.",
       icon: "🎤"
     },
     {
