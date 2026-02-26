@@ -15,7 +15,6 @@ import { initGame, submitGuess, giveUp, activateLifeline } from '../../services/
 import type { GameInitResponse, ActivateLifelineResponse, ExternalLink } from '../../services/gameApi';
 import './ActiveGame.css';
 import GameOverPanel from "../GameOverPanel/GameOverPanel";
-import { getCountryName, formatGenderValue } from '../../utils/formatters';
 
 
 interface Song {
