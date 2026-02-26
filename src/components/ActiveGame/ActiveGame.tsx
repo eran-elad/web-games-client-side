@@ -97,65 +97,6 @@ const formatDuration = (seconds: number): string => {
 };
 
 
-// Component to display secret song details
-const SecretSongDetails = ({ secretSong }: { secretSong: NonNullable<SessionState['secret_song']> }) => {
-  return (
-    <div className="secret-song-details">
-      <div className="secret-song-details-title">Details</div>
-      <div className="secret-song-info-grid">
-        <div className="secret-song-info-item">
-          <span className="secret-song-label">Title:</span>
-          <span className="secret-song-value">{secretSong.title}</span>
-        </div>
-        <div className="secret-song-info-item">
-          <span className="secret-song-label">Artist:</span>
-          <span className="secret-song-value">{secretSong.artist}</span>
-        </div>
-        {secretSong.album && (
-          <div className="secret-song-info-item">
-            <span className="secret-song-label">Album:</span>
-            <span className="secret-song-value">{secretSong.album}</span>
-          </div>
-        )}
-        <div className="secret-song-info-item">
-          <span className="secret-song-label">Year:</span>
-          <span className="secret-song-value">{secretSong.year}</span>
-        </div>
-        <div className="secret-song-info-item">
-          <span className="secret-song-label">Country:</span>
-          <span className="secret-song-value">{getCountryName(secretSong.country)}</span>
-        </div>
-        <div className="secret-song-info-item">
-          <span className="secret-song-label">Genre:</span>
-          <span className="secret-song-value">{secretSong.genre}</span>
-        </div>
-        <div className="secret-song-info-item">
-          <span className="secret-song-label">Duration:</span>
-          <span className="secret-song-value">{formatDuration(secretSong.duration_sec)}</span>
-        </div>
-        {secretSong.bpm != null && secretSong.bpm !== undefined && (
-          <div className="secret-song-info-item">
-            <span className="secret-song-label">BPM:</span>
-            <span className="secret-song-value">{secretSong.bpm}</span>
-          </div>
-        )}
-        {secretSong.artist_type && (
-          <div className="secret-song-info-item">
-            <span className="secret-song-label">Type:</span>
-            <span className="secret-song-value">{secretSong.artist_type === 'Person' ? 'Solo' : secretSong.artist_type}</span>
-          </div>
-        )}
-        {secretSong.gender && (
-          <div className="secret-song-info-item">
-            <span className="secret-song-label">Gender:</span>
-            <span className="secret-song-value">{formatGenderValue(secretSong.gender)}</span>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
 interface ActiveGameProps {
   onShowStatistics?: () => void;
   userClosedStats?: boolean; // True if user manually closed statistics
