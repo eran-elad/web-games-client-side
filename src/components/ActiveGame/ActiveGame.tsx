@@ -89,13 +89,6 @@ const getTodayLocalDateStr = (): string => {
   return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`;
 };
 
-// Helper function to format duration
-const formatDuration = (seconds: number): string => {
-  const mins = Math.floor(seconds / 60);
-  const secs = seconds % 60;
-  return `${mins}:${secs.toString().padStart(2, '0')}`;
-};
-
 
 interface ActiveGameProps {
   onShowStatistics?: () => void;
