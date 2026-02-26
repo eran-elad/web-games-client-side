@@ -303,11 +303,37 @@
   flex-shrink: 0;
 }
 
+.clue-icon-img {
+  display: inline-block;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
 .year-icon,
 .duration-icon,
-.country-icon {
+.country-icon,
+.genre-icon,
+.gender-icon,
+.artist-icon,
+.album-icon {
   width: 14px;
   height: 14px;
+  color: inherit;
+}
+
+.tempo-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.year-icon,
+.duration-icon,
+.country-icon,
+.genre-icon,
+.gender-icon,
+.artist-icon,
+.album-icon,
+.tempo-icon {
   color: inherit;
   vertical-align: middle;
   flex-shrink: 0;

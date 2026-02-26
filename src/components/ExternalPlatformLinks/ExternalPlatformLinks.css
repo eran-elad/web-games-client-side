@@ -1,72 +1,107 @@
+/* ExternalPlatformLinks.css */
+
 .external-platform-links {
   margin-top: 1rem;
-  padding: 0.9rem 1.15rem;
-  background: rgba(255, 255, 255, 0.06);
-  border: 2px solid rgba(255, 255, 255, 0.35);
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
 }
 
+/* ALWAYS 4 in a row, spaced */
 .external-platform-links-list {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  align-items: stretch;
+}
+
+/* Each platform is a square "prestige" tile */
+.external-platform-link {
+  aspect-ratio: 1 / 1;              /* <- makes it square */
+  width: 100%;
   display: flex;
-  flex-wrap: nowrap;
-  gap: 0.6rem 0.85rem;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-}
+  gap: 8px;
 
-.external-platform-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.5rem 0.75rem;
-  border-radius: 8px;
+  padding: 10px;                    /* <- less space between icon and frame */
+  border-radius: 16px;
+
   text-decoration: none;
   color: inherit;
-  font-size: 0.95rem;
-  transition: background-color 0.15s ease, opacity 0.15s ease;
+
+  background: rgba(255, 255, 255, 0.40);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  box-shadow:
+    0 10px 28px rgba(0, 0, 0, 0.10),
+    inset 0 1px 0 rgba(255, 255, 255, 0.60);
+
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
 }
 
 .external-platform-link:hover {
-  text-decoration: none;
-  opacity: 0.9;
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.50);
+  box-shadow:
+    0 14px 34px rgba(0, 0, 0, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.70);
 }
 
-.external-platform-link--known {
-  padding: 0.55rem 0.65rem;
-  background: rgba(255, 255, 255, 0.12);
+.external-platform-link:active {
+  transform: translateY(0px);
 }
 
-.external-platform-link--known:hover {
-  background: rgba(255, 255, 255, 0.2);
-}
-
-.external-platform-link--generic {
-  background: rgba(255, 255, 255, 0.06);
-  font-size: 0.875rem;
-}
-
-.external-platform-link--generic:hover {
-  background: rgba(255, 255, 255, 0.1);
-}
-
+/* icon wrapper */
 .external-platform-link-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
 }
 
+/* slightly larger icon, tighter feel */
 .external-platform-link-img {
+  width: 34px;
+  height: 34px;
   display: block;
-  width: 26px;
-  height: 26px;
 }
 
-.external-platform-link--generic .external-platform-link-icon {
-  opacity: 0.9;
-}
-
+/* label under icon (like the mock) */
 .external-platform-link-label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  opacity: 0.95;
   white-space: nowrap;
+}
+
+/* If you still have these classes in markup, keep them harmless */
+.external-platform-link--known,
+.external-platform-link--generic {
+  background: rgba(255, 255, 255, 0.40);
+}
+
+/* ------------- Dark Mode ------------- */
+@media (prefers-color-scheme: dark) {
+  .external-platform-links {
+    background: transparent;   /* <-- removes the grey panel */
+    border: none;
+    box-shadow: none;
+    padding: 0;  
+  }
+
+  /* keep spacing like light mode */
+  .external-platform-links-list {
+    gap: 0.85rem;
+  }
+  .external-platform-link--known {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+  }
+
+  .external-platform-link--known:hover {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.22);
+  }
 }

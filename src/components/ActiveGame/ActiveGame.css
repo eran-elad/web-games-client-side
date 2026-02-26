@@ -1,3 +1,7 @@
+/*
+  
+*/
+
 .active-game-container {
   display: flex;
   flex-direction: column;
@@ -13,10 +17,12 @@
 }
 
 .active-game-content {
+  --content-pad: 3rem;
+
   text-align: center;
   max-width: 600px;
   width: 100%;
-  padding: 3rem;
+  padding: var(--content-pad);
   background: rgba(255, 255, 255, 0.95);
   border-radius: 20px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
@@ -558,125 +564,19 @@ a.puzzle-footer-link {
 .game-status-message.won {
   background: #d4edda;
   color: #155724;
-  border: 1px solid #c3e6cb;
+  /* border: 1px solid #c3e6cb; */
+  border: none;
+  box-shadow: none;
 }
 
 .game-status-message.lost {
   background: #f8d7da;
   color: #721c24;
-  border: 1px solid #f5c6cb;
+  /* border: 1px solid #f5c6cb; */
+  border: none;
+  box-shadow: none;
 }
 
-.solution-display {
-  margin-top: 0.75rem;
-  padding-top: 0.75rem;
-  font-size: 1rem;
-  font-weight: 500;
-}
-
-.secret-song-details {
-  margin-top: 0.75rem;
-  padding: 0.5rem;
-  background: rgba(255, 255, 255, 0.4);
-  border-radius: 6px;
-  border: 1px solid rgba(102, 126, 234, 0.1);
-}
-
-.secret-song-details-title {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #666;
-  margin: 0 0 0.4rem 0;
-  text-align: left;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-}
-
-.secret-song-info-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: 0.35rem;
-  margin-top: 0.35rem;
-}
-
-.secret-song-info-item {
-  display: flex;
-  flex-direction: row;
-  align-items: baseline;
-  gap: 0.4rem;
-  padding: 0.25rem 0.4rem;
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 3px;
-}
-
-.secret-song-label {
-  font-size: 0.7rem;
-  font-weight: 500;
-  color: #888;
-  white-space: nowrap;
-}
-
-.secret-song-value {
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: #333;
-  flex: 1;
-  text-align: left;
-}
-
-.game-over-actions {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.75rem;
-  margin-top: 1rem;
-}
-
-.game-over-actions .share-result-button {
-  margin-top: 0;
-}
-
-.feedback-result-button {
-  padding: 0.5rem 1rem;
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: #667eea;
-  background: rgba(102, 126, 234, 0.15);
-  border: 1px solid rgba(102, 126, 234, 0.4);
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.feedback-result-button:hover {
-  background: rgba(102, 126, 234, 0.25);
-  border-color: #667eea;
-}
-
-.game-status-message .share-result-button {
-  margin-top: 0;
-  margin-left: auto;
-  margin-right: auto;
-  display: block;
-}
-
-.game-status-message.won .solution-display {
-  border-top: 1px solid rgba(21, 87, 36, 0.2);
-}
-
-.game-status-message.won .solution-display strong {
-  font-weight: 700;
-  color: #155724;
-}
-
-.game-status-message.lost .solution-display {
-  border-top: 1px solid rgba(114, 28, 36, 0.2);
-}
-
-.game-status-message.lost .solution-display strong {
-  font-weight: 700;
-  color: #721c24;
-}
 
 .guesses-container {
   margin-top: 2rem;
@@ -753,6 +653,18 @@ a.puzzle-footer-link {
   .seo-intro-text {
     color: #777;
   }
+
+  .game-status-message.won,
+  .game-status-message.lost {
+    border: none;            /* <-- removes the visible frame */
+    box-shadow: none;        /* optional: keep clean like light */
+  }
+
+  /* optional: slightly tune the green so it doesn’t look “muddy” in dark mode */
+  .game-status-message.won {
+    background: rgba(212, 237, 218, 0.22);
+    color: #dff5e7;
+  }
 }
 
 @media (max-width: 768px) {
@@ -765,7 +677,8 @@ a.puzzle-footer-link {
   }
   
   .active-game-content {
-    padding: 1.5rem;
+    --content-pad: 1.5rem;
+    padding: var(--content-pad);
     max-width: 100%;
   }
   

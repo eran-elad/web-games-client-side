@@ -1004,9 +1004,7 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guess
           return (
             <div className={`clue-tag clue-status-${yearStatus}`}>
               <span className="clue-label year-icon-wrapper">
-                <svg className="year-icon" viewBox="0 0 24 24" fill="currentColor" width="14" height="14">
-                  <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2zM7 12h2v2H7zm4 0h2v2h-2zm4 0h2v2h-2z"/>
-                </svg>
+                <img src={CLUE_DEFINITIONS.year.iconFile} alt="" className="clue-icon-img year-icon" width={14} height={14} />
               </span>
               {isExactMatch ? (
                 <>
@@ -1078,7 +1076,9 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guess
             
             return (
               <div className={`clue-tag clue-status-${genreStatus}`}>
-                <span className="clue-label genre-icon-wrapper">🎵</span>
+                <span className="clue-label genre-icon-wrapper">
+                  <img src={CLUE_DEFINITIONS.genre.iconFile} alt="" className="clue-icon-img genre-icon" width={14} height={14} />
+                </span>
                 {genreName && <span className="clue-value">{genreName}</span>}
                 <ClueTooltip helpText={getHelpText('genre', genreObj)} clueType="genre" />
               </div>
@@ -1112,9 +1112,7 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guess
           return (
             <div className={`clue-tag clue-status-${durationStatus}`}>
               <span className="clue-label duration-icon-wrapper">
-                <svg className="duration-icon" viewBox="0 0 24 24" fill="currentColor" width="14" height="14">
-                  <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/>
-                </svg>
+                <img src={CLUE_DEFINITIONS.duration.iconFile} alt="" className="clue-icon-img duration-icon" width={14} height={14} />
               </span>
               <span className="clue-value">{duration}</span>
               <ClueTooltip helpText={getHelpText('duration', durationObj)} clueType="duration" />
@@ -1127,9 +1125,7 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guess
           return (
             <div className={`clue-tag clue-status-${tempoStatus} tempo-clue`}>
               <span className="clue-label tempo-icon-wrapper">
-                <svg className="tempo-icon" viewBox={CLUE_DEFINITIONS.tempo.svgViewBox ?? '0 0 24 24'} fill="currentColor" width="18" height="18">
-                  <path d={CLUE_DEFINITIONS.tempo.svgPath} />
-                </svg>
+                <img src={CLUE_DEFINITIONS.tempo.iconFile} alt="" className="clue-icon-img tempo-icon" width={18} height={18} />
               </span>
               <span className="clue-value">{tempoDisplay}</span>
               <ClueTooltip helpText={getHelpText('tempo', tempoObj)} clueType="tempo" />
@@ -1160,17 +1156,11 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guess
             status: artistTypeObj.status
           });
           
-          // Default to person icon if we can't determine, or show appropriate icon
-          const iconSvg = isGroup ? (
-            // Multiple persons icon (Group)
-            <svg className="artist-type-icon" viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
-              <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
-            </svg>
-          ) : (
-            // Single person icon (Person/Solo)
-            <svg className="artist-type-icon" viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
-              <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-            </svg>
+          const artistTypeIconFile = isGroup && CLUE_DEFINITIONS.artist_type.iconFileGroup
+            ? CLUE_DEFINITIONS.artist_type.iconFileGroup
+            : CLUE_DEFINITIONS.artist_type.iconFile;
+          const iconSvg = (
+            <img src={artistTypeIconFile} alt="" className="clue-icon-img artist-type-icon" width={16} height={16} />
           );
           
           // Format the display text - convert "Person" to "Solo" for better UX
@@ -1227,8 +1217,9 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guess
           const guessedGenderValue = guessedGender || genderObj?.given || genderObj?.value || genderObj?.gender || '';
           const formattedGender = formatGenderValue(guessedGenderValue);
           
-          // Gender icon - using ⚧ symbol
-          const genderIcon = <span className="gender-icon">⚧</span>;
+          const genderIcon = (
+            <img src={CLUE_DEFINITIONS.gender.iconFile} alt="" className="clue-icon-img gender-icon" width={14} height={14} />
+          );
           
           // Pass the guessed gender and aggregated artist type/gender (when present) to help text function
           const helpText = getHelpText('gender', { 
@@ -1251,7 +1242,10 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guess
         {/* Artist clue - show when correct, or when showArtistClue (near-match or once revealed) */}
         {((artistObj && artistObj.status === 'correct') || showArtistClue) && (
           <div className={`clue-tag clue-status-${artistObj?.status === 'correct' ? 'correct' : 'incorrect'}`}>
-            <span className="clue-label artist-icon-wrapper">{CLUE_DEFINITIONS.artist.shareEmoji} Artist</span>
+            <span className="clue-label artist-icon-wrapper">
+              <img src={CLUE_DEFINITIONS.artist.iconFile} alt="" className="clue-icon-img artist-icon" width={14} height={14} />
+              {' '}Artist
+            </span>
             {artistObj?.status === 'correct' ? (
               <ClueTooltip helpText={<>The secret song&apos;s artist <strong>is</strong> {artist}.</>} clueType="artist" />
             ) : (
@@ -1265,7 +1259,10 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guess
         {/* Album clue - only show when correct */}
         {albumObj && albumObj.status === 'correct' && (
           <div className="clue-tag clue-status-correct">
-            <span className="clue-label album-icon-wrapper">{CLUE_DEFINITIONS.album.shareEmoji} Album</span>
+            <span className="clue-label album-icon-wrapper">
+              <img src={CLUE_DEFINITIONS.album.iconFile} alt="" className="clue-icon-img album-icon" width={14} height={14} />
+              {' '}Album
+            </span>
             <ClueTooltip helpText={getHelpText('album', albumObj)} clueType="album" />
           </div>
         )}

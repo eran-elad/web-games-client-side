@@ -4,11 +4,9 @@ import PageMeta from '../PageMeta/PageMeta';
 import SongAutocomplete from '../SongAutocomplete/SongAutocomplete';
 import GuessBox from '../GuessBox/GuessBox';
 import WinConfetti from '../WinAnimation/WinConfetti';
-import ShareResult from '../ShareResult/ShareResult';
 import GameTopBar from '../GameTopBar/GameTopBar';
 import LeaderboardsOverlay from '../Leaderboards/LeaderboardsOverlay';
 import NewDailyPuzzleBanner from '../NewDailyPuzzleBanner/NewDailyPuzzleBanner';
-import ExternalPlatformLinks from '../ExternalPlatformLinks/ExternalPlatformLinks';
 import { MUSIC_GAME_ID } from '../../config/gameConfig';
 import { getApiUrl } from '../../config/apiConfig';
 import { DEFAULT_CLUE_THRESHOLDS } from '../../config/clueThresholds';
@@ -16,6 +14,9 @@ import { getPlayerId, setPlayerId, setSessionId, setGameId, clearSession, getPuz
 import { initGame, submitGuess, giveUp, activateLifeline } from '../../services/gameApi';
 import type { GameInitResponse, ActivateLifelineResponse, ExternalLink } from '../../services/gameApi';
 import './ActiveGame.css';
+import GameOverPanel from "../GameOverPanel/GameOverPanel";
+import { getCountryName, formatGenderValue } from '../../utils/formatters';
+
 
 interface Song {
   id: string;
@@ -95,62 +96,6 @@ const formatDuration = (seconds: number): string => {
   return `${mins}:${secs.toString().padStart(2, '0')}`;
 };
 
-// Helper function to format country code to country name
-const getCountryName = (countryCode: string): string => {
-  // Simple mapping for common codes, can be expanded
-  const countryMap: { [key: string]: string } = {
-    'US': 'United States',
-    'GB': 'United Kingdom',
-    'CA': 'Canada',
-    'AU': 'Australia',
-    'FR': 'France',
-    'DE': 'Germany',
-    'IT': 'Italy',
-    'ES': 'Spain',
-    'JP': 'Japan',
-    'KR': 'South Korea',
-    'BR': 'Brazil',
-    'MX': 'Mexico',
-    'AR': 'Argentina',
-    'SE': 'Sweden',
-    'NO': 'Norway',
-    'DK': 'Denmark',
-    'FI': 'Finland',
-    'NL': 'Netherlands',
-    'BE': 'Belgium',
-    'CH': 'Switzerland',
-    'AT': 'Austria',
-    'IE': 'Ireland',
-    'NZ': 'New Zealand',
-    'ZA': 'South Africa',
-    'IN': 'India',
-    'CN': 'China',
-    'RU': 'Russia',
-    'PL': 'Poland',
-    'TR': 'Turkey',
-    'GR': 'Greece',
-    'PT': 'Portugal',
-  };
-  return countryMap[countryCode] || countryCode;
-};
-
-// Helper function to format gender value
-const formatGenderValue = (gender?: string): string => {
-  if (!gender) return 'N/A';
-  const genderMap: { [key: string]: string } = {
-    'male': 'Male',
-    'female': 'Female',
-    'non_binary': 'Non-Binary',
-    'non-binary': 'Non-Binary',
-    'all_male': 'All Male',
-    'all_males': 'All Male',
-    'all_female': 'All Female',
-    'all_females': 'All Female',
-    'all_non_binary': 'All Non-Binary',
-    'mixed': 'Mixed',
-  };
-  return genderMap[gender.toLowerCase()] || gender;
-};
 
 // Component to display secret song details
 const SecretSongDetails = ({ secretSong }: { secretSong: NonNullable<SessionState['secret_song']> }) => {
@@ -1100,137 +1045,24 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
           Guessed {guessedCount} / {maxGuesses}
           {sessionState && ` (${guessesRemaining} remaining)`}
         </p>
+        
         {isGameOver && gameStatus && (
-          <div className={`game-status-message ${gameStatus === 'won' ? 'won' : 'lost'}`}>
-            {gameStatus === 'won' ? (
-              <>
-                <div>🎉 Congratulations! You guessed it!</div>
-                {sessionState?.secret_song && (
-                  <>
-                    <div className="solution-display">
-                      The secret song was: <strong>{sessionState.secret_song.display || 
-                        `${sessionState.secret_song.title || ''} - ${sessionState.secret_song.artist || ''}`.trim() || 
-                        'Unknown'}</strong>
-                    </div>
-                    <div className="game-over-actions">
-                      <ShareResult 
-                        guesses={guesses}
-                        guessCount={guessedCount}
-                        maxGuesses={maxGuesses}
-                        isWon={true}
-                        puzzleDate={puzzleDate || undefined}
-                      />
-                      {externalLinks && externalLinks.length > 0 && (
-                        <ExternalPlatformLinks links={externalLinks} sessionId={sessionId ?? undefined} />
-                      )}
-                      {onShowFeedback && (
-                        <button
-                          type="button"
-                          className="feedback-result-button"
-                          onClick={onShowFeedback}
-                        >
-                          💬 Send Feedback
-                        </button>
-                      )}
-                    </div>
-                    {/* Show banner after puzzle ends if new daily puzzle is available */}
-                    {shouldShowBanner() && (
-                      <NewDailyPuzzleBanner
-                        onSwitchToDaily={handleSwitchToDailyPuzzle}
-                        onDismiss={handleDismissBanner}
-                      />
-                    )}
-                    <SecretSongDetails secretSong={sessionState.secret_song} />
-                  </>
-                )}
-              </>
-            ) : gameStatus === 'quit' ? (
-              <>
-                <div>😔 You gave up. Better luck next time!</div>
-                {sessionState?.secret_song && (
-                  <>
-                    <div className="solution-display">
-                      The secret song was: <strong>{sessionState.secret_song.display || 
-                        `${sessionState.secret_song.title || ''} - ${sessionState.secret_song.artist || ''}`.trim() || 
-                        'Unknown'}</strong>
-                    </div>
-                    <div className="game-over-actions">
-                      <ShareResult 
-                        guesses={guesses}
-                        guessCount={guessedCount}
-                        maxGuesses={maxGuesses}
-                        isWon={false}
-                        puzzleDate={puzzleDate || undefined}
-                      />
-                      {externalLinks && externalLinks.length > 0 && (
-                        <ExternalPlatformLinks links={externalLinks} sessionId={sessionId ?? undefined} />
-                      )}
-                      {onShowFeedback && (
-                        <button
-                          type="button"
-                          className="feedback-result-button"
-                          onClick={onShowFeedback}
-                        >
-                          💬 Send Feedback
-                        </button>
-                      )}
-                    </div>
-                    {/* Show banner after puzzle ends if new daily puzzle is available */}
-                    {shouldShowBanner() && (
-                      <NewDailyPuzzleBanner
-                        onSwitchToDaily={handleSwitchToDailyPuzzle}
-                        onDismiss={handleDismissBanner}
-                      />
-                    )}
-                    <SecretSongDetails secretSong={sessionState.secret_song} />
-                  </>
-                )}
-              </>
-            ) : (
-              <>
-                <div>😔 Game Over. Better luck next time!</div>
-                {sessionState?.secret_song && (
-                  <>
-                    <div className="solution-display">
-                      The secret song was: <strong>{sessionState.secret_song.display || 
-                        `${sessionState.secret_song.title || ''} - ${sessionState.secret_song.artist || ''}`.trim() || 
-                        'Unknown'}</strong>
-                    </div>
-                    <div className="game-over-actions">
-                      <ShareResult 
-                        guesses={guesses}
-                        guessCount={guessedCount}
-                        maxGuesses={maxGuesses}
-                        isWon={false}
-                        puzzleDate={puzzleDate || undefined}
-                      />
-                      {externalLinks && externalLinks.length > 0 && (
-                        <ExternalPlatformLinks links={externalLinks} sessionId={sessionId ?? undefined} />
-                      )}
-                      {onShowFeedback && (
-                        <button
-                          type="button"
-                          className="feedback-result-button"
-                          onClick={onShowFeedback}
-                        >
-                          💬 Send Feedback
-                        </button>
-                      )}
-                    </div>
-                    {/* Show banner after puzzle ends if new daily puzzle is available */}
-                    {shouldShowBanner() && (
-                      <NewDailyPuzzleBanner
-                        onSwitchToDaily={handleSwitchToDailyPuzzle}
-                        onDismiss={handleDismissBanner}
-                      />
-                    )}
-                    <SecretSongDetails secretSong={sessionState.secret_song} />
-                  </>
-                )}
-              </>
-            )}
-          </div>
+          <GameOverPanel
+            status={gameStatus as any}
+            secretSong={sessionState?.secret_song}
+            guesses={guesses}
+            guessedCount={guessedCount}
+            maxGuesses={maxGuesses}
+            puzzleDate={puzzleDate}
+            externalLinks={externalLinks}
+            sessionId={sessionId}
+            onShowFeedback={onShowFeedback}
+            shouldShowBanner={shouldShowBanner()}
+            onSwitchToDaily={handleSwitchToDailyPuzzle}
+            onDismissBanner={handleDismissBanner}
+          />
         )}
+
         {instructionText && (
           <p className="instruction-text">{instructionText}</p>
         )}
