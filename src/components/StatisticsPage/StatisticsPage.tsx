@@ -273,20 +273,22 @@ const StatisticsPage = ({ onClose }: StatisticsPageProps) => {
             </section>
 
             {/* Wins by Guess Count */}
-            {Object.keys(stats.stats.wins_by_guess_count).length > 0 && (
-              <section className="statistics-section">
-                <h2 className="section-title">Wins by Guess Count</h2>
-                <div className="wins-distribution">
-                  {Object.entries(stats.stats.wins_by_guess_count)
-                    .sort(([a], [b]) => Number(a) - Number(b))
-                    .map(([guessCount, wins]) => (
+            {Object.keys(stats.stats.wins_by_guess_count).length > 0 && (() => {
+              const entries = Object.entries(stats.stats.wins_by_guess_count)
+                .sort(([a], [b]) => Number(a) - Number(b));
+              const maxWins = Math.max(...entries.map(([, w]) => w), 1);
+              return (
+                <section className="statistics-section">
+                  <h2 className="section-title">Wins by Guess Count</h2>
+                  <div className="wins-distribution">
+                    {entries.map(([guessCount, wins]) => (
                       <div key={guessCount} className="distribution-item">
                         <div className="distribution-label">{guessCount} guess{wins !== 1 ? 'es' : ''}</div>
                         <div className="distribution-bar-container">
                           <div
                             className="distribution-bar"
                             style={{
-                              width: `${stats.stats.total_wins > 0 ? (wins / stats.stats.total_wins) * 100 : 0}%`,
+                              width: `${maxWins > 0 ? (wins / maxWins) * 100 : 0}%`,
                               maxWidth: '100%'
                             }}
                           />
@@ -294,9 +296,10 @@ const StatisticsPage = ({ onClose }: StatisticsPageProps) => {
                         <div className="distribution-value">{wins}</div>
                       </div>
                     ))}
-                </div>
-              </section>
-            )}
+                  </div>
+                </section>
+              );
+            })()}
 
             {/* History */}
             <section className="statistics-section">

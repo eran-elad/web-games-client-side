@@ -145,7 +145,7 @@ const SecretSongDetails = ({ secretSong }: { secretSong: SecretSong }) => {
 
             {secretSong.artist_type && (
                 <DetailRow
-                icon={secretSong.artist_type === "Person" ? "artist" : "group"}  // adjust to your actual filenames
+                icon={secretSong.artist_type === "Person" ? "artist-type-person" : "artist-type-group"}
                 label="Type:"
                 value={secretSong.artist_type === "Person" ? "Solo" : secretSong.artist_type}
                 />
