@@ -963,7 +963,7 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
             {isDailyPuzzle ? (
               'Daily Puzzle'
             ) : (
-              `Archived Puzzle: ${new Date(puzzleDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
+              `Puzzle: ${new Date(puzzleDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
             )}
           </h1>
         </div>
@@ -974,10 +974,12 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
             onDismiss={handleDismissBanner}
           />
         )}
-        <p className="guess-counter">
-          Guessed {guessedCount} / {maxGuesses}
-          {sessionState && ` (${guessesRemaining} remaining)`}
-        </p>
+        {!isGameOver && (
+          <p className="guess-counter">
+            Guessed {guessedCount} / {maxGuesses}
+            {sessionState && ` (${guessesRemaining} remaining)`}
+          </p>
+        )}
         
         {isGameOver && gameStatus && (
           <GameOverPanel
@@ -996,9 +998,10 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
           />
         )}
 
-        {instructionText && (
+        {!isGameOver && instructionText && (
           <p className="instruction-text">{instructionText}</p>
         )}
+        {!isGameOver && (
         <div className="search-container">
           <div className="search-box-wrapper">
             <SongAutocomplete
@@ -1064,6 +1067,7 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
             </div>
           </div>
         </div>
+        )}
         {error && (
           <div className="error-message">{error}</div>
         )}

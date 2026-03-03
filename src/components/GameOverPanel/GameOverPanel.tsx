@@ -153,9 +153,11 @@ const SecretSongDetails = ({ secretSong }: { secretSong: SecretSong }) => {
 
             {secretSong.gender && (
                 <DetailRow
+                k="gender"
                 icon="gender"
                 label="Gender:"
                 value={formatGenderValue(secretSong.gender)}
+                expandable
                 />
             )}
             </div>
