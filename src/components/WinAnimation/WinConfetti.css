@@ -14,33 +14,47 @@
   top: 50%;
   left: 50%;
   font-size: 2rem;
-  color: #667eea;
+  color: var(--color, #667eea);
   font-weight: bold;
-  animation: confettiFall 4s ease-out forwards;
-  animation-delay: var(--delay);
   transform-origin: center;
   opacity: 0;
+  animation: confettiFall 6.5s ease-out forwards;
+  animation-delay: var(--delay);
+  /* Glossy glow */
+  text-shadow:
+    0 0 8px rgba(255, 255, 255, 0.6),
+    0 0 16px var(--color),
+    0 2px 4px rgba(0, 0, 0, 0.2);
+  filter: drop-shadow(0 0 6px var(--color));
 }
 
 @keyframes confettiFall {
   0% {
-    opacity: 1;
+    opacity: 0;
     transform: translate(-50%, -50%) scale(0) rotate(0deg);
   }
-  10% {
+  8% {
     opacity: 1;
-    transform: translate(-50%, -50%) scale(1) rotate(calc(var(--rotation) * 0.3));
+    transform: translate(-50%, -50%) scale(calc(var(--size, 1) * 1.1)) rotate(calc(var(--rotation) * 0.2));
   }
-  100% {
-    opacity: 0;
+  75% {
+    opacity: 1;
     transform: translate(
       calc(-50% + var(--x)),
       calc(-50% + var(--y))
-    ) scale(1.2) rotate(var(--rotation));
+    ) scale(var(--size, 1)) rotate(var(--rotation));
+  }
+  100% {
+    /* Settle in background at low opacity instead of disappearing */
+    opacity: 0.18;
+    transform: translate(
+      calc(-50% + var(--x)),
+      calc(-50% + var(--y))
+    ) scale(var(--size, 1)) rotate(var(--rotation));
   }
 }
 
-/* Mobile optimization - reduce number of notes */
+/* Mobile: slightly smaller, same behavior */
 @media (max-width: 768px) {
   .confetti-note {
     font-size: 1.5rem;

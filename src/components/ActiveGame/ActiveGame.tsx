@@ -460,21 +460,10 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
     };
   }, []);
 
-  // Win animation trigger
+  // Win animation trigger – keep confetti visible while game over (animation settles to low-opacity background)
   useEffect(() => {
     const isGameWon = sessionState?.status === 'won' && sessionState?.is_over === true;
-    
-    if (isGameWon) {
-      setIsWinning(true);
-      // Reset after 4 seconds
-      const timer = setTimeout(() => {
-        setIsWinning(false);
-      }, 4000);
-      
-      return () => clearTimeout(timer);
-    } else {
-      setIsWinning(false);
-    }
+    setIsWinning(!!isGameWon);
   }, [sessionState?.status, sessionState?.is_over]);
 
   const handleSongSelect = (songId: string | null, song?: Song | null) => {
