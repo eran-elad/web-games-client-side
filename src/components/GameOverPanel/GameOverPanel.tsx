@@ -181,6 +181,7 @@ export default function GameOverPanel(props: {
   externalLinks: ExternalLink[] | null;
   sessionId: string | null;
   onShowFeedback?: () => void;
+  onPlayAnotherArchivedPuzzle?: () => void;
   shouldShowBanner: boolean;
   onSwitchToDaily: () => void;
   onDismissBanner: () => void;
@@ -195,6 +196,7 @@ export default function GameOverPanel(props: {
     externalLinks,
     sessionId,
     onShowFeedback,
+    onPlayAnotherArchivedPuzzle,
     shouldShowBanner,
     onSwitchToDaily,
     onDismissBanner,
@@ -248,6 +250,17 @@ export default function GameOverPanel(props: {
                   onClick={onShowFeedback}
                 >
                   💬 Send Feedback
+                </button>
+              )}
+
+              {onPlayAnotherArchivedPuzzle && (
+                <button
+                  type="button"
+                  className="feedback-result-button archive-result-button"
+                  onClick={onPlayAnotherArchivedPuzzle}
+                >
+                  <span className="archive-result-icon" aria-hidden="true">🎧</span>
+                  <span>Play Archived Puzzles</span>
                 </button>
               )}
             </div>

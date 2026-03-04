@@ -981,6 +981,7 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
             externalLinks={externalLinks}
             sessionId={sessionId}
             onShowFeedback={onShowFeedback}
+            onPlayAnotherArchivedPuzzle={onShowArchive}
             shouldShowBanner={shouldShowBanner()}
             onSwitchToDaily={handleSwitchToDailyPuzzle}
             onDismissBanner={handleDismissBanner}

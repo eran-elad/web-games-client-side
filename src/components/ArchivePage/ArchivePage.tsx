@@ -481,8 +481,8 @@ const ArchivePage = ({ onClose, onPlayDate }: ArchivePageProps) => {
                         ? getStatusClass(puzzle?.player_status || null, false)
                         : 'status-no-puzzle';
                     const statusIcon = puzzle ? getStatusIcon(puzzle.player_status) : null;
-                    const difficultyStars = puzzle ? getDifficultyStars(puzzle.difficulty_level) : '';
-                    const difficultyLabel = puzzle ? getDifficultyLabel(puzzle.difficulty_level) : null;
+                    const difficultyStars = puzzle && !cell.isToday ? getDifficultyStars(puzzle.difficulty_level) : '';
+                    const difficultyLabel = puzzle && !cell.isToday ? getDifficultyLabel(puzzle.difficulty_level) : null;
                     const isClickable = puzzle && puzzle.puzzle_id !== null && !cell.isUnavailable;
 
                     return (
