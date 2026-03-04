@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import PageMeta from '../PageMeta/PageMeta';
-import { getArchive, type ArchiveResponse } from '../../services/gameApi';
+import { getArchive, type ArchiveResponse, type PuzzleDifficultyLevel } from '../../services/gameApi';
 import { getPlayerId } from '../../utils/storage';
 import { MUSIC_GAME_ID } from '../../config/gameConfig';
 import './ArchivePage.css';
@@ -9,6 +9,16 @@ interface ArchivePageProps {
   onClose: () => void;
   onPlayDate?: (date: string, puzzleId: string | null) => void;
 }
+
+type ArchivePuzzle = ArchiveResponse['puzzles'][number];
+type CalendarCell = {
+  date: string | null;
+  puzzle: ArchivePuzzle | null;
+  isUnavailable: boolean;
+  isToday: boolean;
+  connectWonLeft: boolean;
+  connectWonRight: boolean;
+};
 
 const ArchivePage = ({ onClose, onPlayDate }: ArchivePageProps) => {
   const [archive, setArchive] = useState<ArchiveResponse | null>(null);
@@ -34,19 +44,41 @@ const ArchivePage = ({ onClose, onPlayDate }: ArchivePageProps) => {
     loadArchive();
   }, []);
 
+  const getDifficultyLabel = (difficulty: PuzzleDifficultyLevel | null) => {
+    switch (difficulty) {
+      case 1:
+        return 'Easy';
+      case 2:
+        return 'Medium';
+      case 3:
+        return 'Hard';
+      default:
+        return null;
+    }
+  };
+
+  const getDifficultyStars = (difficulty: PuzzleDifficultyLevel | null) => {
+    if (!difficulty) return '';
+    return '★'.repeat(difficulty);
+  };
+
   const getStatusIcon = (status: string | null) => {
     switch (status) {
       case 'won':
-        return '✓';
+        return (
+          <span className="day-status-icon day-status-icon-won" aria-label="Won">
+            <span className="won-icon-glyph" aria-hidden="true">🏆</span>
+          </span>
+        );
       case 'lost':
       case 'quit':
-        return '✗';
+        return <span className="day-status-icon day-status-icon-lost">✗</span>;
       case 'abandoned':
       case 'in_progress':
-        return '○';
+        return null;
       case 'not_played':
       default:
-        return '';
+        return null;
     }
   };
 
@@ -119,8 +151,8 @@ const ArchivePage = ({ onClose, onPlayDate }: ArchivePageProps) => {
   };
 
   // Group puzzles by month
-  const groupByMonth = (puzzles: Array<{ date: string; puzzle_id: string | null; player_status: string | null }>) => {
-    const months: { [key: string]: Array<{ date: string; puzzle_id: string | null; player_status: string | null }> } = {};
+  const groupByMonth = (puzzles: ArchivePuzzle[]) => {
+    const months: Record<string, ArchivePuzzle[]> = {};
     
     puzzles.forEach(puzzle => {
       const date = new Date(puzzle.date + 'T00:00:00');
@@ -147,7 +179,7 @@ const ArchivePage = ({ onClose, onPlayDate }: ArchivePageProps) => {
 
   // Create calendar grid for a month
   const createCalendarGrid = (
-    monthPuzzles: Array<{ date: string; puzzle_id: string | null; player_status: string | null }>,
+    monthPuzzles: ArchivePuzzle[],
     firstPuzzleDate: string | null
   ) => {
     if (monthPuzzles.length === 0) return [];
@@ -164,21 +196,23 @@ const ArchivePage = ({ onClose, onPlayDate }: ArchivePageProps) => {
     const firstDayOfMonth = new Date(year, month, 1);
     const lastDayOfMonth = new Date(year, month + 1, 0);
     const daysInMonth = lastDayOfMonth.getDate();
-    const startDayOfWeek = firstDayOfMonth.getDay(); // 0 = Sunday
+    const startDayOfWeek = (firstDayOfMonth.getDay() + 6) % 7; // 0 = Monday
 
     // Parse first puzzle date for comparison
     const firstPuzzleDateObj = firstPuzzleDate ? new Date(firstPuzzleDate + 'T00:00:00') : null;
 
-    const grid: Array<{ 
-      date: string | null; 
-      puzzle: { date: string; puzzle_id: string | null; player_status: string | null } | null;
-      isUnavailable: boolean;
-      isToday: boolean;
-    }> = [];
+    const grid: CalendarCell[] = [];
 
     // Add empty cells for days before the first day of the month
     for (let i = 0; i < startDayOfWeek; i++) {
-      grid.push({ date: null, puzzle: null, isUnavailable: false, isToday: false });
+      grid.push({
+        date: null,
+        puzzle: null,
+        isUnavailable: false,
+        isToday: false,
+        connectWonLeft: false,
+        connectWonRight: false
+      });
     }
 
     // Add cells for each day of the month
@@ -192,8 +226,24 @@ const ArchivePage = ({ onClose, onPlayDate }: ArchivePageProps) => {
       const afterToday = dateStr > todayStr;
       const isUnavailable = beforeFirst || afterToday;
       const isToday = dateStr === todayStr;
+      const cellIndex = grid.length;
+      const col = cellIndex % 7;
+      const prevDate = new Date(dateObj);
+      prevDate.setDate(prevDate.getDate() - 1);
+      const nextDate = new Date(dateObj);
+      nextDate.setDate(nextDate.getDate() + 1);
+      const prevDateStr = `${prevDate.getFullYear()}-${String(prevDate.getMonth() + 1).padStart(2, '0')}-${String(prevDate.getDate()).padStart(2, '0')}`;
+      const nextDateStr = `${nextDate.getFullYear()}-${String(nextDate.getMonth() + 1).padStart(2, '0')}-${String(nextDate.getDate()).padStart(2, '0')}`;
+      const connectWonLeft =
+        col > 0 &&
+        puzzle?.player_status === 'won' &&
+        puzzleMap.get(prevDateStr)?.player_status === 'won';
+      const connectWonRight =
+        col < 6 &&
+        puzzle?.player_status === 'won' &&
+        puzzleMap.get(nextDateStr)?.player_status === 'won';
 
-      grid.push({ date: dateStr, puzzle, isUnavailable, isToday });
+      grid.push({ date: dateStr, puzzle, isUnavailable, isToday, connectWonLeft: !!connectWonLeft, connectWonRight: !!connectWonRight });
     }
 
     return grid;
@@ -276,25 +326,50 @@ const ArchivePage = ({ onClose, onPlayDate }: ArchivePageProps) => {
       </div>
       <div className="archive-content">
         <div className="archive-legend">
-          <div className="legend-item">
-            <span className="status-indicator status-won">✓</span>
-            <span>Won</span>
+          <div className="legend-section">
+            <span className="legend-title">Legend</span>
+            <div className="legend-item">
+              <span className="status-indicator status-won">
+                <span className="legend-won-glyph" aria-hidden="true">🏆</span>
+              </span>
+              <span>Won</span>
+            </div>
+            <div className="legend-item">
+              <span className="status-indicator status-lost">✗</span>
+              <span>Lost</span>
+            </div>
+            <div className="legend-item">
+              <span className="status-indicator status-abandoned"></span>
+              <span>In Progress</span>
+            </div>
+            <div className="legend-item">
+              <span className="status-indicator status-not-played"></span>
+              <span>Not Played</span>
+            </div>
+            <div className="legend-item">
+              <span className="status-indicator status-unavailable"></span>
+              <span>Unavailable</span>
+            </div>
+            <div className="legend-item">
+              <span className="status-indicator status-no-puzzle"></span>
+              <span>No Puzzle</span>
+            </div>
           </div>
-          <div className="legend-item">
-            <span className="status-indicator status-lost">✗</span>
-            <span>Lost</span>
-          </div>
-          <div className="legend-item">
-            <span className="status-indicator status-abandoned">○</span>
-            <span>In Progress</span>
-          </div>
-          <div className="legend-item">
-            <span className="status-indicator status-not-played"></span>
-            <span>Not Played</span>
-          </div>
-          <div className="legend-item">
-            <span className="status-indicator status-unavailable"></span>
-            <span>Unavailable</span>
+
+          <div className="legend-section">
+            <span className="legend-title">Difficulty</span>
+            <div className="legend-item">
+              <span className="difficulty-indicator">★</span>
+              <span>Easy</span>
+            </div>
+            <div className="legend-item">
+              <span className="difficulty-indicator">★★</span>
+              <span>Medium</span>
+            </div>
+            <div className="legend-item">
+              <span className="difficulty-indicator">★★★</span>
+              <span>Hard</span>
+            </div>
           </div>
         </div>
         <div className="archive-calendars">
@@ -307,13 +382,13 @@ const ArchivePage = ({ onClose, onPlayDate }: ArchivePageProps) => {
                 <h2 className="month-header">{formatMonthYear(firstPuzzle.date)}</h2>
                 <div className="calendar-grid">
                   {/* Day names header */}
-                  <div className="calendar-day-name">Sun</div>
                   <div className="calendar-day-name">Mon</div>
                   <div className="calendar-day-name">Tue</div>
                   <div className="calendar-day-name">Wed</div>
                   <div className="calendar-day-name">Thu</div>
                   <div className="calendar-day-name">Fri</div>
                   <div className="calendar-day-name">Sat</div>
+                  <div className="calendar-day-name">Sun</div>
                   
                   {/* Calendar days */}
                   {grid.map((cell, index) => {
@@ -322,23 +397,35 @@ const ArchivePage = ({ onClose, onPlayDate }: ArchivePageProps) => {
                     }
 
                     const puzzle = cell.puzzle;
-                    const statusClass = getStatusClass(puzzle?.player_status || null, cell.isUnavailable);
-                    const statusIcon = puzzle ? getStatusIcon(puzzle.player_status) : '';
+                    const hasPuzzle = puzzle?.puzzle_id !== null;
+                    const statusClass = cell.isUnavailable
+                      ? getStatusClass(null, true)
+                      : hasPuzzle
+                        ? getStatusClass(puzzle?.player_status || null, false)
+                        : 'status-no-puzzle';
+                    const statusIcon = puzzle ? getStatusIcon(puzzle.player_status) : null;
+                    const difficultyStars = puzzle ? getDifficultyStars(puzzle.difficulty_level) : '';
+                    const difficultyLabel = puzzle ? getDifficultyLabel(puzzle.difficulty_level) : null;
                     const isClickable = puzzle && puzzle.puzzle_id !== null && !cell.isUnavailable;
 
                     return (
                       <div
                         key={cell.date}
-                        className={`calendar-day ${statusClass} ${isClickable ? 'clickable' : ''} ${cell.isUnavailable ? 'unavailable' : ''} ${cell.isToday ? 'today' : ''}`}
+                        className={`calendar-day ${statusClass} ${isClickable ? 'clickable' : ''} ${cell.isUnavailable ? 'unavailable' : ''} ${cell.isToday ? 'today' : ''} ${cell.connectWonLeft ? 'streak-left' : ''} ${cell.connectWonRight ? 'streak-right' : ''} ${difficultyStars ? 'has-difficulty' : ''}`}
                         onClick={() => puzzle && !cell.isUnavailable && handleDateClick(puzzle.date, puzzle.puzzle_id)}
                         title={cell.isUnavailable 
                           ? `${formatDate(cell.date)} - Unavailable` 
                           : puzzle 
-                            ? `${formatDate(puzzle.date)} - ${getStatusLabel(puzzle.player_status)}` 
+                            ? `${formatDate(puzzle.date)} - ${puzzle.puzzle_id ? getStatusLabel(puzzle.player_status) : 'No Puzzle'}${difficultyLabel ? ` - ${difficultyLabel}` : ''}` 
                             : `${formatDate(cell.date)} - Not Played`}
                       >
                         <div className="day-number">{getDayNumber(cell.date)}</div>
-                        {statusIcon && <div className="day-status-icon">{statusIcon}</div>}
+                        {statusIcon}
+                        {difficultyStars && (
+                          <div className="day-difficulty-stars" aria-label={`Difficulty: ${difficultyLabel}`}>
+                            {difficultyStars}
+                          </div>
+                        )}
                       </div>
                     );
                   })}

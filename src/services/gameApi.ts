@@ -5,6 +5,7 @@
 import { getApiUrl } from '../config/apiConfig';
 
 export type ExternalLink = { platform_id: string; url: string };
+export type PuzzleDifficultyLevel = 1 | 2 | 3;
 
 /**
  * Response structure from /api/game/init and /api/game/guess
@@ -541,6 +542,7 @@ export type ArchiveResponse = {
   puzzles: Array<{
     date: string;
     puzzle_id: string | null;
+    difficulty_level: PuzzleDifficultyLevel | null;
     player_status: 'won' | 'lost' | 'abandoned' | 'in_progress' | 'not_played' | 'quit' | null;
   }>;
 };
