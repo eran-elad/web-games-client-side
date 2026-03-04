@@ -24,6 +24,7 @@ const ArchivePage = ({ onClose, onPlayDate }: ArchivePageProps) => {
   const [archive, setArchive] = useState<ArchiveResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showAllRecommendations, setShowAllRecommendations] = useState(false);
 
   useEffect(() => {
     const loadArchive = async () => {
@@ -136,6 +137,14 @@ const ArchivePage = ({ onClose, onPlayDate }: ArchivePageProps) => {
     return date.toLocaleDateString('en-US', { 
       month: 'long', 
       year: 'numeric'
+    });
+  };
+
+  const formatRecommendationDate = (dateString: string) => {
+    const date = new Date(dateString + 'T00:00:00');
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric'
     });
   };
 
@@ -325,6 +334,74 @@ const ArchivePage = ({ onClose, onPlayDate }: ArchivePageProps) => {
         <button className="app-close-button close-button" onClick={onClose}>×</button>
       </div>
       <div className="archive-content">
+        {archive.recommended_puzzles.length > 0 && (
+          <div className="archive-recommended">
+            <div className="recommended-header">
+              <span className="recommended-title">Recommended for you:</span>
+            </div>
+
+            <div className="recommended-item primary" role="button" tabIndex={0} onClick={() => handleDateClick(archive.recommended_puzzles[0].date, archive.recommended_puzzles[0].puzzle_id)} onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                handleDateClick(archive.recommended_puzzles[0].date, archive.recommended_puzzles[0].puzzle_id);
+              }
+            }}>
+              <span className="recommended-date">{formatRecommendationDate(archive.recommended_puzzles[0].date)}</span>
+              <span className="recommended-difficulty">
+                {getDifficultyStars(archive.recommended_puzzles[0].difficulty_level)} {getDifficultyLabel(archive.recommended_puzzles[0].difficulty_level)}
+              </span>
+              <button
+                type="button"
+                className="recommended-play"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDateClick(archive.recommended_puzzles[0].date, archive.recommended_puzzles[0].puzzle_id);
+                }}
+              >
+                ▶ Play
+              </button>
+            </div>
+
+            {archive.recommended_puzzles.length > 1 && (
+              <div className="recommended-expand">
+                <button
+                  type="button"
+                  className="recommended-toggle"
+                  onClick={() => setShowAllRecommendations((prev) => !prev)}
+                >
+                  {showAllRecommendations ? 'Hide recommendations' : `Show all (${archive.recommended_puzzles.length})`}
+                </button>
+              </div>
+            )}
+
+            {showAllRecommendations && archive.recommended_puzzles.length > 1 && (
+              <div className="recommended-list">
+                {archive.recommended_puzzles.slice(1).map((rec) => (
+                  <div
+                    key={rec.puzzle_id}
+                    className="recommended-item"
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => handleDateClick(rec.date, rec.puzzle_id)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        handleDateClick(rec.date, rec.puzzle_id);
+                      }
+                    }}
+                  >
+                    <span className="recommended-date">{formatRecommendationDate(rec.date)}</span>
+                    <span className="recommended-difficulty">
+                      {getDifficultyStars(rec.difficulty_level)} {getDifficultyLabel(rec.difficulty_level)}
+                    </span>
+                    <span className="recommended-play secondary">Play</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         <div className="archive-legend">
           <div className="legend-section">
             <span className="legend-title">Legend</span>

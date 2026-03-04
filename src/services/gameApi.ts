@@ -539,6 +539,11 @@ export type ArchiveResponse = {
     first_puzzle_date: string | null;
     last_date: string;
   };
+  recommended_puzzles: Array<{
+    date: string;
+    puzzle_id: string;
+    difficulty_level: PuzzleDifficultyLevel;
+  }>;
   puzzles: Array<{
     date: string;
     puzzle_id: string | null;
