@@ -85,7 +85,8 @@ const ShareResult = ({ guesses, guessCount, maxGuesses, isWon, puzzleDate }: Sha
     const displayGuessCount = guessCount;
     
     // Title format: HitFinder <MMM dd, yyyy> <guesses>/<max>
-    const gameTitle = `🎵 ${GAME_NAME} ${dateStr} ${displayGuessCount}/${maxGuesses}`;
+    // Keep this compact to avoid wrapping the score onto a new line in chat apps.
+    const gameTitle = `${GAME_NAME} ${dateStr} ${displayGuessCount}/${maxGuesses}`;
     
     let shareText = `${gameTitle}\n\n`;
     
