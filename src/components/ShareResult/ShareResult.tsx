@@ -87,18 +87,14 @@ const ShareResult = ({ guesses, guessCount, maxGuesses, isWon, puzzleDate }: Sha
     // Title format: HitFinder <MMM dd, yyyy> <guesses>/<max>
     const gameTitle = `🎵 ${GAME_NAME} ${dateStr} ${displayGuessCount}/${maxGuesses}`;
     
-    const resultLine = isWon 
-      ? `🎉 Solved!`
-      : `😔 Better luck next time!`;
-    
-    let shareText = `${gameTitle}\n${resultLine}\n\n`;
+    let shareText = `${gameTitle}\n\n`;
     
     // Add guess results with emoji grid
     // Y = Year | C = Country | G = Genre | T = Tempo | X = Gender
     guesses.forEach((guess) => {
       // Check if this is a lifeline entry
       if (guess.isLifeline) {
-        shareText += `🛟 Lifeline\n`;
+        shareText += `🛟 Lifeline Used\n`;
         return;
       }
       
