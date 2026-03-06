@@ -94,7 +94,7 @@ const ShareResult = ({ guesses, guessCount, maxGuesses, isWon, puzzleDate }: Sha
     guesses.forEach((guess) => {
       // Check if this is a lifeline entry
       if (guess.isLifeline) {
-        shareText += `🛟 Lifeline Used\n`;
+        shareText += `🛟 Lifeline used\n`;
         return;
       }
       
