@@ -223,7 +223,7 @@
   background: linear-gradient(180deg, #d7def9, #c7d1f5);
   border: 1px solid rgba(117, 124, 180, 0.35);
   border-radius: 10px;
-  overflow: hidden;
+  overflow: visible;
   box-shadow: 0 8px 16px rgba(52, 41, 92, 0.12);
 }
 
@@ -281,11 +281,11 @@
 }
 
 .calendar-day.status-won {
-  background: linear-gradient(180deg, #f4fbf6 0%, #eaf7ee 100%);
+  background: linear-gradient(180deg, #e8f5e9 0%, #c8e6c9 100%);
 }
 
 .calendar-day.status-lost {
-  background: linear-gradient(180deg, #fff4f4 0%, #fbeaea 100%);
+  background: linear-gradient(180deg, #ffebee 0%, #ffcdd2 100%);
 }
 
 .calendar-day.status-abandoned {
@@ -371,13 +371,15 @@
 }
 
 .day-difficulty-stars {
-  font-size: 1.05rem;
+  font-size: 0.8rem;
   line-height: 1;
-  margin-top: 0.2rem;
+  margin-top: auto;
+  padding-top: 0.2rem;
   color: #eea72d;
   letter-spacing: 0.03em;
   text-shadow: 0 1px 0 #fff4d4;
   z-index: 1;
+  white-space: nowrap;
 }
 
 .calendar-day.status-won .day-difficulty-stars {
@@ -448,7 +450,8 @@
 }
 
 .calendar-day.status-won.streak-left {
-  box-shadow: inset 7px 0 0 rgba(145, 210, 162, 0.22);
+  border-left: 2px solid #c8e6c9;
+  box-shadow: none;
 }
 
 .error-message {
@@ -538,7 +541,7 @@
   }
 
   .day-difficulty-stars {
-    font-size: 1rem;
+    font-size: 0.78rem;
   }
 
   .calendar-day-name {
