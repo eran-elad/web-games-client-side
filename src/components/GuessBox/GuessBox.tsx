@@ -841,26 +841,26 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guess
 
           if (typeLower === 'group') {
             return statusIsCorrect
-              ? <>The secret artist <strong>is</strong> a Group (e.g. band).</>
-              : <>The secret artist <strong>is not</strong> a Group (e.g. band).</>;
+              ? <>The secret artist <strong>is</strong> a group (band, duo, etc.).</>
+              : <>The secret artist <strong>is not</strong> a group (band, duo, etc.).</>;
           }
 
           if (typeLower === 'collaboration') {
             return statusIsCorrect
-              ? <>The secret song <strong>is</strong> performed by multiple main artists (not counting featured artists).</>
-              : <>The secret song <strong>is not</strong> performed by multiple main artists (not counting featured artists).</>;
+              ? <>The secret song <strong>is</strong> performed by multiple main artists (featured artists do not count as main artists).</>
+              : <>The secret song <strong>is not</strong> performed by multiple main artists (featured artists do not count as main artists).</>;
           }
 
           if (typeLower === 'person (feat.)') {
             return statusIsCorrect
               ? <>The secret song <strong>is</strong> by a solo performer featuring another artist(s).</>
-              : <>The secret song <strong>is not</strong> by a solo performer featuring another artist(s).</>;
+              : <>The guessed song is by a solo performer featuring another artist(s), but the secret song has a different artist combination.</>;
           }
 
           if (typeLower === 'group (feat.)') {
             return statusIsCorrect
               ? <>The secret song <strong>is</strong> by a group featuring another artist(s).</>
-              : <>The secret song <strong>is not</strong> by a group featuring another artist(s).</>;
+              : <>The guessed song is by a group featuring another artist(s), but the secret song has a different artist combination.</>;
           }
         }
 
