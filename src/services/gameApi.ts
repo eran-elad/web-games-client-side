@@ -317,6 +317,30 @@ export const activateLifeline = async (
 };
 
 /**
+ * Log a Share Result button click as background activity
+ *
+ * This is a best-effort, fire-and-forget style call: callers typically
+ * should not await it and any failures are swallowed.
+ */
+export const logShareResultsClick = async (
+  sessionId: string
+): Promise<void> => {
+  try {
+    await fetch(getApiUrl('/api/activity/share-results-click'), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        session_id: sessionId,
+      }),
+    });
+  } catch {
+    // Intentionally ignore errors so logging never affects user experience
+  }
+};
+
+/**
  * Response structure from /api/game/stats/{player_id}
  */
 export type PlayerStatsResponse = {

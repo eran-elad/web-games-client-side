@@ -234,6 +234,7 @@ export default function GameOverPanel(props: {
                 maxGuesses={maxGuesses}
                 isWon={isWon}
                 puzzleDate={puzzleDate || undefined}
+                sessionId={sessionId ?? undefined}
               />
   
               {externalLinks && externalLinks.length > 0 && (

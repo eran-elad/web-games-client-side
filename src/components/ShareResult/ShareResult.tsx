@@ -2,6 +2,7 @@ import { useState } from 'react';
 import './ShareResult.css';
 import { GAME_NAME, GAME_URL } from '../../config/gameConfig';
 import { CLUE_DEFINITIONS } from '../../config/clueConfig';
+import { logShareResultsClick } from '../../services/gameApi';
 
 interface ShareResultProps {
   guesses: Array<{
@@ -14,9 +15,10 @@ interface ShareResultProps {
   maxGuesses: number;
   isWon: boolean;
   puzzleDate?: string;
+  sessionId?: string;
 }
 
-const ShareResult = ({ guesses, guessCount, maxGuesses, isWon, puzzleDate }: ShareResultProps) => {
+const ShareResult = ({ guesses, guessCount, maxGuesses, isWon, puzzleDate, sessionId }: ShareResultProps) => {
   const [copied, setCopied] = useState(false);
   
   // Check if Web Share API is available (mobile browsers)
@@ -134,6 +136,11 @@ const ShareResult = ({ guesses, guessCount, maxGuesses, isWon, puzzleDate }: Sha
   };
 
   const handleShare = async () => {
+    if (sessionId) {
+      // Fire-and-forget: do not await, and logging errors are swallowed in the helper
+      void logShareResultsClick(sessionId);
+    }
+
     const shareText = generateShareText();
     // The shareText already contains the URL, so we don't need to add it again
     const fullText = shareText;
