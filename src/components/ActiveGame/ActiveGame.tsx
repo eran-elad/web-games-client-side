@@ -16,6 +16,9 @@ import type { GameInitResponse, ActivateLifelineResponse, ExternalLink } from '.
 import './ActiveGame.css';
 import GameOverPanel from "../GameOverPanel/GameOverPanel";
 
+/** Minimum songs shown in lifeline UI text (tooltips, confirm). Use server value when available, otherwise this. */
+const LIFELINE_MIN_SONGS_DISPLAY = 60;
+
 
 interface Song {
   id: string;
@@ -627,7 +630,8 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
 
     // Check eligibility (safety check - button click handler already validated)
     const minGuessesRequired = sessionState.lifeline_min_guesses_required ?? Math.floor((sessionState.puzzle?.max_guesses ?? 6) / 2);
-    const minSongs = sessionState.lifeline_min_songs ?? 100;
+    // Display cap at 60 so UI never shows old server value (e.g. 100); server still enforces actual threshold
+    const minSongs = Math.min(LIFELINE_MIN_SONGS_DISPLAY, sessionState.lifeline_min_songs ?? LIFELINE_MIN_SONGS_DISPLAY);
     
     if (sessionState.guess_count < minGuessesRequired) {
       // This shouldn't happen as button handler checks, but keep as safety
@@ -1049,7 +1053,7 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
               {!isGameOver && sessionState?.status === 'in_progress' && (
                 <HelpButtonsInfo
                   minGuessesRequired={sessionState.lifeline_min_guesses_required ?? Math.floor((sessionState.puzzle?.max_guesses ?? 6) / 2)}
-                  minSongs={sessionState.lifeline_min_songs ?? 100}
+                  minSongs={Math.min(LIFELINE_MIN_SONGS_DISPLAY, sessionState.lifeline_min_songs ?? LIFELINE_MIN_SONGS_DISPLAY)}
                   lifelineActivated={lifelineActivated}
                   giveUpMinGuessesRequired={sessionState.give_up_min_guesses_required ?? 5}
                 />
