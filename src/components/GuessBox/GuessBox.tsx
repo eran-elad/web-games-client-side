@@ -827,11 +827,12 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guess
         // Fallback to guessed type only when aggregated value is unavailable.
         const rawAggr = (clueObj.artist_type_aggr || clueObj.value || clueObj.type || clueObj.artist_type || '').toString();
         const artistTypeAggr = rawAggr.trim();
-
+        console.log('artistTypeAggr:', artistTypeAggr);
+        const guessedType = clueObj._guessedType || clueObj.given || clueObj.type || clueObj.value || clueObj.artist_type || '';
         const statusIsCorrect = clueObj.status === 'correct' || clueObj.status === true;
 
-        if (artistTypeAggr) {
-          const typeLower = artistTypeAggr.toLowerCase();
+        if (guessedType) {
+          const typeLower = guessedType.toLowerCase();
 
           if (typeLower === 'person') {
             return statusIsCorrect
@@ -864,25 +865,28 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guess
           }
         }
 
-        // Fallback: use previous guessed-type based messaging for robustness when aggregated value is missing.
-        const guessedType = clueObj._guessedType || clueObj.given || clueObj.type || clueObj.value || clueObj.artist_type || '';
-        const guessedTypeLower = guessedType ? guessedType.toLowerCase() : '';
-        const isPerson = guessedTypeLower === 'person' || guessedTypeLower === 'solo';
-        const isGroup = guessedTypeLower === 'group' || guessedTypeLower === 'band' || guessedTypeLower === 'duo';
-        const displayName = guessedType
-          ? guessedType.charAt(0).toUpperCase() + guessedType.slice(1).toLowerCase()
-          : '';
+        // // Fallback: use previous guessed-type based messaging for robustness when aggregated value is missing.
+        // const isPerson = guessedTypeLower === 'person' || guessedTypeLower === 'solo';
+        // const isGroup = guessedTypeLower === 'group' || guessedTypeLower === 'band' || guessedTypeLower === 'duo';
+        // const isPersonFeat = guessedTypeLower === 'person (feat.)';
+        // const isGroupFeat = guessedTypeLower === 'group (feat.)';
+        // const displayName = guessedType
+        //   ? guessedType.charAt(0).toUpperCase() + guessedType.slice(1).toLowerCase()
+        //   : '';
 
-        if (statusIsCorrect) {
-          if (isPerson) return 'The Artist Type is a Solo Artist.';
-          if (isGroup) return 'The Artist Type is a Group (e.g. band).';
-          if (displayName) return `The Artist Type is ${displayName}.`;
-          return 'The Artist Type matches.';
-        }
+        // if (statusIsCorrect) {
+        //   if (isPerson) return 'The Artist Type is a Solo Artist.';
+        //   if (isGroup) return 'The Artist Type is a Group (e.g. band).';
+        //   if (displayName) return `The Artist Type is ${displayName}.`;
+        //   return 'The Artist Type matches.';
+        // }
 
-        if (isPerson) return "The Artist Type isn't a Solo Artist.";
-        if (isGroup) return "The Artist Type isn't a Group (e.g. band).";
-        if (displayName) return `The Artist Type isn't ${displayName}.`;
+        // if (isPerson) return "The Artist Type isn't a Solo Artist.";
+        // if (isGroup) return "The Artist Type isn't a Group (e.g. band).";
+        // if (isPersonFeat) return "<>The guessed song is by a solo performer featuring another artist(s), but the secret song has a different artist combination.</>";
+        // if (isGroupFeat) return "<>The guessed song is by a group featuring another artist(s), but the secret song has a different artist combination.</>";
+        // if (displayName) return `The Artist Type isn't ${displayName}.`;
+
         return "The Artist Type doesn't match.";
       }
       case 'gender': {
