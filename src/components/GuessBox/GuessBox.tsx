@@ -270,6 +270,8 @@ interface GuessBoxProps {
 const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guessedArtistType, guessedGender, guessedYear, guessedBpm, guessedBpmDetails, preferredDistanceUnit = null, isWinning = false, pulseDelay = 0, isLifeline = false, catalogSize, catalogSizeAfterGuess, showArtistClue = false, solutionArtist }: GuessBoxProps) => {
   // Helper to determine clue status (correct/close/incorrect/neighboring) based on thresholds
   type ClueStatus = 'correct' | 'close' | 'incorrect' | 'neighboring' | 'unknown';
+
+  console.log('Guessed Song Details:', { songTitle, artist, guessedArtistType, guessedGender, guessedYear, guessedBpm, guessedBpmDetails, preferredDistanceUnit, isWinning, pulseDelay, isLifeline, catalogSize, catalogSizeAfterGuess, showArtistClue, solutionArtist });
   
   const getYearStatus = (clueObj: any): ClueStatus => {
     if (!clueObj || typeof clueObj !== 'object' || clueObj.diff === undefined) return 'unknown';
@@ -891,18 +893,23 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guess
       }
       case 'gender': {
         // Prefer aggregated gender/type from the server; fall back to legacy behavior when absent.
-        const artistTypeAggrRaw = (clueObj.artist_type_aggr || '').toString().trim();
-        const artistTypeAggrLower = artistTypeAggrRaw.toLowerCase();
         const genderAggrRaw = (clueObj.artist_gender_aggr || '').toString().trim();
         const genderAggrLower = genderAggrRaw.toLowerCase();
-
+        const guessedGenderValue =
+          clueObj._guessedGender || clueObj.given || clueObj.value || clueObj.gender || guessedGender || '';
+        const genderLower = guessedGenderValue.toLowerCase();
+        console.log('=== guessedArtistType:', guessedArtistType);
+        const guessedArtistTypeLower = guessedArtistType ? guessedArtistType.toLowerCase() : '';
+        console.log('=== guessedArtistTypeLower:', guessedArtistTypeLower);
+        console.log('=== genderAggrLower:', genderAggrLower);
+        
         // Multi-artist cases: Collaboration or any feat. – ignore guessed gender, use aggregated gender only.
         const isMultiArtist =
-          artistTypeAggrLower === 'collaboration' ||
-          artistTypeAggrLower === 'person (feat.)'.toLowerCase() ||
-          artistTypeAggrLower === 'group (feat.)'.toLowerCase();
+          guessedArtistTypeLower === 'collaboration' ||
+          guessedArtistTypeLower === 'person (feat.)' ||
+          guessedArtistTypeLower === 'group (feat.)';
 
-        if (isMultiArtist && genderAggrLower) {
+        if (isMultiArtist && genderLower) {
           switch (genderAggrLower) {
             case 'all_males':
               return 'All credited artists are male.';
@@ -918,9 +925,7 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guess
         }
 
         // Single-artist or no aggregated metadata: use existing logic based on guessed gender and status.
-        const guessedGenderValue =
-          clueObj._guessedGender || clueObj.given || clueObj.value || clueObj.gender || guessedGender || '';
-        const genderLower = guessedGenderValue.toLowerCase();
+        
 
         const isSoloArtist =
           genderLower === 'male' ||
@@ -948,13 +953,13 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guess
         if (clueObj.status === 'correct') {
           return (
             <>
-              The secret artist <strong>is</strong> an {genderForTooltip} group
+              The secret artist <strong>is</strong> a {genderForTooltip} group
             </>
           );
         }
         return (
           <>
-            The secret artist <strong>isn't</strong> an {genderForTooltip} group
+            The secret artist <strong>isn't</strong> a {genderForTooltip} group
           </>
         );
       }
@@ -1187,8 +1192,6 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guess
           console.log('=== ARTIST TYPE DISPLAY DEBUG ===');
           console.log('guessedType:', guessedType);
           console.log('guessedTypeLower:', guessedTypeLower);
-          console.log('isPerson:', isPerson);
-          console.log('isGroup:', isGroup);
           console.log('displayText:', displayText);
           console.log('artistTypeObj:', artistTypeObj);
           console.log('guessedArtistType prop:', guessedArtistType);
@@ -1201,9 +1204,7 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guess
             _isPerson: isPerson, 
             _isGroup: isGroup 
           });
-          
-          console.log('Help text result:', helpText);
-          
+                    
           return (
             <div className={`clue-tag clue-status-${statusClass}`}>
               <span className="clue-value artist-type-icon-wrapper">{iconSvg}</span>
