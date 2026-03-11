@@ -893,15 +893,13 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guess
       }
       case 'gender': {
         // Prefer aggregated gender/type from the server; fall back to legacy behavior when absent.
-        const genderAggrRaw = (clueObj.artist_gender_aggr || '').toString().trim();
-        const genderAggrLower = genderAggrRaw.toLowerCase();
         const guessedGenderValue =
           clueObj._guessedGender || clueObj.given || clueObj.value || clueObj.gender || guessedGender || '';
         const genderLower = guessedGenderValue.toLowerCase();
         console.log('=== guessedArtistType:', guessedArtistType);
         const guessedArtistTypeLower = guessedArtistType ? guessedArtistType.toLowerCase() : '';
         console.log('=== guessedArtistTypeLower:', guessedArtistTypeLower);
-        console.log('=== genderAggrLower:', genderAggrLower);
+        
         
         // Multi-artist cases: Collaboration or any feat. – ignore guessed gender, use aggregated gender only.
         const isMultiArtist =
@@ -910,7 +908,7 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guess
           guessedArtistTypeLower === 'group (feat.)';
 
         if (isMultiArtist && genderLower) {
-          switch (genderAggrLower) {
+          switch (genderLower) {
             case 'all_males':
               return 'All credited artists are male.';
             case 'all_females':
