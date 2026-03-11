@@ -1242,15 +1242,29 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guess
             </div>
           );
         })()}
-        {/* Artist clue - show when correct, or when showArtistClue (near-match or once revealed) */}
-        {((artistObj && artistObj.status === 'correct') || showArtistClue) && (
-          <div className={`clue-tag clue-status-${artistObj?.status === 'correct' ? 'correct' : 'incorrect'}`}>
+        {/* Artist clue - show when correct/partial, or when showArtistClue (near-match or once revealed) */}
+        {((artistObj && artistObj.status === 'correct') || showArtistClue) && (() => {
+          const rawStatus = artistObj?.status;
+          // Map "partial" to the same blue styling used for "close" (e.g., year close)
+          const statusClass =
+            rawStatus === 'correct'
+              ? 'correct'
+              : rawStatus === 'partial'
+              ? 'close'
+              : 'incorrect';
+          return (
+          <div className={`clue-tag clue-status-${statusClass}`}>
             <span className="clue-label artist-icon-wrapper">
               <img src={CLUE_DEFINITIONS.artist.iconFile} alt="" className="clue-icon-img artist-icon" width={14} height={14} />
               {' '}Artist
             </span>
             {artistObj?.status === 'correct' ? (
               <ClueTooltip helpText={<>The secret song&apos;s artist <strong>is</strong> {artist}.</>} clueType="artist" />
+            ) : artistObj?.status === 'partial' ? (
+              <>
+                {solutionArtist && <span className="clue-value">{solutionArtist}</span>}
+                <ClueTooltip helpText="Your guess shares an artist with the secret song" clueType="artist" />
+              </>
             ) : (
               <>
                 {solutionArtist && <span className="clue-value">{solutionArtist}</span>}
@@ -1258,7 +1272,8 @@ const GuessBox = ({ songTitle, artist, clues, guessNumber, guessedCountry, guess
               </>
             )}
           </div>
-        )}
+          );
+        })()}
         {/* Album clue - only show when correct */}
         {albumObj && albumObj.status === 'correct' && (
           <div className="clue-tag clue-status-correct">

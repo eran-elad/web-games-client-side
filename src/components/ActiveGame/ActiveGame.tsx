@@ -1069,9 +1069,13 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
           // Once artist clue is shown for any guess (correct or near-match), show it for all subsequent guesses
           let artistRevealed = false;
           const showArtistClueForGuess = guesses.map((guess) => {
-            const artistCorrect = (guess.clues?.clues?.artist?.status === 'correct') || (guess.clues?.artist?.status === 'correct');
+            const artistStatus =
+              guess.clues?.clues?.artist?.status ??
+              guess.clues?.artist?.status;
+            const artistCorrect = artistStatus === 'correct';
+            const artistPartial = artistStatus === 'partial';
             const nearMatch = shouldShowArtistByNearMatch(guess.clues);
-            const show = artistCorrect || nearMatch || artistRevealed;
+            const show = artistCorrect || artistPartial || nearMatch || artistRevealed;
             if (show) artistRevealed = true;
             return show;
           });
