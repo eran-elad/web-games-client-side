@@ -82,10 +82,12 @@ const SecretSongDetails = ({ secretSong }: { secretSong: SecretSong }) => {
             if (e.key === "Enter" || e.key === " ") toggle(k);
             },
             "aria-expanded": isExpanded,
+            "aria-label": label,
             title: title ?? "Tap to expand",
         }
         : {
             className: "secret-song-info-item",
+            "aria-label": label,
         };
 
     return (
