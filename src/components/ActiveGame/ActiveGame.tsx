@@ -1121,7 +1121,7 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
           <span className="puzzle-footer-sep"> · </span>
           <a href="/credits" className="puzzle-footer-link">Credits</a>
         </div>
-        <section className="seo-intro">
+        <section className="seo-intro" aria-label="About Hitfinder">
           <button
             type="button"
             className="seo-intro-toggle"
@@ -1132,7 +1132,7 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
             <span className="seo-intro-chevron">{seoIntroExpanded ? '▼' : '▶'}</span>
           </button>
           <div className={`seo-intro-content ${seoIntroExpanded ? 'expanded' : ''}`}>
-            <h1 className="seo-intro-title">Hitfinder – Daily Music Guessing Game</h1>
+            <h2 className="seo-intro-title">Hitfinder – Daily Music Guessing Game</h2>
             <p className="seo-intro-text">
               Hitfinder is a free daily music guessing game where players try to guess
               the secret hit song using clues like genre, BPM, release year, and artist.

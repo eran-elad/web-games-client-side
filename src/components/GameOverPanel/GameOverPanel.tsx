@@ -94,7 +94,7 @@ const SecretSongDetails = ({ secretSong }: { secretSong: SecretSong }) => {
             <img src={iconSrc(icon)} alt="" />
         </span>
 
-        <span className="secret-song-label">{label}</span>
+        {/* <span className="secret-song-label">{label}</span> */}
         <span className="secret-song-value">{value}</span>
         </div>
     );
@@ -132,7 +132,7 @@ const SecretSongDetails = ({ secretSong }: { secretSong: SecretSong }) => {
                     {countryFlag}
                 </span>
 
-                <span className="secret-song-label">Country:</span>
+                {/* <span className="secret-song-label">Country:</span> */}
                 <span className="secret-song-value">{getCountryName(secretSong.country)}</span>
             </div>
 

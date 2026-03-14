@@ -65,7 +65,7 @@ export const CLUE_DEFINITIONS: Record<ClueType, ClueDefinition> = {
   gender: {
     label: 'Gender',
     icon: 'emoji',
-    iconFile: '/clue_icons/gender.svg',
+    iconFile: '/clue_icons/gender.svg?v=2',
     emoji: '⚧',
   },
   artist: {

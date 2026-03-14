@@ -130,11 +130,11 @@ a.puzzle-footer-link {
   margin: 0 0.25rem;
 }
 
-/* SEO intro - visible to crawlers, subtle for users */
+/* SEO intro - visible to crawlers, very subtle for users */
 .seo-intro {
   margin-top: 1.5rem;
-  padding-top: 1rem;
-  border-top: 1px solid #eee;
+  padding-top: 0.75rem;
+  border-top: 1px solid #f4f4f9;
 }
 
 .seo-intro-toggle {
@@ -145,7 +145,7 @@ a.puzzle-footer-link {
   border: none;
   padding: 0;
   font-size: 0.75rem;
-  color: #999;
+  color: #d7daf2;
   cursor: pointer;
   font-family: inherit;
   transition: color 0.2s;
@@ -170,15 +170,15 @@ a.puzzle-footer-link {
 }
 
 .seo-intro-title {
-  font-size: 0.9rem;
+  font-size: 0.7rem;
   font-weight: 600;
-  color: #888;
-  margin: 0.5rem 0 0.25rem 0;
+  color: #d0d3f0;
+  margin: 0.25rem 0 0.15rem 0;
 }
 
 .seo-intro-text {
-  font-size: 0.75rem;
-  color: #999;
+  font-size: 0.7rem;
+  color: #d8daf0;
   line-height: 1.5;
   margin: 0;
 }

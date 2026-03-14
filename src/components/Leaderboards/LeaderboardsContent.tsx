@@ -98,6 +98,7 @@ export default function LeaderboardsContent({ playerId, onRefresh }: Leaderboard
     ? board.rows.find((r) => r.player_id === playerId)
     : null;
   const showGapRow = playerRow && playerRow.rank > board.top_n;
+  const currentPlayerNotOnBoard = playerId != null && !board.rows.some((r) => r.player_id === playerId);
 
   return (
     <div className="leaderboards-content">
@@ -246,6 +247,12 @@ export default function LeaderboardsContent({ playerId, onRefresh }: Leaderboard
           </tbody>
         </table>
       </div>
+
+      {currentPlayerNotOnBoard && (
+        <p className="leaderboards-play-to-enter" role="status">
+          Play a puzzle to enter the leaderboard.
+        </p>
+      )}
 
       <p className="leaderboards-rotate-hint" aria-hidden="true">
         <span className="leaderboards-rotate-icon" aria-hidden="true">

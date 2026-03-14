@@ -245,6 +245,14 @@
 }
 
 /* Rotate hint: only visible in portrait mode on phones */
+.leaderboards-play-to-enter {
+  margin: 0.75rem 0 0;
+  padding: 0.5rem 0;
+  font-size: 0.9rem;
+  color: #666;
+  text-align: center;
+}
+
 .leaderboards-rotate-hint {
   display: none;
   align-items: center;
