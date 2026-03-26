@@ -1,5 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../../auth/AuthContext';
+import { GOOGLE_CLIENT_ID } from '../../config/apiConfig';
+import GoogleSignInButton from '../GoogleSignInButton/GoogleSignInButton';
 import './HamburgerMenu.css';
 
 interface HamburgerMenuProps {
@@ -21,7 +24,9 @@ const HamburgerMenu = ({
   onShowFeedback,
   onGoToDailyPuzzle
 }: HamburgerMenuProps) => {
+  const { auth, signOut, signInError } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
@@ -72,6 +77,46 @@ const HamburgerMenu = ({
       
       {isOpen && (
         <div ref={menuRef} className="hamburger-menu-dropdown">
+          {auth.status !== 'loading' && (
+            <div className="hamburger-menu-account">
+              {auth.status === 'authenticated' ? (
+                <>
+                  <div className="hamburger-menu-account-name">
+                    {auth.displayName || auth.email || 'Signed in'}
+                  </div>
+                  {auth.displayName && auth.email ? (
+                    <div className="hamburger-menu-account-email">{auth.email}</div>
+                  ) : null}
+                  <div className="hamburger-menu-account-provider">Signed in with Google</div>
+                  <button
+                    type="button"
+                    className="hamburger-menu-sign-out"
+                    disabled={signingOut}
+                    onClick={() => {
+                      void (async () => {
+                        setSigningOut(true);
+                        try {
+                          await signOut();
+                        } finally {
+                          setSigningOut(false);
+                        }
+                        setIsOpen(false);
+                      })();
+                    }}
+                  >
+                    {signingOut ? 'Signing out…' : 'Sign out'}
+                  </button>
+                </>
+              ) : (
+                <>
+                  <div className="hamburger-menu-account-title">Sign in</div>
+                  <div className="hamburger-menu-account-sub">Save your progress across devices</div>
+                  {GOOGLE_CLIENT_ID ? <GoogleSignInButton variant="compact" /> : null}
+                </>
+              )}
+              {signInError ? <div className="hamburger-menu-account-error">{signInError}</div> : null}
+            </div>
+          )}
           {onGoToDailyPuzzle && (
             <button
               className="hamburger-menu-item"

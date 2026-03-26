@@ -10,14 +10,18 @@ import NewDailyPuzzleBanner from '../NewDailyPuzzleBanner/NewDailyPuzzleBanner';
 import { MUSIC_GAME_ID } from '../../config/gameConfig';
 import { getApiUrl } from '../../config/apiConfig';
 import { DEFAULT_CLUE_THRESHOLDS } from '../../config/clueThresholds';
-import { getPlayerId, setPlayerId, setSessionId, setGameId, clearSession, getPuzzleId, getLocalDate, getDistanceUnit, isViewingArchive, clearPuzzleId, clearLocalDate, clearViewingArchive, setPuzzleId, setLocalDate } from '../../utils/storage';
+import { getPlayerId, setPlayerId, setSessionId, setGameId, clearSession, getPuzzleId, getLocalDate, getDistanceUnit, isViewingArchive, setPuzzleId, setLocalDate } from '../../utils/storage';
 import { initGame, submitGuess, giveUp, activateLifeline } from '../../services/gameApi';
 import type { GameInitResponse, ActivateLifelineResponse, ExternalLink } from '../../services/gameApi';
 import './ActiveGame.css';
 import GameOverPanel from "../GameOverPanel/GameOverPanel";
+import { useAuth } from "../../auth/AuthContext";
 
 /** Minimum songs shown in lifeline UI text (tooltips, confirm). Use server value when available, otherwise this. */
 const LIFELINE_MIN_SONGS_DISPLAY = 60;
+
+/** Pause after game ends before navigating to statistics (lets the player read the result). */
+const AUTO_SHOW_STATISTICS_DELAY_MS = 4000;
 
 
 interface Song {
@@ -125,6 +129,8 @@ function shouldShowArtistByNearMatch(clues: any): boolean {
 
 const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onShowArchive, onShowLeaderboards, onShowSettings, onShowFeedback, onGoToDailyPuzzle }: ActiveGameProps = {}) => {
   const { pathname } = useLocation();
+  const { auth } = useAuth();
+  const authReady = auth.status !== 'loading';
   const [selectedSongId, setSelectedSongId] = useState<string | null>(null);
   const [selectedSong, setSelectedSong] = useState<Song | null>(null);
   const [guesses, setGuesses] = useState<Guess[]>([]);
@@ -160,8 +166,9 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
     };
   }, []);
 
-  // Initialize game session on mount
+  // Initialize game session on mount (after platform auth bootstrap so player_id matches cookie)
   useEffect(() => {
+    if (!authReady) return;
     // Prevent double init when React Strict Mode runs the effect twice (mount → cleanup → mount)
     if (initInProgressRef.current) return;
     initInProgressRef.current = true;
@@ -186,10 +193,9 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
         // Detect timezone or default to UTC
         const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
         
-        // Only use puzzle_id/local_date if we're explicitly viewing an archive puzzle
-        // OR if we have a puzzle_id that matches today's daily puzzle (from daily-puzzle-status)
-        // Otherwise, clear old puzzle parameters and let the server decide which puzzle to show
-        // (server will show daily puzzle if idle-expired, or resume current puzzle if active)
+        // Use puzzle_id/local_date when: today's daily pair, archive flow, or any remaining
+        // stored pair (e.g. after archive completion — viewing_archive may be cleared but ids remain).
+        // With no stored params, let the server decide (daily if idle-expired, etc.).
         let puzzleId: string | undefined = undefined;
         let localDate: string | undefined = undefined;
         
@@ -212,13 +218,12 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
             console.log('Loading historical puzzle from archive:', { puzzleId, localDate });
             clearSession(); // Clear session to force server to load the correct puzzle
           }
-        } else {
-          // Not viewing archive and no valid daily puzzle_id - clear old puzzle parameters
-          if (storedPuzzleId || storedLocalDate) {
-            console.log('Clearing old puzzle parameters on initial load:', { storedPuzzleId, storedLocalDate });
-            clearPuzzleId();
-            clearLocalDate();
-          }
+        } else if (storedPuzzleId || storedLocalDate) {
+          // Same puzzle as last session (e.g. closed statistics after archive completion)
+          puzzleId = storedPuzzleId || undefined;
+          localDate = storedLocalDate || undefined;
+          console.log('Loading puzzle from stored puzzle params:', { puzzleId, localDate });
+          clearSession();
         }
         
         // Call init API - note: we're NOT sending session_id, only player_id
@@ -260,12 +265,9 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
         const responseLocalDate = response.session.puzzle.local_date;
         setPuzzleId(responsePuzzleId);
         setLocalDate(responseLocalDate);
-        if (
-          response.session.puzzle.type === 'daily' ||
-          responseLocalDate === todayDateStr
-        ) {
-          clearViewingArchive();
-        }
+        // Do not clear viewing_archive here — archive sessions stay "archive" until the user
+        // switches to daily (onGoToDailyPuzzle) or picks another puzzle. Clearing on type/date
+        // broke returning from statistics after completing an archived puzzle.
         
         // Store player and session data in localStorage
         setPlayerId(response.player.player_uuid);
@@ -461,13 +463,14 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [authReady]);
 
-  // Win animation trigger – keep confetti visible while game over (animation settles to low-opacity background)
+  // Win animation trigger – keep confetti visible while game over (animation settles to low-opacity background).
+  // Skip confetti when returning from statistics (user already saw it); still run when loading a completed puzzle fresh (e.g. archive).
   useEffect(() => {
     const isGameWon = sessionState?.status === 'won' && sessionState?.is_over === true;
-    setIsWinning(!!isGameWon);
-  }, [sessionState?.status, sessionState?.is_over]);
+    setIsWinning(!!(isGameWon && !userClosedStats));
+  }, [sessionState?.status, sessionState?.is_over, userClosedStats]);
 
   const handleSongSelect = (songId: string | null, song?: Song | null) => {
     setSelectedSongId(songId);
@@ -543,13 +546,6 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
       if (newSessionState.is_over) {
         setPuzzleId(response.session.puzzle.puzzle_id);
         setLocalDate(response.session.puzzle.local_date);
-        const todayStr = getTodayLocalDateStr();
-        if (
-          response.session.puzzle.type === 'daily' ||
-          response.session.puzzle.local_date === todayStr
-        ) {
-          clearViewingArchive();
-        }
       }
       
       // Handle lifeline catalog updates
@@ -600,7 +596,7 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
         setTimeout(() => {
           setHasShownStats(true);
           onShowStatistics();
-        }, 3000);
+        }, AUTO_SHOW_STATISTICS_DELAY_MS);
       }
     } catch (err) {
       // Log detailed error to console for developers
@@ -768,13 +764,6 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
       if (newSessionState.is_over) {
         setPuzzleId(response.session.puzzle.puzzle_id);
         setLocalDate(response.session.puzzle.local_date);
-        const todayStr = getTodayLocalDateStr();
-        if (
-          response.session.puzzle.type === 'daily' ||
-          response.session.puzzle.local_date === todayStr
-        ) {
-          clearViewingArchive();
-        }
       }
       
       // If game is over, show statistics after a short delay
@@ -783,7 +772,7 @@ const ActiveGame = ({ onShowStatistics, userClosedStats = false, onShowHelp, onS
         setTimeout(() => {
           setHasShownStats(true);
           onShowStatistics();
-        }, 3000);
+        }, AUTO_SHOW_STATISTICS_DELAY_MS);
       }
     } catch (err) {
       // Log detailed error to console for developers

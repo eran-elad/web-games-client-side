@@ -22,6 +22,12 @@
  */
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 
+/**
+ * Google OAuth client ID (Google Identity Services). Set VITE_GOOGLE_CLIENT_ID in .env.local or hosting env.
+ * See also: src/auth/GoogleSignInButton — hidden when empty.
+ */
+export const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID ?? '';
+
 // Debug log (remove in production if needed)
 if (typeof window !== 'undefined') {
   console.log('API_BASE_URL:', API_BASE_URL || '(empty - using relative paths)');

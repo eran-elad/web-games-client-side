@@ -1,0 +1,14 @@
+.google-sign-in-button {
+  display: flex;
+  justify-content: flex-start;
+  min-height: 40px;
+}
+
+.google-sign-in-button--compact {
+  justify-content: center;
+  min-height: 36px;
+}
+
+.google-sign-in-button--compact iframe {
+  max-width: 100%;
+}

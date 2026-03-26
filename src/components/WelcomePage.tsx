@@ -5,6 +5,7 @@ import HamburgerMenu from './HamburgerMenu/HamburgerMenu';
 import { initGame } from '../services/gameApi';
 import { getPlayerId } from '../utils/storage';
 import { MUSIC_GAME_ID } from '../config/gameConfig';
+import { useAuth } from '../auth/AuthContext';
 import './WelcomePage.css';
 
 interface WelcomePageProps {
@@ -18,10 +19,14 @@ interface WelcomePageProps {
 }
 
 const WelcomePage = ({ onPlay, onShowStatistics, onShowHelp, onShowArchive, onShowLeaderboards, onShowSettings, onShowPrivacy }: WelcomePageProps) => {
+  const { auth } = useAuth();
+  const authReady = auth.status !== 'loading';
   const [dailyPuzzleStatus, setDailyPuzzleStatus] = useState<'in_progress' | 'won' | 'lost' | 'abandoned' | 'quit' | 'not_played' | null>(null);
   const [isLoadingStatus, setIsLoadingStatus] = useState(true);
 
   useEffect(() => {
+    if (!authReady) return;
+
     const checkDailyPuzzleStatus = async () => {
       try {
         setIsLoadingStatus(true);
@@ -51,8 +56,8 @@ const WelcomePage = ({ onPlay, onShowStatistics, onShowHelp, onShowArchive, onSh
       }
     };
 
-    checkDailyPuzzleStatus();
-  }, []);
+    void checkDailyPuzzleStatus();
+  }, [authReady]);
 
   const getPlayButtonText = () => {
     if (isLoadingStatus) {

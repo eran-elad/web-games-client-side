@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Routes, Route, useNavigate } from 'react-router-dom'
 import { setViewingArchive, clearViewingArchive } from './utils/storage'
 import { clearSession } from './utils/storage'
@@ -16,6 +16,7 @@ import AboutPage from './components/AboutPage/AboutPage'
 import FaqPage from './components/FaqPage/FaqPage'
 import FeedbackModal from './components/FeedbackModal/FeedbackModal'
 import { ToastContainer, useToastState, showToast } from './components/Toast/Toast'
+import { AUTH_PLAYER_ID_CHANGED_EVENT } from './auth/authTypes'
 import './App.css'
 
 function AppContent() {
@@ -25,6 +26,12 @@ function AppContent() {
   const [gameKey, setGameKey] = useState<number>(0)
   const [showFeedbackModal, setShowFeedbackModal] = useState(false)
   const { toasts, dismiss } = useToastState()
+
+  useEffect(() => {
+    const bump = () => setGameKey((k) => k + 1)
+    window.addEventListener(AUTH_PLAYER_ID_CHANGED_EVENT, bump)
+    return () => window.removeEventListener(AUTH_PLAYER_ID_CHANGED_EVENT, bump)
+  }, [])
 
   const handleCloseStatistics = () => {
     statsClosedRef.current = true

@@ -51,10 +51,78 @@
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
   min-width: 180px;
+  max-width: min(92vw, 280px);
   z-index: 1000;
   overflow: hidden;
   animation: slideDown 0.2s ease-out;
   border: 1px solid #e0e0e0;
+}
+
+.hamburger-menu-account {
+  padding: 0.65rem 0.85rem 0.75rem;
+  border-bottom: 1px solid #eee;
+  background: #fafbfc;
+}
+
+.hamburger-menu-account-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #222;
+}
+
+.hamburger-menu-account-sub {
+  font-size: 0.75rem;
+  color: #666;
+  margin: 0.15rem 0 0.5rem;
+  line-height: 1.2;
+}
+
+.hamburger-menu-account-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #222;
+  line-height: 1.2;
+  word-break: break-word;
+}
+
+.hamburger-menu-account-email {
+  font-size: 0.72rem;
+  color: #666;
+  margin-top: 0.08rem;
+  word-break: break-all;
+}
+
+.hamburger-menu-account-provider {
+  font-size: 0.7rem;
+  color: #888;
+  margin: 0.35rem 0 0.45rem;
+}
+
+.hamburger-menu-account-error {
+  font-size: 0.72rem;
+  color: #c0392b;
+  margin-top: 0.35rem;
+}
+
+.hamburger-menu-sign-out {
+  width: 100%;
+  padding: 0.4rem 0.5rem;
+  font-size: 0.85rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+  font-family: inherit;
+  color: #333;
+}
+
+.hamburger-menu-sign-out:hover:not(:disabled) {
+  background: #f5f5f5;
+}
+
+.hamburger-menu-sign-out:disabled {
+  opacity: 0.7;
+  cursor: default;
 }
 
 @keyframes slideDown {
@@ -125,6 +193,24 @@ a.hamburger-menu-item {
     right: 0;
     left: auto;
     min-width: 160px;
+    max-width: min(94vw, 260px);
+  }
+
+  .hamburger-menu-account {
+    padding: 0.5rem 0.65rem 0.6rem;
+  }
+
+  .hamburger-menu-account-title {
+    font-size: 0.88rem;
+  }
+
+  .hamburger-menu-account-sub {
+    font-size: 0.7rem;
+    margin-bottom: 0.4rem;
+  }
+
+  .google-sign-in-button--compact {
+    min-height: 32px;
   }
   
   .hamburger-menu-item {
@@ -159,6 +245,32 @@ a.hamburger-menu-item {
   .hamburger-menu-dropdown {
     background: #1a1a1a;
     border-color: #444;
+  }
+
+  .hamburger-menu-account {
+    background: #141414;
+    border-bottom-color: #333;
+  }
+
+  .hamburger-menu-account-title,
+  .hamburger-menu-account-name {
+    color: #e8e8e8;
+  }
+
+  .hamburger-menu-account-sub,
+  .hamburger-menu-account-email,
+  .hamburger-menu-account-provider {
+    color: #aaa;
+  }
+
+  .hamburger-menu-sign-out {
+    background: #222;
+    border-color: #444;
+    color: #e0e0e0;
+  }
+
+  .hamburger-menu-sign-out:hover:not(:disabled) {
+    background: #2a2a2a;
   }
   
   .hamburger-menu-item {

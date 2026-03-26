@@ -6,6 +6,9 @@ import type { ExternalLink } from "../../services/gameApi";
 import { getCountryName, formatGenderValue } from "../../utils/formatters";
 import "./GameOverPanel.css";
 import { getCountryFlag, normalizeCountryCode } from "../../config/countryCodes";
+import { useAuth } from "../../auth/AuthContext";
+import { GOOGLE_CLIENT_ID } from "../../config/apiConfig";
+import GoogleSignInButton from "../GoogleSignInButton/GoogleSignInButton";
 
 type GameStatus = "won" | "lost" | "abandoned" | "quit";
 
@@ -142,7 +145,7 @@ const SecretSongDetails = ({ secretSong }: { secretSong: SecretSong }) => {
             <DetailRow icon="duration" label="Duration:" value={formatDuration(secretSong.duration_sec)} />
 
             {secretSong.bpm != null && (
-                <DetailRow icon="tempo" label="BPM:" value={secretSong.bpm} />
+                <DetailRow icon="tempo" label="BPM:" value={`${secretSong.bpm} BPM`} />
             )}
 
             {secretSong.artist_type && (
@@ -204,7 +207,10 @@ export default function GameOverPanel(props: {
     onDismissBanner,
   } = props;
 
+  const { auth } = useAuth();
   const isWon = status === "won";
+  const showSaveProgressCta =
+    GOOGLE_CLIENT_ID && auth.status === "anonymous";
 
   return (
     <div
@@ -238,6 +244,20 @@ export default function GameOverPanel(props: {
                 puzzleDate={puzzleDate || undefined}
                 sessionId={sessionId ?? undefined}
               />
+
+              {showSaveProgressCta && (
+                <div className="game-over-save-progress">
+                  <div className="game-over-save-progress-title">Save your progress</div>
+                  <p className="game-over-save-progress-text">
+                    Sign in to keep your streaks, stats, and badges across devices.
+                  </p>
+                  <GoogleSignInButton />
+                </div>
+              )}
+
+              {auth.status === "authenticated" && (
+                <p className="game-over-progress-saved">Progress saved to your account.</p>
+              )}
   
               {externalLinks && externalLinks.length > 0 && (
                 <ExternalPlatformLinks

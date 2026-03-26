@@ -72,6 +72,76 @@
   padding: 0.5rem 0;
 }
 
+.settings-account-block {
+  padding: 1rem 0 1.25rem;
+  border-bottom: 1px solid #e8e8e8;
+}
+
+.settings-account-heading {
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #666;
+  margin-bottom: 0.65rem;
+}
+
+.settings-account-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: flex-start;
+}
+
+.settings-account-line {
+  font-weight: 600;
+  color: #222;
+  font-size: 1rem;
+}
+
+.settings-account-email {
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.settings-account-hint {
+  font-size: 0.8rem;
+  color: #888;
+  margin-bottom: 0.25rem;
+}
+
+.settings-account-blurb {
+  margin: 0 0 0.35rem;
+  font-size: 0.95rem;
+  color: #444;
+  line-height: 1.35;
+}
+
+.settings-account-error {
+  font-size: 0.85rem;
+  color: #c0392b;
+  margin-top: 0.35rem;
+}
+
+.settings-sign-out-button {
+  padding: 0.45rem 1rem;
+  font-size: 0.9rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+  font-family: inherit;
+  color: #333;
+}
+
+.settings-sign-out-button:hover:not(:disabled) {
+  background: #f5f5f5;
+}
+
+.settings-sign-out-button:disabled {
+  opacity: 0.7;
+}
+
 .settings-row {
   display: flex;
   align-items: center;

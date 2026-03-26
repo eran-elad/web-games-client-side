@@ -3,6 +3,9 @@ import PageMeta from '../PageMeta/PageMeta';
 import { getDistanceUnit, setDistanceUnit, getDisplayName, setDisplayName, getPlayerId } from '../../utils/storage';
 import { updatePlayerDisplayName, getLeaderboards } from '../../services/gameApi';
 import { getCountryMeasurementSystem } from '../../config/countryCodes';
+import { useAuth } from '../../auth/AuthContext';
+import { GOOGLE_CLIENT_ID } from '../../config/apiConfig';
+import GoogleSignInButton from '../GoogleSignInButton/GoogleSignInButton';
 import './SettingsPage.css';
 
 interface SettingsPageProps {
@@ -54,6 +57,8 @@ const detectUserCountry = (): string | null => {
 };
 
 const SettingsPage = ({ onClose }: SettingsPageProps) => {
+  const { auth, signOut, signInError } = useAuth();
+  const [signingOut, setSigningOut] = useState(false);
   const [displayUnit, setDisplayUnit] = useState<'km' | 'miles'>('km');
   const [displayName, setDisplayNameState] = useState(getDisplayName() ?? '');
   const [displayNameSaving, setDisplayNameSaving] = useState(false);
@@ -168,6 +173,47 @@ const SettingsPage = ({ onClose }: SettingsPageProps) => {
         </div>
         
         <div className="settings-sections">
+          {auth.status !== 'loading' && (
+            <div className="settings-account-block">
+              <div className="settings-account-heading">Account</div>
+              {auth.status === 'authenticated' ? (
+                <div className="settings-account-body">
+                  <div className="settings-account-line">
+                    {auth.displayName || auth.email || 'Signed in'}
+                  </div>
+                  {auth.displayName && auth.email ? (
+                    <div className="settings-account-email">{auth.email}</div>
+                  ) : null}
+                  <div className="settings-account-hint">Signed in with Google</div>
+                  <button
+                    type="button"
+                    className="settings-sign-out-button"
+                    disabled={signingOut}
+                    onClick={() => {
+                      void (async () => {
+                        setSigningOut(true);
+                        try {
+                          await signOut();
+                        } finally {
+                          setSigningOut(false);
+                        }
+                      })();
+                    }}
+                  >
+                    {signingOut ? 'Signing out…' : 'Sign out'}
+                  </button>
+                </div>
+              ) : (
+                <div className="settings-account-body">
+                  <p className="settings-account-blurb">
+                    Sign in to save your progress across devices.
+                  </p>
+                  {GOOGLE_CLIENT_ID ? <GoogleSignInButton /> : null}
+                </div>
+              )}
+              {signInError ? <div className="settings-account-error">{signInError}</div> : null}
+            </div>
+          )}
           <div className="settings-row settings-row-display-name">
             <span className="settings-label settings-display-name-label">
               Display Name
